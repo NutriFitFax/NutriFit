@@ -1,6 +1,6 @@
 # nutrifit-backend
 
-FastAPI service backing the NutriFit Flutter app. Owned by **Esma Krnjić**.
+Java Spring Boot service backing the NutriFit Flutter app. Owned by **Esma Krnjic**.
 
 Three endpoints power the mobile app, plus a health check used by Render/Fly uptime probes:
 
@@ -11,22 +11,18 @@ Three endpoints power the mobile app, plus a health check used by Render/Fly upt
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
-Barcode + search are backed by [OpenFoodFacts](https://world.openfoodfacts.org). The meal-photo endpoint uses OpenAI's vision model when `OPENAI_API_KEY` is set, otherwise returns a deterministic stub so the mobile app has something to render in dev.
+Barcode + search are backed by [OpenFoodFacts](https://world.openfoodfacts.org). The meal-photo endpoint uses OpenAI's vision model when `OPENAI_API_KEY` is set, otherwise returns a deterministic stub so the Flutter app has something to render in dev.
 
 ## Run locally
 
-Requires Python 3.11+ (3.12 recommended).
+Requires Java 21 and Maven.
 
 ```bash
 cd nutrifit-backend
-python -m venv .venv
-. .venv/Scripts/activate          # Windows PowerShell: .venv\Scripts\Activate.ps1
-pip install -r requirements-dev.txt
-cp .env.example .env              # optional — defaults are fine
-uvicorn app.main:app --reload
+mvn spring-boot:run
 ```
 
-Open <http://127.0.0.1:8000/docs> for Swagger UI.
+Open <http://127.0.0.1:8000/health> for a quick health check.
 
 ### Try the endpoints
 
@@ -40,39 +36,40 @@ curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 ## Tests
 
 ```bash
-pytest -q
-ruff check .
+mvn test
 ```
 
-Tests use [`respx`](https://github.com/lundberg/respx) to mock OpenFoodFacts — no network is required and no API key is needed.
+Tests use `MockWebServer` to mock OpenFoodFacts, so no network is required and no API key is needed.
 
 ## Deploy
 
 Three options. Pick one and ignore the rest.
 
-### Render (easiest — free tier)
+### Render
+
+Render does not provide Java as a native runtime, so this repo deploys the Java backend with Docker.
 
 1. Push this repo to GitHub.
 2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The staging URL appears in the dashboard. Share it with the team.
-4. (Optional) In the service's Environment tab, paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
-5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml` — drop the **deploy hook URL** into the repo secret `RENDER_DEPLOY_HOOK_URL` (Settings → Deploy Hook → copy).
+4. Optional: in the service's Environment tab, paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
+5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml`. Add the deploy hook URL to the repo secret `RENDER_DEPLOY_HOOK_URL`.
 
 ### Fly.io
 
 ```bash
 cd nutrifit-backend
-flyctl launch --no-deploy --copy-config        # accepts existing fly.toml
+flyctl launch --no-deploy --copy-config
 flyctl deploy
 ```
 
-To enable GitHub Actions deploys: set repo variable `DEPLOY_TARGET=fly`, then add secret `FLY_API_TOKEN` (run `flyctl auth token`).
+To enable GitHub Actions deploys: set repo variable `DEPLOY_TARGET=fly`, then add secret `FLY_API_TOKEN` from `flyctl auth token`.
 
 ### Railway
 
-Railway auto-detects `Procfile`. Create a project from the repo, set the root to `nutrifit-backend`, and add the same env vars as `.env.example`.
+Railway can build the Maven project and use the `Procfile`. Create a project from the repo, set the root to `nutrifit-backend`, and add the same env vars as `.env.example`.
 
-### Docker (anywhere)
+### Docker
 
 ```bash
 cd nutrifit-backend
@@ -84,37 +81,31 @@ docker run --rm -p 8000:8000 -e ENVIRONMENT=local nutrifit-backend
 
 All settings come from environment variables. See `.env.example` for the full list. The two that matter most:
 
-| Var               | Default         | Why                                                                 |
-| ----------------- | --------------- | ------------------------------------------------------------------- |
-| `CORS_ORIGINS`    | `*`             | Tighten for production: list the actual Flutter web / device hosts. |
-| `OPENAI_API_KEY`  | (unset)         | Set to enable real meal-photo estimation. Unset → stub mode.        |
+| Var              | Default | Why                                                                 |
+| ---------------- | ------- | ------------------------------------------------------------------- |
+| `CORS_ORIGINS`   | `*`     | Tighten for production: list the actual Flutter web / device hosts. |
+| `OPENAI_API_KEY` | unset   | Set to enable real meal-photo estimation. Unset means stub mode.    |
 
 ## Project layout
 
-```
+```text
 nutrifit-backend/
-├── app/
-│   ├── main.py             FastAPI entrypoint + lifespan
-│   ├── config.py           Env-driven Settings
-│   ├── schemas.py          Pydantic contracts (mirrored in Dart)
-│   ├── version.py          __version__ — single source of truth
-│   ├── routers/
-│   │   ├── health.py       /, /health
-│   │   ├── barcode.py      /barcode/{barcode}
-│   │   ├── search.py       /search
-│   │   └── meal.py         /estimate-meal
-│   └── services/
-│       ├── openfoodfacts.py  OFF wrapper + Food mapping
-│       └── meal_estimator.py AI / stub meal estimator
-├── tests/                  pytest + respx (offline-safe)
-├── Dockerfile              Production image
-├── fly.toml                Fly.io app config
-├── Procfile                Railway / Heroku
-├── requirements.txt        Runtime deps
-├── requirements-dev.txt    Test/lint deps
-└── pyproject.toml          pytest + ruff config
++-- src/main/java/com/nutrifit/backend/
+|   +-- NutriFitBackendApplication.java
+|   +-- config/             Env-driven settings + CORS
+|   +-- controller/         HTTP endpoints
+|   +-- model/              JSON response contracts mirrored in Dart
+|   +-- service/            OpenFoodFacts + meal estimator integrations
++-- src/main/resources/
+|   +-- application.properties
++-- src/test/java/com/nutrifit/backend/
+|   +-- Spring MVC tests with MockWebServer
++-- Dockerfile              Production image for Render/Fly/Docker
++-- fly.toml                Fly.io app config
++-- Procfile                Railway / Heroku-style process command
++-- pom.xml                 Maven build
 ```
 
 ## Contracts with the Flutter app
 
-The Dart client lives in `mobile/lib/api/`. Pydantic schemas in `app/schemas.py` are mirrored by Dart classes in `mobile/lib/api/models.dart`. **Breaking a schema = breaking the app** — version-bump or coordinate before changing field names/types.
+The Dart client lives in `mobile/lib/api/`. Java response records in `src/main/java/com/nutrifit/backend/model/` are mirrored by Dart classes in `mobile/lib/api/models.dart`. Breaking a JSON field name or type means breaking the app; version-bump or coordinate before changing the contract.

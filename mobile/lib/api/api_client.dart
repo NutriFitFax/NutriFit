@@ -1,15 +1,15 @@
 /// NutriFit backend client.
 ///
-/// Owner: Esma. Calls three endpoints on the FastAPI service:
-///   * GET  /barcode/{barcode}        → [Food]
-///   * GET  /search?q=...             → [SearchResult]
-///   * POST /estimate-meal (multipart)→ [MealEstimate]
+/// Owner: Esma. Calls three endpoints on the Java backend service:
+///   * GET  /barcode/{barcode}        -> [Food]
+///   * GET  /search?q=...             -> [SearchResult]
+///   * POST /estimate-meal (multipart)-> [MealEstimate]
 ///
 /// Configure the base URL at app start:
 ///
 ///   final api = NutriFitApi(baseUrl: Uri.parse('https://staging.example.com'));
 ///
-/// Use `package:http` — already a Flutter convention. To swap to `dio` later,
+/// Use `package:http`, already a Flutter convention. To swap to `dio` later,
 /// only this file needs to change; the rest of the app talks to the typed
 /// methods below.
 library;
@@ -97,9 +97,9 @@ class NutriFitApi {
         if (d != null) return d.toString();
       }
     } on FormatException {
-      // body wasn't JSON — fall through.
+      // Body was not JSON; fall through.
     }
-    return body.length > 200 ? '${body.substring(0, 200)}…' : body;
+    return body.length > 200 ? '${body.substring(0, 200)}...' : body;
   }
 
   Future<T> _wrapErrors<T>(Future<T> Function() body) async {
@@ -113,10 +113,6 @@ class NutriFitApi {
       throw NetworkException('client error: ${e.message}');
     }
   }
-
-  // -----------------------------------------------------------------
-  // Public API
-  // -----------------------------------------------------------------
 
   /// GET /barcode/{barcode}. Throws [NotFoundException] if product is unknown.
   Future<Food> getByBarcode(String barcode) {
@@ -172,7 +168,7 @@ class NutriFitApi {
     });
   }
 
-  /// GET /health. Useful for connectivity checks and Settings → "ping server".
+  /// GET /health. Useful for connectivity checks and Settings -> "ping server".
   Future<bool> ping() async {
     try {
       final resp = await _client.get(_u('/health')).timeout(timeout);

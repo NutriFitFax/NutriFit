@@ -1,6 +1,6 @@
-# `mobile/lib/api/` — NutriFit backend client
+# `mobile/lib/api/` - NutriFit backend client
 
-Owner: **Esma**. Anything in this folder is the Flutter app's only path to the FastAPI service. If you need a new endpoint, ping Esma — don't call HTTP directly from feature code.
+Owner: **Esma**. Anything in this folder is the Flutter app's only path to the Java backend service. If you need a new endpoint, ping Esma; don't call HTTP directly from feature code.
 
 ## Add to `pubspec.yaml`
 
@@ -22,7 +22,7 @@ final api = NutriFitApi(baseUrl: ApiConfig.baseUrl);
 // 1. Barcode lookup
 try {
   final food = await api.getByBarcode('5449000000996');
-  print('${food.name} — ${food.macrosPer100g.caloriesKcal} kcal / 100 g');
+  print('${food.name} - ${food.macrosPer100g.caloriesKcal} kcal / 100 g');
 } on NotFoundException {
   // show "no product found for that barcode"
 } on ApiException catch (e) {
@@ -46,24 +46,24 @@ api.close();
 
 ## Endpoints
 
-| Method | Path                       | Returns        | Notes                                          |
-| ------ | -------------------------- | -------------- | ---------------------------------------------- |
-| GET    | `/barcode/{barcode}`       | `Food`         | 404 → `NotFoundException`                      |
+| Method | Path                          | Returns        | Notes                                          |
+| ------ | ----------------------------- | -------------- | ---------------------------------------------- |
+| GET    | `/barcode/{barcode}`          | `Food`         | 404 -> `NotFoundException`                     |
 | GET    | `/search?q=&page=&page_size=` | `SearchResult` | `page` 1-50, `page_size` 1-50                  |
-| POST   | `/estimate-meal`           | `MealEstimate` | multipart field name = `image`, jpg/png/webp   |
-| GET    | `/health`                  | `bool`         | use `api.ping()` for a soft connectivity check |
+| POST   | `/estimate-meal`              | `MealEstimate` | multipart field name = `image`, jpg/png/webp   |
+| GET    | `/health`                     | `bool`         | use `api.ping()` for a soft connectivity check |
 
 ## Errors
 
 All thrown errors are subclasses of `ApiException`:
 
-* `NetworkException` — device offline, DNS failure
-* `TimeoutException` — slow or unreachable server
-* `BadRequestException` — 400 / 413
-* `NotFoundException` — 404 (no product for barcode)
-* `ValidationException` — 415 / 422 (bad image type, missing query)
-* `UpstreamException` — 502 / 503 / 504 (OpenFoodFacts down)
-* `ServerException` — anything else 5xx
+* `NetworkException` - device offline, DNS failure
+* `TimeoutException` - slow or unreachable server
+* `BadRequestException` - 400 / 413
+* `NotFoundException` - 404 (no product for barcode)
+* `ValidationException` - 415 / 422 (bad image type, missing query)
+* `UpstreamException` - 502 / 503 / 504 (OpenFoodFacts down)
+* `ServerException` - anything else 5xx
 
 ## Configuring the base URL
 

@@ -1,6 +1,6 @@
-/// Data models mirroring `nutrifit-backend/app/schemas.py`.
+/// Data models mirroring `nutrifit-backend/src/main/java/com/nutrifit/backend/model/`.
 ///
-/// Keep these in lockstep with the Python schemas. If a field is added on the
+/// Keep these in lockstep with the Java response models. If a field is added on the
 /// backend, add it here too; if a field is removed, mark it deprecated for
 /// one release before deleting.
 library;

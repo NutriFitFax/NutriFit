@@ -1,8 +1,8 @@
 /// Typed exceptions for the NutriFit backend client.
 ///
 /// Catch [ApiException] for any failure. Use subtype matching when the UI
-/// needs to react differently (e.g. NotFound → "no product for that barcode",
-/// NetworkException → "you're offline").
+/// needs to react differently (e.g. NotFound -> "no product for that barcode",
+/// NetworkException -> "you are offline").
 library;
 
 sealed class ApiException implements Exception {

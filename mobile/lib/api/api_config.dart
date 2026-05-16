@@ -4,8 +4,8 @@
 ///   flutter run --dart-define=API_BASE_URL=https://nutrifit-staging.example.com
 ///
 /// The default points at localhost on the platform-correct host for emulators:
-///   * Android emulator → http://10.0.2.2:8000
-///   * iOS simulator / desktop → http://127.0.0.1:8000
+///   * Android emulator -> http://10.0.2.2:8000
+///   * iOS simulator / desktop -> http://127.0.0.1:8000
 library;
 
 import 'dart:io' show Platform;
