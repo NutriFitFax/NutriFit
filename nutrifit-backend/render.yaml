@@ -1,0 +1,25 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Create the staging URL by running: connect this repo on Render, point at
+# this file. Push to main = auto-deploy. Free tier sleeps after inactivity;
+# upgrade to "starter" for always-on.
+services:
+  - type: web
+    name: nutrifit-backend
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: nutrifit-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: staging
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.12.5"
+      - key: OPENAI_API_KEY
+        sync: false   # set manually in the Render dashboard if/when wanted
