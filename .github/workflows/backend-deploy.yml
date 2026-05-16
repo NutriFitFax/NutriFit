@@ -1,9 +1,9 @@
 name: backend-deploy
 
 # Two deploy targets. Pick whichever your team uses and add the matching
-# secrets in: repo Settings → Secrets and variables → Actions.
-#   RENDER_DEPLOY_HOOK_URL   (Render → service → Settings → Deploy Hook)
-#   FLY_API_TOKEN            (`flyctl auth token` → repo secret)
+# secrets in: repo Settings -> Secrets and variables -> Actions.
+#   RENDER_DEPLOY_HOOK_URL   (Render -> service -> Settings -> Deploy Hook)
+#   FLY_API_TOKEN            (`flyctl auth token` -> repo secret)
 # Either secret missing? That target is skipped. Both empty = no-op.
 
 on:
@@ -11,6 +11,7 @@ on:
     branches: [main]
     paths:
       - "nutrifit-backend/**"
+      - "render.yaml"
       - ".github/workflows/backend-deploy.yml"
   workflow_dispatch:
 
@@ -28,7 +29,7 @@ jobs:
           HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           if [ -z "$HOOK" ]; then
-            echo "RENDER_DEPLOY_HOOK_URL not set — skipping."
+            echo "RENDER_DEPLOY_HOOK_URL not set - skipping."
             exit 0
           fi
           curl -fsS -X POST "$HOOK"
@@ -49,7 +50,7 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
           if [ -z "$FLY_API_TOKEN" ]; then
-            echo "FLY_API_TOKEN not set — skipping."
+            echo "FLY_API_TOKEN not set - skipping."
             exit 0
           fi
           flyctl deploy --remote-only

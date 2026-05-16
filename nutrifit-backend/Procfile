@@ -1,1 +1,1 @@
-web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+web: java -jar target/nutrifit-backend-0.1.0.jar --server.port=$PORT

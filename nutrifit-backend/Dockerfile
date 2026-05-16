@@ -1,27 +1,21 @@
 # syntax=docker/dockerfile:1.7
-FROM python:3.12-slim AS base
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /workspace
+COPY pom.xml ./
+RUN mvn -q -DskipTests dependency:go-offline
+COPY src ./src
+RUN mvn -q -DskipTests package
+
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
+COPY --from=build /workspace/target/nutrifit-backend-0.1.0.jar app.jar
 
-# Install deps first for better layer caching.
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Then copy app code.
-COPY app ./app
-
-# Run as a non-root user.
-RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
+RUN addgroup -S app && adduser -S app -G app
 USER app
 
-# Render/Fly/Railway inject $PORT. Default to 8000 for local Docker runs.
 ENV PORT=8000
 EXPOSE 8000
 
-# Use shell form so $PORT is interpolated at container runtime.
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+CMD ["sh", "-c", "java -jar /app/app.jar --server.port=${PORT}"]

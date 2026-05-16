@@ -1,4 +1,4 @@
-# Fly.io config — run `fly launch --no-deploy --copy-config` then `fly deploy`.
+# Fly.io config - run `fly launch --no-deploy --copy-config` then `fly deploy`.
 # Free allowance: small shared-cpu VM is fine for a student project.
 app = "nutrifit-backend"
 primary_region = "fra"
