@@ -53,7 +53,7 @@ Three options. Pick one and ignore the rest.
 ### Render (easiest — free tier)
 
 1. Push this repo to GitHub.
-2. Create a new "Blueprint" in Render and point it at the repo. `render.yaml` is auto-detected.
+2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The staging URL appears in the dashboard. Share it with the team.
 4. (Optional) In the service's Environment tab, paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
 5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml` — drop the **deploy hook URL** into the repo secret `RENDER_DEPLOY_HOOK_URL` (Settings → Deploy Hook → copy).
@@ -108,7 +108,6 @@ nutrifit-backend/
 │       └── meal_estimator.py AI / stub meal estimator
 ├── tests/                  pytest + respx (offline-safe)
 ├── Dockerfile              Production image
-├── render.yaml             Render Blueprint
 ├── fly.toml                Fly.io app config
 ├── Procfile                Railway / Heroku
 ├── requirements.txt        Runtime deps

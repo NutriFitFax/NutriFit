@@ -1,7 +1,5 @@
-# Render Blueprint — https://render.com/docs/blueprint-spec
-# Create the staging URL by running: connect this repo on Render, point at
-# this file. Push to main = auto-deploy. Free tier sleeps after inactivity;
-# upgrade to "starter" for always-on.
+# Render Blueprint - https://render.com/docs/blueprint-spec
+# Render looks for this file at the repository root by default.
 services:
   - type: web
     name: nutrifit-backend
@@ -22,4 +20,4 @@ services:
       - key: PYTHON_VERSION
         value: "3.12.5"
       - key: OPENAI_API_KEY
-        sync: false   # set manually in the Render dashboard if/when wanted
+        sync: false
