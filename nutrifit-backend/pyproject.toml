@@ -1,0 +1,20 @@
+[project]
+name = "nutrifit-backend"
+version = "0.1.0"
+description = "FastAPI backend for the NutriFit Flutter app"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+# B008  → FastAPI requires Depends()/File()/Query() as default values.
+# E501  → long-line warnings — handled by formatter.
+ignore = ["E501", "B008"]
