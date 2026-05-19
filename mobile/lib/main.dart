@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'api/api_client.dart';
 import 'api/api_config.dart';
-import 'screens/barcode_screen.dart';
-import 'screens/meal_screen.dart';
+import 'features/barcode/barcode_scanner_screen.dart';
+import 'features/meal_estimation/meal_entry_screen.dart';
 import 'screens/search_screen.dart';
 
 void main() {
@@ -39,8 +39,8 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final screens = [
       SearchScreen(api: widget.api),
-      BarcodeScreen(api: widget.api),
-      MealScreen(api: widget.api),
+      BarcodeScannerScreen(api: widget.api),
+      MealEntryScreen(api: widget.api),
     ];
 
     return Scaffold(
