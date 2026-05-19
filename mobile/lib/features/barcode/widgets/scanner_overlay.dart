@@ -16,7 +16,7 @@ class ScannerOverlay extends StatelessWidget {
         // Dimmed overlay around the frame
         ColorFiltered(
           colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.55),
+            Colors.black.withValues(alpha: 0.55),
             BlendMode.srcOut,
           ),
           child: Stack(
