@@ -3,10 +3,22 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../api/api_exception.dart';
 import '../api/models.dart';
+import '../features/history/viewed_food_history_store.dart';
+import '../ui/food_view_data.dart';
+import '../ui/app_page.dart';
+import '../ui/macro_summary_card.dart';
+import '../ui/status_views.dart';
+import 'food_detail_screen.dart';
 
 class BarcodeScreen extends StatefulWidget {
   final NutriFitApi api;
-  const BarcodeScreen({super.key, required this.api});
+  final ViewedFoodHistoryStore history;
+
+  const BarcodeScreen({
+    super.key,
+    required this.api,
+    required this.history,
+  });
 
   @override
   State<BarcodeScreen> createState() => _BarcodeScreenState();
@@ -46,9 +58,9 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Barcode Lookup')),
-      body: Padding(
+    return AppPage(
+      title: 'Barcode Lookup',
+      child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,11 +89,22 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
             const SizedBox(height: 16),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null)
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              InlineErrorText(message: _error!),
+            if (_food != null)
+              _FoodCard(
+                food: _food!,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => FoodDetailScreen(
+                        food: FoodViewData.fromFood(_food!),
+                        history: widget.history,
+                        sourceLabel: 'barcode',
+                      ),
+                    ),
+                  );
+                },
               ),
-            if (_food != null) _FoodCard(food: _food!),
           ],
         ),
       ),
@@ -91,47 +114,26 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
 
 class _FoodCard extends StatelessWidget {
   final Food food;
-  const _FoodCard({required this.food});
+  final VoidCallback onTap;
+
+  const _FoodCard({
+    required this.food,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final m = food.macrosPer100g;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(food.name, style: Theme.of(context).textTheme.titleLarge),
-            if (food.brand != null)
-              Text(food.brand!, style: Theme.of(context).textTheme.bodySmall),
-            const Divider(height: 24),
-            _Row('Calories', '${m.caloriesKcal.toStringAsFixed(0)} kcal'),
-            _Row('Protein', '${m.proteinG.toStringAsFixed(1)} g'),
-            _Row('Carbs', '${m.carbsG.toStringAsFixed(1)} g'),
-            _Row('Fat', '${m.fatG.toStringAsFixed(1)} g'),
-            if (m.fiberG != null) _Row('Fiber', '${m.fiberG!.toStringAsFixed(1)} g'),
-          ],
-        ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: onTap,
+      child: MacroSummaryCard(
+        title: food.name,
+        subtitle: food.brand == null
+            ? 'Tap to open details'
+            : '${food.brand!} · tap to open details',
+        macros: food.macrosPer100g,
+        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
-}
-
-class _Row extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Row(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-      );
 }
