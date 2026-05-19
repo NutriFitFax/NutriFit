@@ -33,6 +33,10 @@ hs_err_pid*
 .idea/
 *.swp
 
+# --- Private (personal notes, not for repo) ----------------------------------
+.private/
+.claude/
+
 # --- OS ----------------------------------------------------------------------
 .DS_Store
 Thumbs.db
