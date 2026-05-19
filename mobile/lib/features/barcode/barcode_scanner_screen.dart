@@ -4,6 +4,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/api_client.dart';
+import '../../features/history/viewed_food_history_store.dart';
 import '../shared/permission_helper.dart';
 import 'barcode_result_sheet.dart';
 import 'widgets/flash_toggle.dart';
@@ -11,7 +12,8 @@ import 'widgets/scanner_overlay.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   final NutriFitApi api;
-  const BarcodeScannerScreen({super.key, required this.api});
+  final ViewedFoodHistoryStore history;
+  const BarcodeScannerScreen({super.key, required this.api, required this.history});
 
   @override
   State<BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
@@ -73,6 +75,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
       builder: (_) => BarcodeResultSheet(
         barcode: barcode,
         api: widget.api,
+        history: widget.history,
         onScanAgain: _resumeScanning,
       ),
     ).then((_) => _resumeScanning());

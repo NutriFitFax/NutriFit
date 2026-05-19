@@ -47,13 +47,13 @@ class _AppShellState extends State<AppShell> {
       label: 'Barcode',
       icon: Icons.qr_code_scanner,
       builder: (context, api, history, openTab) =>
-          BarcodeScannerScreen(api: api),
+          BarcodeScannerScreen(api: api, history: history),
     ),
     AppTabDefinition(
       id: AppTabId.meal,
       label: 'Meal',
       icon: Icons.camera_alt,
-      builder: (context, api, history, openTab) => MealEntryScreen(api: api),
+      builder: (context, api, history, openTab) => MealEntryScreen(api: api, history: history),
     ),
     AppTabDefinition(
       id: AppTabId.history,

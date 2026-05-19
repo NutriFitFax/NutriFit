@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../api/api_client.dart';
+import '../../features/history/viewed_food_history_store.dart';
 import '../shared/permission_helper.dart';
 import 'meal_preview_screen.dart';
 
 class MealEntryScreen extends StatelessWidget {
   final NutriFitApi api;
-  const MealEntryScreen({super.key, required this.api});
+  final ViewedFoodHistoryStore history;
+  const MealEntryScreen({super.key, required this.api, required this.history});
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
     if (source == ImageSource.camera) {
@@ -25,7 +27,7 @@ class MealEntryScreen extends StatelessWidget {
 
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => MealPreviewScreen(image: file, api: api),
+        builder: (_) => MealPreviewScreen(image: file, api: api, history: history),
       ),
     );
   }

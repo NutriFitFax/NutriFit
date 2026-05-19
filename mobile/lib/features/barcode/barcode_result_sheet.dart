@@ -3,16 +3,21 @@ import 'package:flutter/material.dart';
 import '../../api/api_client.dart';
 import '../../api/api_exception.dart';
 import '../../api/models.dart';
+import '../../features/history/viewed_food_history_store.dart';
+import '../../screens/food_detail_screen.dart';
+import '../../ui/food_view_data.dart';
 
 class BarcodeResultSheet extends StatefulWidget {
   final String barcode;
   final NutriFitApi api;
+  final ViewedFoodHistoryStore history;
   final VoidCallback onScanAgain;
 
   const BarcodeResultSheet({
     super.key,
     required this.barcode,
     required this.api,
+    required this.history,
     required this.onScanAgain,
   });
 
@@ -101,9 +106,16 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                // TODO: hand off to Ahmed's food detail screen
-                // Navigator.of(context).pushNamed('/food-detail', arguments: _food);
                 Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => FoodDetailScreen(
+                      food: FoodViewData.fromFood(_food!),
+                      history: widget.history,
+                      sourceLabel: 'Barcode scan',
+                    ),
+                  ),
+                );
               },
               child: const Text('View full nutrition'),
             ),

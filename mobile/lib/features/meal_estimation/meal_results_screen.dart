@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../api/models.dart';
+import '../../features/history/viewed_food_history_store.dart';
+import '../../screens/food_detail_screen.dart';
+import '../../ui/food_view_data.dart';
 import 'widgets/food_item_card.dart';
 import 'widgets/meal_totals_footer.dart';
 
 class MealResultsScreen extends StatelessWidget {
   final MealEstimate estimate;
+  final ViewedFoodHistoryStore history;
 
-  const MealResultsScreen({super.key, required this.estimate});
+  const MealResultsScreen({super.key, required this.estimate, required this.history});
 
   @override
   Widget build(BuildContext context) {
@@ -50,10 +54,15 @@ class MealResultsScreen extends StatelessWidget {
                 final item = estimate.items[i];
                 return FoodItemCard(
                   item: item,
-                  onTap: () {
-                    // TODO: navigate to Ahmed's food detail screen
-                    // Navigator.of(context).pushNamed('/food-detail', arguments: item);
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => FoodDetailScreen(
+                        food: FoodViewData.fromEstimatedFood(item),
+                        history: history,
+                        sourceLabel: 'Meal photo',
+                      ),
+                    ),
+                  ),
                 );
               },
             ),

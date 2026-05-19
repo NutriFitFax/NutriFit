@@ -5,13 +5,15 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../api/api_client.dart';
 import '../../api/api_exception.dart';
+import '../../features/history/viewed_food_history_store.dart';
 import 'meal_results_screen.dart';
 
 class MealPreviewScreen extends StatefulWidget {
   final XFile image;
   final NutriFitApi api;
+  final ViewedFoodHistoryStore history;
 
-  const MealPreviewScreen({super.key, required this.image, required this.api});
+  const MealPreviewScreen({super.key, required this.image, required this.api, required this.history});
 
   @override
   State<MealPreviewScreen> createState() => _MealPreviewScreenState();
@@ -35,7 +37,7 @@ class _MealPreviewScreenState extends State<MealPreviewScreen> {
       if (!mounted) return;
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => MealResultsScreen(estimate: estimate),
+          builder: (_) => MealResultsScreen(estimate: estimate, history: widget.history),
         ),
       );
     } on BadRequestException {
