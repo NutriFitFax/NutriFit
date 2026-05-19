@@ -2,57 +2,37 @@ import 'package:flutter/material.dart';
 
 import 'api/api_client.dart';
 import 'api/api_config.dart';
-import 'features/barcode/barcode_scanner_screen.dart';
-import 'features/meal_estimation/meal_entry_screen.dart';
-import 'screens/search_screen.dart';
+import 'app/app_shell.dart';
+import 'app/app_theme.dart';
+import 'features/history/viewed_food_history_store.dart';
 
 void main() {
-  runApp(NutriFitApp(api: NutriFitApi(baseUrl: ApiConfig.baseUrl)));
+  runApp(
+    NutriFitApp(
+      api: NutriFitApi(baseUrl: ApiConfig.baseUrl),
+      history: InMemoryViewedFoodHistoryStore(),
+    ),
+  );
 }
 
 class NutriFitApp extends StatelessWidget {
   final NutriFitApi api;
-  const NutriFitApp({super.key, required this.api});
+  final ViewedFoodHistoryStore history;
+
+  const NutriFitApp({
+    super.key,
+    required this.api,
+    required this.history,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'NutriFit',
-      theme: ThemeData(colorSchemeSeed: Colors.green, useMaterial3: true),
-      home: HomeShell(api: api),
-    );
-  }
-}
-
-class HomeShell extends StatefulWidget {
-  final NutriFitApi api;
-  const HomeShell({super.key, required this.api});
-
-  @override
-  State<HomeShell> createState() => _HomeShellState();
-}
-
-class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final screens = [
-      SearchScreen(api: widget.api),
-      BarcodeScannerScreen(api: widget.api),
-      MealEntryScreen(api: widget.api),
-    ];
-
-    return Scaffold(
-      body: screens[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
-          NavigationDestination(icon: Icon(Icons.qr_code_scanner), label: 'Barcode'),
-          NavigationDestination(icon: Icon(Icons.camera_alt), label: 'Meal'),
-        ],
+      theme: buildAppTheme(),
+      home: AppShell(
+        api: api,
+        history: history,
       ),
     );
   }

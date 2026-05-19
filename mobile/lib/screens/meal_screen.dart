@@ -6,10 +6,22 @@ import 'package:image_picker/image_picker.dart';
 import '../api/api_client.dart';
 import '../api/api_exception.dart';
 import '../api/models.dart';
+import '../features/history/viewed_food_history_store.dart';
+import '../ui/food_view_data.dart';
+import '../ui/app_page.dart';
+import '../ui/macro_summary_card.dart';
+import '../ui/status_views.dart';
+import 'food_detail_screen.dart';
 
 class MealScreen extends StatefulWidget {
   final NutriFitApi api;
-  const MealScreen({super.key, required this.api});
+  final ViewedFoodHistoryStore history;
+
+  const MealScreen({
+    super.key,
+    required this.api,
+    required this.history,
+  });
 
   @override
   State<MealScreen> createState() => _MealScreenState();
@@ -46,9 +58,9 @@ class _MealScreenState extends State<MealScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Meal Estimator')),
-      body: Padding(
+    return AppPage(
+      title: 'Meal Estimator',
+      child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,11 +87,16 @@ class _MealScreenState extends State<MealScreen> {
             const SizedBox(height: 16),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null)
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              InlineErrorText(message: _error!),
+            if (_estimate != null)
+              Expanded(
+                child: SingleChildScrollView(
+                  child: _EstimateCard(
+                    estimate: _estimate!,
+                    history: widget.history,
+                  ),
+                ),
               ),
-            if (_estimate != null) _EstimateCard(estimate: _estimate!),
           ],
         ),
       ),
@@ -89,74 +106,60 @@ class _MealScreenState extends State<MealScreen> {
 
 class _EstimateCard extends StatelessWidget {
   final MealEstimate estimate;
-  const _EstimateCard({required this.estimate});
+  final ViewedFoodHistoryStore history;
+
+  const _EstimateCard({
+    required this.estimate,
+    required this.history,
+  });
 
   @override
   Widget build(BuildContext context) {
     final est = estimate;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Meal Estimate', style: Theme.of(context).textTheme.titleLarge),
-                Chip(label: Text(est.source)),
-              ],
-            ),
-            const Divider(height: 24),
-            _Row('Calories', '${est.totalCaloriesKcal.toStringAsFixed(0)} kcal'),
-            _Row('Protein', '${est.totalProteinG.toStringAsFixed(1)} g'),
-            _Row('Carbs', '${est.totalCarbsG.toStringAsFixed(1)} g'),
-            _Row('Fat', '${est.totalFatG.toStringAsFixed(1)} g'),
-            if (est.notes != null) ...[
-              const SizedBox(height: 8),
-              Text(est.notes!, style: Theme.of(context).textTheme.bodySmall),
-            ],
-            if (est.items.isNotEmpty) ...[
-              const Divider(height: 24),
-              Text('Breakdown', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
-              ...est.items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('${item.name} (${item.estimatedGrams.toStringAsFixed(0)}g)'),
-                      Text(
-                        '${(item.macrosPer100g.caloriesKcal * item.estimatedGrams / 100).toStringAsFixed(0)} kcal',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MacroSummaryCard(
+          title: 'Meal Estimate',
+          subtitle: est.notes ?? 'Source: ${est.source}',
+          trailing: Chip(label: Text(est.source)),
+          macros: Macros(
+            caloriesKcal: est.totalCaloriesKcal,
+            proteinG: est.totalProteinG,
+            carbsG: est.totalCarbsG,
+            fatG: est.totalFatG,
+          ),
+        ),
+        if (est.items.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text('Breakdown', style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          ...est.items.map(
+            (item) => Card(
+              child: ListTile(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => FoodDetailScreen(
+                        food: FoodViewData.fromEstimatedFood(item),
+                        history: history,
+                        sourceLabel: 'meal',
                       ),
-                    ],
-                  ),
+                    ),
+                  );
+                },
+                title: Text(item.name),
+                subtitle: Text(
+                  '${item.estimatedGrams.toStringAsFixed(0)} g · confidence ${(item.confidence * 100).toStringAsFixed(0)}%',
+                ),
+                trailing: Text(
+                  '${(item.macrosPer100g.caloriesKcal * item.estimatedGrams / 100).toStringAsFixed(0)} kcal',
                 ),
               ),
-            ],
-          ],
-        ),
-      ),
+            ),
+          ),
+        ],
+      ],
     );
   }
-}
-
-class _Row extends StatelessWidget {
-  final String label;
-  final String value;
-  const _Row(this.label, this.value);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-      );
 }
