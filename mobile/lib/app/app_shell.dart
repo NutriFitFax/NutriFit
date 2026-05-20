@@ -47,8 +47,11 @@ class _AppShellState extends State<AppShell> {
       id: AppTabId.barcode,
       label: 'Barcode',
       icon: const BarcodeIcon(),
-      builder: (context, api, history, openTab) =>
-          BarcodeScannerScreen(api: api, history: history),
+      builder: (context, api, history, openTab) => BarcodeScannerScreen(
+        api: api,
+        history: history,
+        onGoToSearch: () => openTab(AppTabId.search),
+      ),
     ),
     AppTabDefinition(
       id: AppTabId.meal,

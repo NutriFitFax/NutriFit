@@ -25,13 +25,19 @@ const _foodJson = {
 NutriFitApi _apiWith(MockClient client) =>
     NutriFitApi(baseUrl: Uri.parse(_baseUrl), client: client);
 
-Widget _sheet(NutriFitApi api, {VoidCallback? onScanAgain}) => MaterialApp(
+Widget _sheet(
+  NutriFitApi api, {
+  VoidCallback? onScanAgain,
+  VoidCallback? onEnterManually,
+}) =>
+    MaterialApp(
       home: Scaffold(
         body: BarcodeResultSheet(
           barcode: '1234567890',
           api: api,
           history: InMemoryViewedFoodHistoryStore(),
           onScanAgain: onScanAgain ?? () {},
+          onEnterManually: onEnterManually,
         ),
       ),
     );
@@ -118,6 +124,37 @@ void main() {
       await tester.pumpWidget(_sheet(_apiWith(client), onScanAgain: () => fired = true));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Scan again'));
+      await tester.pumpAndSettle();
+      expect(fired, isTrue);
+    });
+
+    testWidgets('shows Search by name button on 404 when onEnterManually provided', (tester) async {
+      final client = MockClient((_) async => Response('', 404));
+      await tester.pumpWidget(_sheet(_apiWith(client), onEnterManually: () {}));
+      await tester.pumpAndSettle();
+      expect(find.text('Search by name'), findsOneWidget);
+    });
+
+    testWidgets('hides Search by name button when onEnterManually is null', (tester) async {
+      final client = MockClient((_) async => Response('', 404));
+      await tester.pumpWidget(_sheet(_apiWith(client)));
+      await tester.pumpAndSettle();
+      expect(find.text('Search by name'), findsNothing);
+    });
+
+    testWidgets('hides Search by name button on non-404 errors', (tester) async {
+      final client = MockClient((_) async => Response('', 503));
+      await tester.pumpWidget(_sheet(_apiWith(client), onEnterManually: () {}));
+      await tester.pumpAndSettle();
+      expect(find.text('Search by name'), findsNothing);
+    });
+
+    testWidgets('fires onEnterManually when Search by name is tapped', (tester) async {
+      final client = MockClient((_) async => Response('', 404));
+      var fired = false;
+      await tester.pumpWidget(_sheet(_apiWith(client), onEnterManually: () => fired = true));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Search by name'));
       await tester.pumpAndSettle();
       expect(fired, isTrue);
     });

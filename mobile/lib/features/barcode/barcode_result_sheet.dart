@@ -12,6 +12,7 @@ class BarcodeResultSheet extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
   final VoidCallback onScanAgain;
+  final VoidCallback? onEnterManually;
 
   const BarcodeResultSheet({
     super.key,
@@ -19,6 +20,7 @@ class BarcodeResultSheet extends StatefulWidget {
     required this.api,
     required this.history,
     required this.onScanAgain,
+    this.onEnterManually,
   });
 
   @override
@@ -28,6 +30,7 @@ class BarcodeResultSheet extends StatefulWidget {
 class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
   Food? _food;
   String? _error;
+  bool _isNotFound = false;
 
   @override
   void initState() {
@@ -39,14 +42,17 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
     setState(() {
       _food = null;
       _error = null;
+      _isNotFound = false;
     });
     try {
       final food = await widget.api.getByBarcode(widget.barcode);
       if (mounted) setState(() => _food = food);
     } on NotFoundException {
       if (mounted) {
-        setState(() => _error =
-            'Product not found. Try scanning again or search by name.');
+        setState(() {
+          _error = 'Product not found. Try scanning again or search by name.';
+          _isNotFound = true;
+        });
       }
     } on NetworkException {
       if (mounted) {
@@ -100,6 +106,12 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
                 Navigator.of(context).pop();
                 widget.onScanAgain();
               },
+              onEnterManually: _isNotFound && widget.onEnterManually != null
+                  ? () {
+                      Navigator.of(context).pop();
+                      widget.onEnterManually!();
+                    }
+                  : null,
             ),
           ] else ...[
             _FoodResult(food: _food!),
@@ -187,11 +199,13 @@ class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   final VoidCallback onScanAgain;
+  final VoidCallback? onEnterManually;
 
   const _ErrorView({
     required this.message,
     required this.onRetry,
     required this.onScanAgain,
+    this.onEnterManually,
   });
 
   @override
@@ -207,6 +221,11 @@ class _ErrorView extends StatelessWidget {
         FilledButton(onPressed: onRetry, child: const Text('Retry')),
         OutlinedButton(
             onPressed: onScanAgain, child: const Text('Scan again')),
+        if (onEnterManually != null)
+          TextButton(
+            onPressed: onEnterManually,
+            child: const Text('Search by name'),
+          ),
       ],
     );
   }

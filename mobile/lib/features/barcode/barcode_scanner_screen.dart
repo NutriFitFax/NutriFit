@@ -13,7 +13,9 @@ import 'widgets/scanner_overlay.dart';
 class BarcodeScannerScreen extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
-  const BarcodeScannerScreen({super.key, required this.api, required this.history});
+  final VoidCallback? onGoToSearch;
+  const BarcodeScannerScreen(
+      {super.key, required this.api, required this.history, this.onGoToSearch});
 
   @override
   State<BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
@@ -77,6 +79,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         api: widget.api,
         history: widget.history,
         onScanAgain: _resumeScanning,
+        onEnterManually: widget.onGoToSearch,
       ),
     ).then((_) => _resumeScanning());
   }
@@ -105,8 +108,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: const Text('Scan barcode',
-            style: TextStyle(color: Colors.white)),
+        title:
+            const Text('Scan barcode', style: TextStyle(color: Colors.white)),
         actions: [
           FlashToggle(controller: _controller),
           const SizedBox(width: 8),
@@ -132,7 +135,7 @@ class _PermissionDeniedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan barcode')),
+      appBar: AppBar(title: const Text('Scan Barcode')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
