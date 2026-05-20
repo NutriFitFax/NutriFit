@@ -82,14 +82,13 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _loading ? null : _lookup,
-                  child: const Text('Look up'),
+                  child: const Text('Look Up'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             if (_loading) const LinearProgressIndicator(),
-            if (_error != null)
-              InlineErrorText(message: _error!),
+            if (_error != null) InlineErrorText(message: _error!),
             if (_food != null)
               _FoodCard(
                 food: _food!,
@@ -99,7 +98,7 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
                       builder: (_) => FoodDetailScreen(
                         food: FoodViewData.fromFood(_food!),
                         history: widget.history,
-                        sourceLabel: 'barcode',
+                        sourceLabel: 'Barcode',
                       ),
                     ),
                   );

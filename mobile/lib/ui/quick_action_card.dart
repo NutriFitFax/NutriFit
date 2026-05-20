@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class QuickActionCard extends StatelessWidget {
-  final IconData icon;
+  final Widget icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -26,7 +26,7 @@ class QuickActionCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                child: Icon(icon),
+                child: icon,
               ),
               const SizedBox(width: 12),
               Expanded(

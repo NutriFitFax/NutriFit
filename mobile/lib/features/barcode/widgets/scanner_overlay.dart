@@ -3,59 +3,86 @@ import 'package:flutter/material.dart';
 class ScannerOverlay extends StatelessWidget {
   const ScannerOverlay({super.key});
 
-  static const double _frameW = 280;
-  static const double _frameH = 180;
-  static const double _cornerLen = 24;
   static const double _cornerThick = 4;
   static const Color _cornerColor = Colors.white;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Dimmed overlay around the frame
-        ColorFiltered(
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.55),
-            BlendMode.srcOut,
-          ),
-          child: Stack(
-            children: [
-              Container(decoration: const BoxDecoration(color: Colors.black)),
-              Center(
-                child: Container(
-                  width: _frameW,
-                  height: _frameH,
-                  decoration: const BoxDecoration(color: Colors.black),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackW = constraints.maxWidth;
+        final stackH = constraints.maxHeight;
+        final isLandscape = stackW > stackH;
+
+        // Keep the frame below the AppBar, which is overlaid on this body
+        // because extendBodyBehindAppBar is true. MediaQuery.padding.top is
+        // already 0 here (consumed by the outer AppShell SafeArea).
+        const appBarH = kToolbarHeight;
+        final usableH = stackH - appBarH;
+
+        final frameW = isLandscape ? (stackW * 0.60).clamp(260.0, 480.0) : 280.0;
+        final frameH = isLandscape
+            ? (usableH * 0.55).clamp(100.0, 160.0)
+            : 180.0;
+        final cornerLen = isLandscape ? 18.0 : 24.0;
+
+        final frameLeft = (stackW - frameW) / 2;
+        final frameTop = appBarH + (usableH - frameH) / 2;
+        final hintTop = (frameTop + frameH + 14).clamp(0.0, stackH - 24.0);
+
+        return Stack(
+          children: [
+            // Dimmed overlay with transparent cutout at the frame position.
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.55),
+                BlendMode.srcOut,
+              ),
+              child: Stack(
+                children: [
+                  Container(decoration: const BoxDecoration(color: Colors.black)),
+                  Positioned(
+                    left: frameLeft,
+                    top: frameTop,
+                    child: Container(
+                      width: frameW,
+                      height: frameH,
+                      decoration: const BoxDecoration(color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Corner brackets.
+            Positioned(
+              left: frameLeft,
+              top: frameTop,
+              child: SizedBox(
+                width: frameW,
+                height: frameH,
+                child: CustomPaint(
+                  painter: _CornerPainter(
+                    cornerLen: cornerLen,
+                    thickness: _cornerThick,
+                    color: _cornerColor,
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-        // Corner brackets
-        Center(
-          child: SizedBox(
-            width: _frameW,
-            height: _frameH,
-            child: CustomPaint(painter: _CornerPainter(
-              cornerLen: _cornerLen,
-              thickness: _cornerThick,
-              color: _cornerColor,
-            )),
-          ),
-        ),
-        // Hint text
-        Positioned(
-          bottom: MediaQuery.of(context).size.height / 2 - _frameH / 2 - 40,
-          left: 0,
-          right: 0,
-          child: const Text(
-            'Point your camera at a product barcode',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontSize: 13),
-          ),
-        ),
-      ],
+            ),
+            // Hint text below the frame.
+            Positioned(
+              top: hintTop,
+              left: 0,
+              right: 0,
+              child: const Text(
+                'Point your camera at a product barcode',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../ui/app_page.dart';
+import '../ui/barcode_icon.dart';
 import '../ui/quick_action_card.dart';
 import 'app_tabs.dart';
 
@@ -25,28 +26,28 @@ class HomeDashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            icon: Icons.search,
+            icon: const Icon(Icons.search),
             title: 'Search foods',
             subtitle: 'Find foods by name and view nutrition details.',
             onTap: () => onOpenTab(AppTabId.search),
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            icon: Icons.qr_code_scanner,
+            icon: const BarcodeIcon(),
             title: 'Scan barcode',
             subtitle: 'Jump to barcode lookup for packaged foods.',
             onTap: () => onOpenTab(AppTabId.barcode),
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            icon: Icons.camera_alt,
+            icon: const Icon(Icons.camera_alt),
             title: 'Camera meal estimate',
             subtitle: 'Use a photo to estimate meal calories.',
             onTap: () => onOpenTab(AppTabId.meal),
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            icon: Icons.monitor_weight_outlined,
+            icon: const Icon(Icons.monitor_weight_outlined),
             title: 'Health tracking',
             subtitle: 'Water, weight, and BMI tracking will live here next.',
             onTap: () {
@@ -59,7 +60,7 @@ class HomeDashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           QuickActionCard(
-            icon: Icons.history,
+            icon: const Icon(Icons.history),
             title: 'Recent history',
             subtitle: 'Reopen foods you viewed recently.',
             onTap: () => onOpenTab(AppTabId.history),

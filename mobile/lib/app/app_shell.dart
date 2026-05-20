@@ -6,6 +6,7 @@ import '../features/history/history_screen.dart';
 import '../features/history/viewed_food_history_store.dart';
 import '../features/meal_estimation/meal_entry_screen.dart';
 import '../screens/search_screen.dart';
+import '../ui/barcode_icon.dart';
 import 'app_tabs.dart';
 import 'home_dashboard_screen.dart';
 
@@ -28,7 +29,7 @@ class _AppShellState extends State<AppShell> {
     AppTabDefinition(
       id: AppTabId.home,
       label: 'Home',
-      icon: Icons.home_outlined,
+      icon: const Icon(Icons.home_outlined),
       builder: (context, api, history, openTab) => HomeDashboardScreen(
         onOpenTab: openTab,
       ),
@@ -36,7 +37,7 @@ class _AppShellState extends State<AppShell> {
     AppTabDefinition(
       id: AppTabId.search,
       label: 'Search',
-      icon: Icons.search,
+      icon: const Icon(Icons.search),
       builder: (context, api, history, openTab) => SearchScreen(
         api: api,
         history: history,
@@ -45,20 +46,21 @@ class _AppShellState extends State<AppShell> {
     AppTabDefinition(
       id: AppTabId.barcode,
       label: 'Barcode',
-      icon: Icons.qr_code_scanner,
+      icon: const BarcodeIcon(),
       builder: (context, api, history, openTab) =>
           BarcodeScannerScreen(api: api, history: history),
     ),
     AppTabDefinition(
       id: AppTabId.meal,
       label: 'Meal',
-      icon: Icons.camera_alt,
-      builder: (context, api, history, openTab) => MealEntryScreen(api: api, history: history),
+      icon: const Icon(Icons.camera_alt),
+      builder: (context, api, history, openTab) =>
+          MealEntryScreen(api: api, history: history),
     ),
     AppTabDefinition(
       id: AppTabId.history,
       label: 'History',
-      icon: Icons.history,
+      icon: const Icon(Icons.history),
       builder: (context, api, history, openTab) => HistoryScreen(
         history: history,
       ),
@@ -97,7 +99,7 @@ class _AppShellState extends State<AppShell> {
         destinations: _tabs
             .map(
               (tab) => NavigationDestination(
-                icon: Icon(tab.icon),
+                icon: tab.icon,
                 label: tab.label,
               ),
             )

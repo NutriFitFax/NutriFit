@@ -17,6 +17,10 @@ class AppPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title), actions: actions),
       body: child,
+      // The outer AppShell Scaffold already handles keyboard resize; setting
+      // this to false prevents the inner Scaffold from double-shrinking the
+      // body in landscape when the keyboard is open.
+      resizeToAvoidBottomInset: false,
     );
   }
 }

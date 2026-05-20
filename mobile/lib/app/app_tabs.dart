@@ -16,7 +16,7 @@ typedef AppTabBuilder =
 class AppTabDefinition {
   final AppTabId id;
   final String label;
-  final IconData icon;
+  final Widget icon;
   final AppTabBuilder builder;
 
   const AppTabDefinition({

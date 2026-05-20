@@ -67,7 +67,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      hintText: 'Search food…',
+                      hintText: 'Search Food…',
                       border: OutlineInputBorder(),
                     ),
                     textInputAction: TextInputAction.search,
@@ -90,10 +90,17 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           Expanded(
             child: _results.isEmpty
-                ? const EmptyStateView(
-                    icon: Icons.search,
-                    title: 'No foods yet',
-                    message: 'Run a search to view matching foods here.',
+                ? const CustomScrollView(
+                    slivers: [
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: EmptyStateView(
+                          icon: Icons.search,
+                          title: 'No foods yet',
+                          message: 'Run a search to view matching foods here.',
+                        ),
+                      ),
+                    ],
                   )
                 : ListView.builder(
                     itemCount: _results.length,
@@ -109,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               builder: (_) => FoodDetailScreen(
                                 food: FoodViewData.fromFood(food),
                                 history: widget.history,
-                                sourceLabel: 'search',
+                                sourceLabel: 'Search',
                               ),
                             ),
                           );
