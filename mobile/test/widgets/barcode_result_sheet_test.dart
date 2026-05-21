@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' show Response;
 import 'package:http/testing.dart';
 import 'package:nutrifit/api/api_client.dart';
+import 'package:nutrifit/app/nutri_colors.dart';
 import 'package:nutrifit/features/barcode/barcode_result_sheet.dart';
 import 'package:nutrifit/features/history/viewed_food_history_store.dart';
 
@@ -31,6 +32,7 @@ Widget _sheet(
   VoidCallback? onEnterManually,
 }) =>
     MaterialApp(
+      theme: ThemeData.light().copyWith(extensions: const [NutriColors.light]),
       home: Scaffold(
         body: BarcodeResultSheet(
           barcode: '1234567890',
@@ -70,7 +72,7 @@ void main() {
       expect(find.text('Generic'), findsOneWidget);
     });
 
-    testWidgets('shows View full nutrition and Scan another on success', (tester) async {
+    testWidgets('shows View details and Log to today on success', (tester) async {
       final client = MockClient((_) async => Response(
             jsonEncode(_foodJson),
             200,
@@ -78,8 +80,19 @@ void main() {
           ));
       await tester.pumpWidget(_sheet(_apiWith(client)));
       await tester.pumpAndSettle();
-      expect(find.text('View full nutrition'), findsOneWidget);
-      expect(find.text('Scan another'), findsOneWidget);
+      expect(find.text('View details'), findsOneWidget);
+      expect(find.text('Log to today'), findsOneWidget);
+    });
+
+    testWidgets('shows MATCHED badge on success', (tester) async {
+      final client = MockClient((_) async => Response(
+            jsonEncode(_foodJson),
+            200,
+            headers: {'content-type': 'application/json'},
+          ));
+      await tester.pumpWidget(_sheet(_apiWith(client)));
+      await tester.pumpAndSettle();
+      expect(find.text('MATCHED'), findsOneWidget);
     });
 
     testWidgets('shows not-found error on 404', (tester) async {
@@ -102,20 +115,6 @@ void main() {
       await tester.pumpWidget(_sheet(_apiWith(client)));
       await tester.pumpAndSettle();
       expect(find.textContaining('Service is having trouble'), findsOneWidget);
-    });
-
-    testWidgets('fires onScanAgain when Scan another is tapped on success', (tester) async {
-      final client = MockClient((_) async => Response(
-            jsonEncode(_foodJson),
-            200,
-            headers: {'content-type': 'application/json'},
-          ));
-      var fired = false;
-      await tester.pumpWidget(_sheet(_apiWith(client), onScanAgain: () => fired = true));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Scan another'));
-      await tester.pumpAndSettle();
-      expect(fired, isTrue);
     });
 
     testWidgets('fires onScanAgain when Scan again is tapped on error', (tester) async {

@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../api/models.dart';
+import '../../../app/nutri_colors.dart';
 
 class MealTotalsFooter extends StatelessWidget {
   final MealEstimate estimate;
-
   const MealTotalsFooter({super.key, required this.estimate});
 
   @override
   Widget build(BuildContext context) {
+    final c = context.nutri;
     final t = estimate;
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-        ),
+        color: c.surface,
+        border: Border(top: BorderSide(color: c.line)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: SafeArea(
@@ -23,18 +22,67 @@ class MealTotalsFooter extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Meal total',
-                style: Theme.of(context).textTheme.labelMedium),
-            const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _Total('Calories',
-                    '${t.totalCaloriesKcal.toStringAsFixed(0)} kcal',
-                    large: true),
-                _Total('Protein', '${t.totalProteinG.toStringAsFixed(1)} g'),
-                _Total('Carbs', '${t.totalCarbsG.toStringAsFixed(1)} g'),
-                _Total('Fat', '${t.totalFatG.toStringAsFixed(1)} g'),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'MEAL TOTAL',
+                        style: TextStyle(
+                          fontSize: 11, fontWeight: FontWeight.w700,
+                          color: c.ink2, letterSpacing: 0.8,
+                        ),
+                      ),
+                      Text.rich(
+                        TextSpan(
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26),
+                          children: [
+                            TextSpan(text: t.totalCaloriesKcal.toStringAsFixed(0)),
+                            TextSpan(text: ' kcal', style: TextStyle(fontSize: 16, color: c.ink2)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    _Mini(value: t.totalProteinG, label: 'P', color: c.protein),
+                    const SizedBox(width: 14),
+                    _Mini(value: t.totalCarbsG,   label: 'C', color: c.carbs),
+                    const SizedBox(width: 14),
+                    _Mini(value: t.totalFatG,     label: 'F', color: c.fat),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () { /* TODO(Davud): bulk log */ },
+                    child: const Text('Adjust portions'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      // TODO(Davud): bulk log
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${t.items.length} foods logged to today')),
+                      );
+                      Navigator.of(context).popUntil((r) => r.isFirst);
+                    },
+                    icon: const Icon(Icons.check, size: 18),
+                    label: Text('Log all ${t.items.length}'),
+                  ),
+                ),
               ],
             ),
           ],
@@ -44,24 +92,24 @@ class MealTotalsFooter extends StatelessWidget {
   }
 }
 
-class _Total extends StatelessWidget {
+class _Mini extends StatelessWidget {
+  final double value;
   final String label;
-  final String value;
-  final bool large;
-
-  const _Total(this.label, this.value, {this.large = false});
+  final Color color;
+  const _Mini({required this.value, required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: large ? 18 : 14,
-            ),
-          ),
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value.toStringAsFixed(0),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16, color: color),
+        ),
+        Text(label, style: TextStyle(fontSize: 9, color: c.ink3, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+      ],
+    );
+  }
 }

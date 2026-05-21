@@ -4,18 +4,23 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/api_client.dart';
+import '../../app/nutri_colors.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../shared/permission_helper.dart';
 import 'barcode_result_sheet.dart';
-import 'widgets/flash_toggle.dart';
 import 'widgets/scanner_overlay.dart';
 
 class BarcodeScannerScreen extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
   final VoidCallback? onGoToSearch;
-  const BarcodeScannerScreen(
-      {super.key, required this.api, required this.history, this.onGoToSearch});
+
+  const BarcodeScannerScreen({
+    super.key,
+    required this.api,
+    required this.history,
+    this.onGoToSearch,
+  });
 
   @override
   State<BarcodeScannerScreen> createState() => _BarcodeScannerScreenState();
@@ -26,6 +31,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   late final MobileScannerController _controller;
   bool _hasPermission = false;
   bool _sheetOpen = false;
+  bool _torchOn = false;
 
   @override
   void initState() {
@@ -71,8 +77,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Theme.of(context).extension<NutriColors>()!.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => BarcodeResultSheet(
         barcode: barcode,
@@ -90,6 +97,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     _controller.start();
   }
 
+  Future<void> _toggleTorch() async {
+    HapticFeedback.selectionClick();
+    await _controller.toggleTorch();
+    if (mounted) setState(() => _torchOn = !_torchOn);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasPermission) {
@@ -100,29 +113,112 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     }
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title:
-            const Text('Scan barcode', style: TextStyle(color: Colors.white)),
-        actions: [
-          FlashToggle(controller: _controller),
-          const SizedBox(width: 8),
-        ],
-      ),
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
+          MobileScanner(controller: _controller, onDetect: _onDetect),
           const ScannerOverlay(),
+
+          // Top controls — sit above the SafeArea inset.
+          Positioned(
+            top: 8, left: 12, right: 12,
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  _RoundIcon(
+                    icon: Icons.close,
+                    onTap: () => Navigator.of(context).maybePop(),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'SCANNING',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0,
+                          ),
+                        ),
+                        Text(
+                          'Point at a barcode',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.white, fontSize: 17,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _RoundIcon(
+                    icon: _torchOn ? Icons.flash_on : Icons.flash_off,
+                    active: _torchOn,
+                    onTap: _toggleTorch,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom helper text + secondary actions
+          Positioned(
+            left: 0, right: 0, bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Hold steady · Align barcode within the frame',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: widget.onGoToSearch,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.white.withValues(alpha: 0.06),
+                            side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                          ),
+                          icon: const Icon(Icons.search, size: 16),
+                          label: const Text('Search instead'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _RoundIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool active;
+  const _RoundIcon({required this.icon, required this.onTap, this.active = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? Colors.white : Colors.white.withValues(alpha: 0.12),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 40, height: 40,
+          child: Icon(icon, color: active ? Colors.black87 : Colors.white, size: 20),
+        ),
       ),
     );
   }
@@ -134,25 +230,21 @@ class _PermissionDeniedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.nutri;
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Barcode')),
+      backgroundColor: c.bg,
+      appBar: AppBar(title: const Text('Scan barcode')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.camera_alt_outlined, size: 64),
+              Icon(Icons.camera_alt_outlined, size: 64, color: c.ink2),
               const SizedBox(height: 16),
-              const Text(
-                'Camera access is required to scan barcodes.',
-                textAlign: TextAlign.center,
-              ),
+              const Text('Camera access is required to scan barcodes.', textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: onOpenSettings,
-                child: const Text('Open Settings'),
-              ),
+              FilledButton(onPressed: onOpenSettings, child: const Text('Open Settings')),
             ],
           ),
         ),
