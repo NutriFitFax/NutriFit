@@ -70,44 +70,87 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
+  late final PageController _pageController = PageController();
   int _index = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void _openTab(AppTabId tabId) {
     final nextIndex = _tabs.indexWhere((tab) => tab.id == tabId);
     if (nextIndex == -1 || nextIndex == _index) return;
-    setState(() => _index = nextIndex);
+    _selectTab(nextIndex);
+  }
+
+  void _selectTab(int index) {
+    setState(() => _index = index);
+    _pageController.jumpToPage(index);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: IndexedStack(
-          index: _index,
-          children: _tabs
+    return PopScope(
+      canPop: _index == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _selectTab(0);
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) => setState(() => _index = index),
+            children: _tabs
+                .map(
+                  (tab) => _KeepAlivePage(
+                    child: tab.builder(
+                      context,
+                      widget.api,
+                      widget.history,
+                      _openTab,
+                    ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: _selectTab,
+          destinations: _tabs
               .map(
-                (tab) => tab.builder(
-                  context,
-                  widget.api,
-                  widget.history,
-                  _openTab,
+                (tab) => NavigationDestination(
+                  icon: tab.icon,
+                  label: tab.label,
                 ),
               )
               .toList(growable: false),
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (index) => setState(() => _index = index),
-        destinations: _tabs
-            .map(
-              (tab) => NavigationDestination(
-                icon: tab.icon,
-                label: tab.label,
-              ),
-            )
-            .toList(growable: false),
-      ),
     );
+  }
+}
+
+// Keeps the tab's widget tree alive after the first visit so state
+// (scroll position, search results, etc.) survives swiping away.
+class _KeepAlivePage extends StatefulWidget {
+  final Widget child;
+  const _KeepAlivePage({required this.child});
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

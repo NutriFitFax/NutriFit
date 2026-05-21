@@ -57,7 +57,7 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
     } on NetworkException {
       if (mounted) {
         setState(
-            () => _error = 'No internet connection. Reconnect and tap to retry.');
+            () => _error = 'No internet connection or server unreachable. Tap to retry.');
       }
     } on TimeoutException {
       if (mounted) {

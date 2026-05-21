@@ -43,7 +43,7 @@ class _MealResultsScreenState extends State<MealResultsScreen> {
       }
     } on NetworkException {
       if (mounted) {
-        setState(() => _error = 'No internet connection. Reconnect and try again.');
+        setState(() => _error = 'No internet connection or server unreachable. Try again.');
       }
     } on TimeoutException {
       if (mounted) {
