@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class OpenFoodFactsControllerTest {
+class UsdaFoodDataControllerTest {
     private static final MockWebServer server = startServer();
 
     @Autowired
@@ -33,44 +33,51 @@ class OpenFoodFactsControllerTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("OPENFOODFACTS_BASE_URL", () -> server.url("/").toString());
+        registry.add("USDA_BASE_URL", () -> server.url("/").toString());
+        registry.add("USDA_API_KEY", () -> "TEST_KEY");
     }
 
     @Test
     void barcodeLookupMapsFood() throws Exception {
         server.enqueue(json("""
                 {
-                  "status": 1,
-                  "product": {
-                    "code": "5449000000996",
-                    "product_name": "Cola",
-                    "brands": "NutriFit",
-                    "image_url": "https://example.test/cola.jpg",
-                    "serving_size": "330 ml",
-                    "nutriments": {
-                      "energy-kcal_100g": 42,
-                      "proteins_100g": 0,
-                      "carbohydrates_100g": 10.6,
-                      "fat_100g": 0,
-                      "sugars_100g": 10.6
+                  "totalHits": 1,
+                  "foods": [
+                    {
+                      "fdcId": 2105222,
+                      "description": "NUT 'N BERRY MIX",
+                      "gtinUpc": "077034085228",
+                      "brandName": "KAR'S",
+                      "servingSize": 28,
+                      "servingSizeUnit": "g",
+                      "foodNutrients": [
+                        {"nutrientNumber": "208", "value": 500, "unitName": "KCAL"},
+                        {"nutrientNumber": "203", "value": 14.3, "unitName": "G"},
+                        {"nutrientNumber": "205", "value": 42.9, "unitName": "G"},
+                        {"nutrientNumber": "204", "value": 32.1, "unitName": "G"},
+                        {"nutrientNumber": "269", "value": 28.6, "unitName": "G"},
+                        {"nutrientNumber": "291", "value": 7.1, "unitName": "G"},
+                        {"nutrientNumber": "307", "value": 0, "unitName": "MG"}
+                      ]
                     }
-                  }
+                  ]
                 }
                 """));
 
-        mockMvc.perform(get("/barcode/5449000000996"))
+        mockMvc.perform(get("/barcode/077034085228"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is("5449000000996")))
-                .andExpect(jsonPath("$.name", is("Cola")))
-                .andExpect(jsonPath("$.brand", is("NutriFit")))
-                .andExpect(jsonPath("$.serving_size_g", is(330.0)))
-                .andExpect(jsonPath("$.macros_per_100g.calories_kcal", is(42.0)))
-                .andExpect(jsonPath("$.macros_per_100g.sugar_g", is(10.6)));
+                .andExpect(jsonPath("$.id", is("2105222")))
+                .andExpect(jsonPath("$.name", is("NUT 'N BERRY MIX")))
+                .andExpect(jsonPath("$.brand", is("KAR'S")))
+                .andExpect(jsonPath("$.serving_size_g", is(28.0)))
+                .andExpect(jsonPath("$.macros_per_100g.calories_kcal", is(500.0)))
+                .andExpect(jsonPath("$.macros_per_100g.sugar_g", is(28.6)))
+                .andExpect(jsonPath("$.macros_per_100g.salt_g", is(0.0)));
     }
 
     @Test
     void barcodeLookupReturns404ForMiss() throws Exception {
-        server.enqueue(json("{\"status\": 0}"));
+        server.enqueue(json("{\"totalHits\": 0, \"foods\": []}"));
 
         mockMvc.perform(get("/barcode/1234567890123"))
                 .andExpect(status().isNotFound());
@@ -80,30 +87,33 @@ class OpenFoodFactsControllerTest {
     void searchMapsResultList() throws Exception {
         server.enqueue(json("""
                 {
-                  "count": 1,
-                  "products": [
+                  "totalHits": 1,
+                  "foods": [
                     {
-                      "code": "1",
-                      "product_name": "Greek yogurt",
-                      "brands": "Dairy Co",
-                      "nutriments": {
-                        "energy-kcal_100g": 90,
-                        "proteins_100g": 9,
-                        "carbohydrates_100g": 4,
-                        "fat_100g": 3
-                      }
+                      "fdcId": 2057648,
+                      "description": "CHEDDAR CHEESE",
+                      "brandOwner": "Grafton Village Cheese Co, LLC",
+                      "servingSize": 28,
+                      "servingSizeUnit": "g",
+                      "foodNutrients": [
+                        {"nutrientNumber": "208", "value": 393},
+                        {"nutrientNumber": "203", "value": 21.4},
+                        {"nutrientNumber": "205", "value": 3.57},
+                        {"nutrientNumber": "204", "value": 28.6}
+                      ]
                     }
                   ]
                 }
                 """));
 
-        mockMvc.perform(get("/search").param("q", "yogurt").param("page_size", "10"))
+        mockMvc.perform(get("/search").param("q", "cheddar cheese").param("page_size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.query", is("yogurt")))
+                .andExpect(jsonPath("$.query", is("cheddar cheese")))
                 .andExpect(jsonPath("$.page", is(1)))
                 .andExpect(jsonPath("$.page_size", is(10)))
                 .andExpect(jsonPath("$.total", is(1)))
-                .andExpect(jsonPath("$.items[0].name", is("Greek yogurt")));
+                .andExpect(jsonPath("$.items[0].id", is("2057648")))
+                .andExpect(jsonPath("$.items[0].name", is("CHEDDAR CHEESE")));
     }
 
     @Test

@@ -11,7 +11,7 @@ Three endpoints power the mobile app, plus a health check used by Render/Fly upt
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
-Barcode + search are backed by [OpenFoodFacts](https://world.openfoodfacts.org). The meal-photo endpoint uses OpenAI's vision model when `OPENAI_API_KEY` is set, otherwise returns a deterministic stub so the Flutter app has something to render in dev.
+Barcode + search are backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set, otherwise returns a deterministic stub so the Flutter app has something to render in dev.
 
 ## Run locally
 
@@ -28,8 +28,8 @@ Open <http://127.0.0.1:8000/health> for a quick health check.
 
 ```bash
 curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/barcode/5449000000996
-curl "http://127.0.0.1:8000/search?q=yogurt"
+curl http://127.0.0.1:8000/barcode/077034085228
+curl "http://127.0.0.1:8000/search?q=cheddar%20cheese"
 curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 ```
 
@@ -39,7 +39,7 @@ curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 mvn test
 ```
 
-Tests use `MockWebServer` to mock OpenFoodFacts, so no network is required and no API key is needed.
+Tests use `MockWebServer` to mock USDA FoodData Central, so no network is required and no API key is needed.
 
 ## Deploy
 
@@ -52,7 +52,7 @@ Render does not provide Java as a native runtime, so this repo deploys the Java 
 1. Push this repo to GitHub.
 2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The staging URL appears in the dashboard. Share it with the team.
-4. Optional: in the service's Environment tab, paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
+4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key. Optional: paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
 5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml`. Add the deploy hook URL to the repo secret `RENDER_DEPLOY_HOOK_URL`.
 
 ### Fly.io
@@ -84,7 +84,9 @@ All settings come from environment variables. See `.env.example` for the full li
 | Var              | Default | Why                                                                 |
 | ---------------- | ------- | ------------------------------------------------------------------- |
 | `CORS_ORIGINS`   | `*`     | Tighten for production: list the actual Flutter web / device hosts. |
+| `USDA_API_KEY`   | `DEMO_KEY` | Free data.gov key used for barcode/search. `DEMO_KEY` is only for light local testing. |
 | `OPENAI_API_KEY` | unset   | Set to enable real meal-photo estimation. Unset means stub mode.    |
+| `OPENAI_MODEL`   | `gpt-4o` | Vision model used by `/estimate-meal`.                              |
 
 ## Project layout
 
@@ -95,7 +97,7 @@ nutrifit-backend/
 |   +-- config/             Env-driven settings + CORS
 |   +-- controller/         HTTP endpoints
 |   +-- model/              JSON response contracts mirrored in Dart
-|   +-- service/            OpenFoodFacts + meal estimator integrations
+|   +-- service/            USDA FoodData Central + meal estimator integrations
 +-- src/main/resources/
 |   +-- application.properties
 +-- src/test/java/com/nutrifit/backend/

@@ -1,8 +1,8 @@
 package com.nutrifit.backend.controller;
 
 import com.nutrifit.backend.model.SearchResult;
-import com.nutrifit.backend.service.OpenFoodFactsClient;
-import com.nutrifit.backend.service.OpenFoodFactsException;
+import com.nutrifit.backend.service.UsdaFoodDataClient;
+import com.nutrifit.backend.service.UsdaFoodDataException;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
@@ -16,9 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Validated
 @RestController
 public class SearchController {
-    private final OpenFoodFactsClient client;
+    private final UsdaFoodDataClient client;
 
-    public SearchController(OpenFoodFactsClient client) {
+    public SearchController(UsdaFoodDataClient client) {
         this.client = client;
     }
 
@@ -29,9 +29,9 @@ public class SearchController {
             @RequestParam(name = "page_size", defaultValue = "20") @Min(1) @Max(50) int pageSize
     ) {
         try {
-            OpenFoodFactsClient.SearchResponse response = client.search(query, page, pageSize);
+            UsdaFoodDataClient.SearchResponse response = client.search(query, page, pageSize);
             return new SearchResult(query, page, pageSize, response.total(), response.items());
-        } catch (OpenFoodFactsException ex) {
+        } catch (UsdaFoodDataException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, ex.getMessage(), ex);
         }
     }

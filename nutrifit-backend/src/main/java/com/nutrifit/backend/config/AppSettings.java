@@ -12,7 +12,8 @@ public class AppSettings {
 
     private final String environment;
     private final List<String> corsOrigins;
-    private final String openFoodFactsBaseUrl;
+    private final String usdaBaseUrl;
+    private final String usdaApiKey;
     private final double httpTimeoutSeconds;
     private final String openAiApiKey;
     private final String openAiModel;
@@ -22,16 +23,18 @@ public class AppSettings {
     public AppSettings(
             @Value("${ENVIRONMENT:development}") String environment,
             @Value("${CORS_ORIGINS:*}") String corsOrigins,
-            @Value("${OPENFOODFACTS_BASE_URL:https://world.openfoodfacts.org}") String openFoodFactsBaseUrl,
+            @Value("${USDA_BASE_URL:https://api.nal.usda.gov/fdc/v1}") String usdaBaseUrl,
+            @Value("${USDA_API_KEY:DEMO_KEY}") String usdaApiKey,
             @Value("${HTTP_TIMEOUT:8.0}") double httpTimeoutSeconds,
             @Value("${OPENAI_API_KEY:}") String openAiApiKey,
-            @Value("${OPENAI_MODEL:gpt-4o-mini}") String openAiModel,
+            @Value("${OPENAI_MODEL:gpt-4o}") String openAiModel,
             @Value("${MAX_UPLOAD_BYTES:8388608}") long maxUploadBytes,
             @Value("${HTTP_USER_AGENT:NutriFit/0.1 (student project; contact: teamwork@loveiq.org)}") String userAgent
     ) {
         this.environment = environment;
         this.corsOrigins = parseCsv(corsOrigins);
-        this.openFoodFactsBaseUrl = openFoodFactsBaseUrl;
+        this.usdaBaseUrl = usdaBaseUrl;
+        this.usdaApiKey = usdaApiKey == null || usdaApiKey.isBlank() ? "DEMO_KEY" : usdaApiKey;
         this.httpTimeoutSeconds = httpTimeoutSeconds;
         this.openAiApiKey = openAiApiKey == null || openAiApiKey.isBlank() ? null : openAiApiKey;
         this.openAiModel = openAiModel;
@@ -57,8 +60,12 @@ public class AppSettings {
         return corsOrigins;
     }
 
-    public String openFoodFactsBaseUrl() {
-        return openFoodFactsBaseUrl;
+    public String usdaBaseUrl() {
+        return usdaBaseUrl;
+    }
+
+    public String usdaApiKey() {
+        return usdaApiKey;
     }
 
     public double httpTimeoutSeconds() {

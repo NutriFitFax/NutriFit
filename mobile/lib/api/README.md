@@ -62,7 +62,7 @@ All thrown errors are subclasses of `ApiException`:
 * `BadRequestException` - 400 / 413
 * `NotFoundException` - 404 (no product for barcode)
 * `ValidationException` - 415 / 422 (bad image type, missing query)
-* `UpstreamException` - 502 / 503 / 504 (OpenFoodFacts down)
+* `UpstreamException` - 502 / 503 / 504 (USDA/OpenAI upstream down)
 * `ServerException` - anything else 5xx
 
 ## Configuring the base URL

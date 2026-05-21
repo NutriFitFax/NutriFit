@@ -16,5 +16,9 @@ services:
         value: staging
       - key: CORS_ORIGINS
         value: "*"
+      - key: USDA_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o
       - key: OPENAI_API_KEY
         sync: false

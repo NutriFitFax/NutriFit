@@ -1,8 +1,8 @@
 package com.nutrifit.backend.controller;
 
 import com.nutrifit.backend.model.Food;
-import com.nutrifit.backend.service.OpenFoodFactsClient;
-import com.nutrifit.backend.service.OpenFoodFactsException;
+import com.nutrifit.backend.service.UsdaFoodDataClient;
+import com.nutrifit.backend.service.UsdaFoodDataException;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
@@ -15,9 +15,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Validated
 @RestController
 public class BarcodeController {
-    private final OpenFoodFactsClient client;
+    private final UsdaFoodDataClient client;
 
-    public BarcodeController(OpenFoodFactsClient client) {
+    public BarcodeController(UsdaFoodDataClient client) {
         this.client = client;
     }
 
@@ -34,7 +34,7 @@ public class BarcodeController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "product not found");
             }
             return food;
-        } catch (OpenFoodFactsException ex) {
+        } catch (UsdaFoodDataException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, ex.getMessage(), ex);
         }
     }
