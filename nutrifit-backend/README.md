@@ -11,7 +11,7 @@ Three endpoints power the mobile app, plus a health check used by Render/Fly upt
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
-Barcode + search are backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set, and falls back to a deterministic stub if no key is set or OpenAI is unavailable.
+Search is backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). Barcode lookup tries USDA first, then falls back to [Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/) for products USDA does not have. The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set; if OpenAI is not configured or fails, the endpoint returns an upstream error instead of inventing fake foods.
 
 Live staging URL: <https://nutrifit-backend-lnm0.onrender.com>
 
@@ -54,7 +54,7 @@ Render does not provide Java as a native runtime, so this repo deploys the Java 
 1. Push this repo to GitHub.
 2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The current staging URL is <https://nutrifit-backend-lnm0.onrender.com>. Share it with the team.
-4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key. Optional: paste your `OPENAI_API_KEY` to flip `/estimate-meal` from `stub` to `ai`.
+4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key and `OPENAI_API_KEY` to your OpenAI key. OpenFoodFacts barcode fallback does not need a key.
 5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml`. Add the deploy hook URL to the repo secret `RENDER_DEPLOY_HOOK_URL`.
 
 ### Fly.io
@@ -87,7 +87,8 @@ All settings come from environment variables. See `.env.example` for the full li
 | ---------------- | ------- | ------------------------------------------------------------------- |
 | `CORS_ORIGINS`   | `*`     | Tighten for production: list the actual Flutter web / device hosts. |
 | `USDA_API_KEY`   | `DEMO_KEY` | Free data.gov key used for barcode/search. `DEMO_KEY` is only for light local testing. |
-| `OPENAI_API_KEY` | unset   | Set to enable real meal-photo estimation. Unset or failing OpenAI calls return stub mode. |
+| `OPENFOODFACTS_BASE_URL` | `https://world.openfoodfacts.org` | Public barcode fallback. No key needed for read requests. |
+| `OPENAI_API_KEY` | unset   | Required for real meal-photo estimation. Missing or failing OpenAI calls return an upstream error. |
 | `OPENAI_MODEL`   | `gpt-4o` | Vision model used by `/estimate-meal`.                              |
 
 ## Project layout

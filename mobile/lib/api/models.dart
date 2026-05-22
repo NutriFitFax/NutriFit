@@ -131,7 +131,7 @@ class MealEstimate {
   final double totalProteinG;
   final double totalCarbsG;
   final double totalFatG;
-  final String source; // 'ai' or 'stub'
+  final String source; // 'ai'
   final String? notes;
 
   const MealEstimate({

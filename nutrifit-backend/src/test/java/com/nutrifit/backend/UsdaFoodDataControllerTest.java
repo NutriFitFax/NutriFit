@@ -21,25 +21,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class UsdaFoodDataControllerTest {
-    private static final MockWebServer server = startServer();
+    private static final MockWebServer usdaServer = startServer();
+    private static final MockWebServer openFoodFactsServer = startServer();
 
     @Autowired
     private MockMvc mockMvc;
 
     @AfterAll
     static void stopServer() throws IOException {
-        server.shutdown();
+        usdaServer.shutdown();
+        openFoodFactsServer.shutdown();
     }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("USDA_BASE_URL", () -> server.url("/").toString());
+        registry.add("USDA_BASE_URL", () -> usdaServer.url("/").toString());
         registry.add("USDA_API_KEY", () -> "TEST_KEY");
+        registry.add("OPENFOODFACTS_BASE_URL", () -> openFoodFactsServer.url("/").toString());
     }
 
     @Test
     void barcodeLookupMapsFood() throws Exception {
-        server.enqueue(json("""
+        usdaServer.enqueue(json("""
                 {
                   "totalHits": 1,
                   "foods": [
@@ -77,15 +80,56 @@ class UsdaFoodDataControllerTest {
 
     @Test
     void barcodeLookupReturns404ForMiss() throws Exception {
-        server.enqueue(json("{\"totalHits\": 0, \"foods\": []}"));
+        usdaServer.enqueue(json("{\"totalHits\": 0, \"foods\": []}"));
+        openFoodFactsServer.enqueue(json("{\"code\":\"1234567890123\",\"status\":0,\"status_verbose\":\"product not found\"}"));
 
         mockMvc.perform(get("/barcode/1234567890123"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
+    void barcodeLookupFallsBackToOpenFoodFacts() throws Exception {
+        usdaServer.enqueue(json("{\"totalHits\": 0, \"foods\": []}"));
+        openFoodFactsServer.enqueue(json("""
+                {
+                  "code": "3017624010701",
+                  "status": 1,
+                  "status_verbose": "product found",
+                  "product": {
+                    "product_name": "Nutella",
+                    "brands": "Ferrero",
+                    "image_front_url": "https://images.openfoodfacts.org/nutella.jpg",
+                    "serving_size": "15 g",
+                    "nutriments": {
+                      "energy-kcal_100g": 539,
+                      "proteins_100g": 6.3,
+                      "carbohydrates_100g": 57.5,
+                      "fat_100g": 30.9,
+                      "sugars_100g": 56.3,
+                      "salt_100g": 0.107
+                    }
+                  }
+                }
+                """));
+
+        mockMvc.perform(get("/barcode/3017624010701"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is("3017624010701")))
+                .andExpect(jsonPath("$.name", is("Nutella")))
+                .andExpect(jsonPath("$.brand", is("Ferrero")))
+                .andExpect(jsonPath("$.image_url", is("https://images.openfoodfacts.org/nutella.jpg")))
+                .andExpect(jsonPath("$.serving_size_g", is(15.0)))
+                .andExpect(jsonPath("$.macros_per_100g.calories_kcal", is(539.0)))
+                .andExpect(jsonPath("$.macros_per_100g.protein_g", is(6.3)))
+                .andExpect(jsonPath("$.macros_per_100g.carbs_g", is(57.5)))
+                .andExpect(jsonPath("$.macros_per_100g.fat_g", is(30.9)))
+                .andExpect(jsonPath("$.macros_per_100g.sugar_g", is(56.3)))
+                .andExpect(jsonPath("$.macros_per_100g.salt_g", is(0.107)));
+    }
+
+    @Test
     void searchMapsResultList() throws Exception {
-        server.enqueue(json("""
+        usdaServer.enqueue(json("""
                 {
                   "totalHits": 1,
                   "foods": [
@@ -118,7 +162,7 @@ class UsdaFoodDataControllerTest {
 
     @Test
     void upstreamFailureReturns502() throws Exception {
-        server.enqueue(new MockResponse().setResponseCode(503).setBody("unavailable"));
+        usdaServer.enqueue(new MockResponse().setResponseCode(503).setBody("unavailable"));
 
         mockMvc.perform(get("/search").param("q", "milk"))
                 .andExpect(status().isBadGateway());

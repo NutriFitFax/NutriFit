@@ -20,26 +20,15 @@ import org.springframework.web.client.RestClientException;
 
 @Service
 public class MealEstimator {
-    private static final String NO_OPENAI_KEY_NOTE =
-            "OPENAI_API_KEY not set - returning deterministic stub estimate.";
-    private static final String OPENAI_FAILURE_NOTE =
-            "OpenAI estimation failed - returning deterministic stub estimate.";
-
     private static final String PROMPT = """
-            You are a nutrition assistant. Identify the foods in this meal photo.
+            You are a nutrition assistant. Identify only the foods visibly present in this meal photo.
+            Do not use default examples. Do not guess foods that are not visible.
+            If the photo contains one banana, return one item named Banana.
+            If there is no recognizable food, return {"items":[]}.
             Reply with ONLY valid JSON of this shape:
             {"items":[{"name":str,"estimated_grams":number,"confidence":number 0..1,"macros_per_100g":{"calories_kcal":number,"protein_g":number,"carbs_g":number,"fat_g":number}}]}
-            If unsure, still return a best guess; never include prose outside JSON.
+            Use realistic per-100g nutrition values. Never include prose outside JSON.
             """;
-
-    private static final List<EstimatedFood> STUB_ITEMS = List.of(
-            new EstimatedFood("Grilled chicken breast", 150.0, 0.6,
-                    new Macros(165, 31, 0, 3.6, null, null, null)),
-            new EstimatedFood("Steamed rice", 180.0, 0.55,
-                    new Macros(130, 2.7, 28, 0.3, null, null, null)),
-            new EstimatedFood("Mixed vegetables", 90.0, 0.5,
-                    new Macros(65, 2.5, 13, 0.5, null, null, null))
-    );
 
     private final AppSettings settings;
     private final ObjectMapper objectMapper;
@@ -53,28 +42,11 @@ public class MealEstimator {
 
     public MealEstimate estimate(byte[] imageBytes, String contentType) {
         if (settings.openAiApiKey() == null) {
-            return stub(NO_OPENAI_KEY_NOTE);
+            throw new MealEstimatorException("OPENAI_API_KEY is not configured");
         }
-        try {
-            List<EstimatedFood> items = callOpenAi(imageBytes, contentType == null ? "image/jpeg" : contentType);
-            Totals totals = totals(items);
-            return new MealEstimate(items, totals.calories(), totals.protein(), totals.carbs(), totals.fat(), "ai", null);
-        } catch (MealEstimatorException ex) {
-            return stub(OPENAI_FAILURE_NOTE);
-        }
-    }
-
-    private MealEstimate stub(String notes) {
-        Totals totals = totals(STUB_ITEMS);
-        return new MealEstimate(
-                STUB_ITEMS,
-                totals.calories(),
-                totals.protein(),
-                totals.carbs(),
-                totals.fat(),
-                "stub",
-                notes
-        );
+        List<EstimatedFood> items = callOpenAi(imageBytes, contentType == null ? "image/jpeg" : contentType);
+        Totals totals = totals(items);
+        return new MealEstimate(items, totals.calories(), totals.protein(), totals.carbs(), totals.fat(), "ai", null);
     }
 
     private List<EstimatedFood> callOpenAi(byte[] imageBytes, String contentType) {
@@ -90,7 +62,7 @@ public class MealEstimator {
                         )
                 )),
                 "response_format", Map.of("type", "json_object"),
-                "temperature", 0.2
+                "temperature", 0
         );
 
         JsonNode body;
@@ -126,9 +98,6 @@ public class MealEstimator {
                     // Skip malformed items and keep any parseable results.
                 }
             }
-            if (items.isEmpty()) {
-                throw new MealEstimatorException("no parseable items in openai response");
-            }
             return items;
         } catch (JsonProcessingException ex) {
             throw new MealEstimatorException("bad openai response: " + ex.getMessage(), ex);
@@ -143,6 +112,8 @@ public class MealEstimator {
         return Double.isFinite(item.estimatedGrams())
                 && item.estimatedGrams() > 0
                 && Double.isFinite(item.confidence())
+                && item.confidence() >= 0
+                && item.confidence() <= 1
                 && Double.isFinite(macros.caloriesKcal())
                 && Double.isFinite(macros.proteinG())
                 && Double.isFinite(macros.carbsG())
