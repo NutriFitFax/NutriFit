@@ -47,6 +47,7 @@ class SpoonacularControllerTest {
                     {
                       "id": 655219,
                       "title": "Peanut Butter And Chocolate Oatmeal",
+                      "image": "Peanut-Butter-And-Chocolate-Oatmeal-655219.jpg",
                       "imageType": "jpg",
                       "readyInMinutes": 45,
                       "servings": 1,
@@ -74,7 +75,7 @@ class SpoonacularControllerTest {
                 .andExpect(jsonPath("$.meals[0].id", is("655219")))
                 .andExpect(jsonPath("$.meals[0].title", is("Peanut Butter And Chocolate Oatmeal")))
                 .andExpect(jsonPath("$.meals[0].image_url",
-                        is("https://img.spoonacular.com/recipes/655219-312x231.jpg")))
+                        is("https://img.spoonacular.com/recipes/Peanut-Butter-And-Chocolate-Oatmeal-655219.jpg")))
                 .andExpect(jsonPath("$.meals[0].ready_in_minutes", is(45)))
                 .andExpect(jsonPath("$.meals[0].servings", is(1)))
                 .andExpect(jsonPath("$.nutrients.calories_kcal", is(1735.81)))

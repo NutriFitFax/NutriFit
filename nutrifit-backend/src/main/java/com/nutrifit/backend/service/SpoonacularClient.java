@@ -138,7 +138,10 @@ public class SpoonacularClient {
     private static String imageUrl(String id, JsonNode node) {
         String explicit = firstText(node, "image", "imageUrl");
         if (explicit != null) {
-            return explicit;
+            if (explicit.startsWith("http://") || explicit.startsWith("https://") || explicit.contains("/")) {
+                return explicit;
+            }
+            return "https://img.spoonacular.com/recipes/" + explicit;
         }
         String imageType = text(node, "imageType");
         if (imageType == null || imageType.isBlank()) {
