@@ -1,7 +1,7 @@
 /// Single place to set the backend URL.
 ///
 /// Override at build time:
-///   flutter run --dart-define=API_BASE_URL=https://nutrifit-staging.example.com
+///   flutter run --dart-define=API_BASE_URL=https://nutrifit-backend-lnm0.onrender.com
 ///
 /// The default points at localhost on the platform-correct host for emulators:
 ///   * Android emulator -> http://10.0.2.2:8000

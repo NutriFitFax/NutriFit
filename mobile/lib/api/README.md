@@ -70,7 +70,7 @@ All thrown errors are subclasses of `ApiException`:
 Production / staging:
 
 ```bash
-flutter run --dart-define=API_BASE_URL=https://nutrifit-staging.onrender.com
+flutter run --dart-define=API_BASE_URL=https://nutrifit-backend-lnm0.onrender.com
 ```
 
 Local dev: default. Android emulator hits `10.0.2.2:8000`, iOS simulator / desktop hit `127.0.0.1:8000`.

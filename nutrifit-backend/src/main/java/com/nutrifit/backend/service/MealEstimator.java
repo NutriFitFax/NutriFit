@@ -20,6 +20,11 @@ import org.springframework.web.client.RestClientException;
 
 @Service
 public class MealEstimator {
+    private static final String NO_OPENAI_KEY_NOTE =
+            "OPENAI_API_KEY not set - returning deterministic stub estimate.";
+    private static final String OPENAI_FAILURE_NOTE =
+            "OpenAI estimation failed - returning deterministic stub estimate.";
+
     private static final String PROMPT = """
             You are a nutrition assistant. Identify the foods in this meal photo.
             Reply with ONLY valid JSON of this shape:
@@ -48,14 +53,18 @@ public class MealEstimator {
 
     public MealEstimate estimate(byte[] imageBytes, String contentType) {
         if (settings.openAiApiKey() == null) {
-            return stub();
+            return stub(NO_OPENAI_KEY_NOTE);
         }
-        List<EstimatedFood> items = callOpenAi(imageBytes, contentType == null ? "image/jpeg" : contentType);
-        Totals totals = totals(items);
-        return new MealEstimate(items, totals.calories(), totals.protein(), totals.carbs(), totals.fat(), "ai", null);
+        try {
+            List<EstimatedFood> items = callOpenAi(imageBytes, contentType == null ? "image/jpeg" : contentType);
+            Totals totals = totals(items);
+            return new MealEstimate(items, totals.calories(), totals.protein(), totals.carbs(), totals.fat(), "ai", null);
+        } catch (MealEstimatorException ex) {
+            return stub(OPENAI_FAILURE_NOTE);
+        }
     }
 
-    private MealEstimate stub() {
+    private MealEstimate stub(String notes) {
         Totals totals = totals(STUB_ITEMS);
         return new MealEstimate(
                 STUB_ITEMS,
@@ -64,7 +73,7 @@ public class MealEstimator {
                 totals.carbs(),
                 totals.fat(),
                 "stub",
-                "OPENAI_API_KEY not set - returning deterministic stub estimate."
+                notes
         );
     }
 
@@ -109,7 +118,10 @@ public class MealEstimator {
             List<EstimatedFood> items = new ArrayList<>();
             for (JsonNode raw : rawItems) {
                 try {
-                    items.add(objectMapper.treeToValue(raw, EstimatedFood.class));
+                    EstimatedFood item = objectMapper.treeToValue(raw, EstimatedFood.class);
+                    if (isUsable(item)) {
+                        items.add(item);
+                    }
                 } catch (JsonProcessingException ignored) {
                     // Skip malformed items and keep any parseable results.
                 }
@@ -121,6 +133,20 @@ public class MealEstimator {
         } catch (JsonProcessingException ex) {
             throw new MealEstimatorException("bad openai response: " + ex.getMessage(), ex);
         }
+    }
+
+    private static boolean isUsable(EstimatedFood item) {
+        if (item == null || item.name() == null || item.name().isBlank() || item.macrosPer100g() == null) {
+            return false;
+        }
+        Macros macros = item.macrosPer100g();
+        return Double.isFinite(item.estimatedGrams())
+                && item.estimatedGrams() > 0
+                && Double.isFinite(item.confidence())
+                && Double.isFinite(macros.caloriesKcal())
+                && Double.isFinite(macros.proteinG())
+                && Double.isFinite(macros.carbsG())
+                && Double.isFinite(macros.fatG());
     }
 
     private static Totals totals(List<EstimatedFood> items) {
