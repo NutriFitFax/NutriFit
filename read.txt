@@ -1,0 +1,237 @@
+NutriFit next steps
+===================
+
+Current status
+--------------
+- Backend is deployed on Render:
+  https://nutrifit-backend-lnm0.onrender.com
+- Backend endpoints currently available:
+  GET /health
+  GET /barcode/{barcode}
+  GET /search?q=&page=&page_size=
+  POST /estimate-meal
+- Barcode lookup uses USDA first, then OpenFoodFacts fallback.
+- Search uses USDA.
+- Meal photo uses OpenAI. It must not return fake foods when OpenAI fails.
+- Flutter API client exists in mobile/lib/api/.
+- Camera, barcode, meal photo, search, food detail, home, navigation, and history UI exist.
+- Flutter is not installed on this machine, so mobile tests must be run by someone with Flutter installed.
+
+
+Immediate steps for Esma
+------------------------
+1. Fix OpenAI key in Render.
+   - In Render -> nutrifit-backend -> Environment:
+     OPENAI_API_KEY must be a full OpenAI key starting with sk- or sk-proj-.
+     OPENAI_MODEL should be gpt-4o.
+     USDA_API_KEY should be the data.gov USDA key.
+   - Do not paste real keys into chat or git.
+   - After changing env vars, run Manual Deploy -> Deploy latest commit.
+
+2. Verify backend after deploy.
+   - Open:
+     https://nutrifit-backend-lnm0.onrender.com/health
+   - Test search:
+     https://nutrifit-backend-lnm0.onrender.com/search?q=banana&page_size=2
+   - Test barcode fallback:
+     https://nutrifit-backend-lnm0.onrender.com/barcode/3017624010701
+   - Test meal photo from the app using a banana photo. It should return Banana, not chicken.
+
+3. Share the backend URL with the Flutter team.
+   flutter run --dart-define=API_BASE_URL=https://nutrifit-backend-lnm0.onrender.com
+
+
+Team ownership
+--------------
+1. Backend and DevOps + Flutter API Client
+   Owner: Esma Krnjic
+   Owns:
+   - nutrifit-backend/
+   - mobile/lib/api/
+   Responsibilities:
+   - Keep Render backend healthy.
+   - Keep USDA/OpenFoodFacts/OpenAI integration working.
+   - Keep API client models in sync with backend JSON.
+   - Help teammates connect their screens to the backend.
+
+2. Camera Features
+   Owner: Bakir Bakovic
+   Owns:
+   - mobile/lib/features/barcode/
+   - mobile/lib/features/meal_estimation/
+   Responsibilities:
+   - Barcode scanning screen.
+   - Meal photo capture/gallery -> preview -> upload -> result.
+   - Camera permissions, lifecycle, and error states.
+   - Verify meal-photo errors show a useful message instead of wrong foods.
+
+3. Search + Food Display
+   Owner: Ahmed Musaefendic
+   Owns:
+   - mobile/lib/screens/search_screen.dart
+   - mobile/lib/screens/food_detail_screen.dart
+   Responsibilities:
+   - Search input and results list.
+   - Food detail view with name, brand, serving size, macros.
+   - Serving-size adjustment slider with recalculated macros.
+   - Empty/no-results state.
+
+4. Health Tracking + Local Storage
+   Owner: Davud Sadikaj
+   Owns:
+   - mobile/lib/db/
+   - mobile/lib/features/tracking/
+   Responsibilities:
+   - Local storage schema for profile, weight, water, meals, and activity logs.
+   - Water intake logging and daily goals.
+   - Weight logging.
+   - BMI from height + latest weight.
+   - Charts/progress views.
+
+5. Home + Navigation + History + Design System
+   Owner: Ferhad Jukic
+   Owns:
+   - mobile/lib/app/
+   - mobile/lib/features/history/
+   - mobile/lib/ui/
+   Responsibilities:
+   - Home screen.
+   - Bottom navigation/app shell.
+   - Food history screen.
+   - Theme, colors, typography, shared widgets.
+   - Replace placeholder home values once Davud's storage layer exists.
+
+
+New feature: Spoonacular meal planner
+-------------------------------------
+Do this only after the current backend/mobile flows are stable.
+
+1. Create a Spoonacular API key.
+   - Go to https://spoonacular.com/food-api/docs
+   - Create an account and copy the API key.
+   - Store it only in backend environment variables, for example:
+     SPOONACULAR_API_KEY=...
+   - Do not put the key in Flutter or git.
+
+2. Add backend config.
+   - Add SPOONACULAR_API_KEY and SPOONACULAR_BASE_URL to AppSettings.
+   - Add them to .env.example and Render env vars.
+
+3. Add backend models.
+   Suggested Java records:
+   - MealPlanResponse
+   - PlannedMeal
+   - RecipeDetails
+   - RecipeNutrients
+
+4. Add backend service.
+   Suggested class:
+   - SpoonacularClient
+
+   Useful endpoints:
+   - GET https://api.spoonacular.com/mealplanner/generate
+     Params:
+     timeFrame=day or week
+     targetCalories=<number>
+     diet=<optional>
+   - GET https://api.spoonacular.com/recipes/{id}/information
+     Params:
+     includeNutrition=true
+
+5. Add backend controller endpoints.
+   Suggested NutriFit endpoints:
+   - GET /meal-plan?time_frame=day&target_calories=2000&diet=vegetarian
+   - GET /recipes/{id}
+
+6. Add tests.
+   - Use MockWebServer.
+   - Test successful meal plan.
+   - Test Spoonacular failure -> 502.
+   - Test missing key -> clear error.
+
+7. Add Flutter API methods.
+   - api.generateMealPlan(...)
+   - api.getRecipeDetails(...)
+   - Add Dart models matching backend JSON.
+
+8. Add Flutter UI.
+   Suggested folder:
+   - mobile/lib/features/meal_plan/
+   Screens:
+   - MealPlanScreen
+   - RecipeDetailScreen
+   Required states:
+   - loading
+   - success
+   - empty
+   - API quota/error
+
+
+New feature: exercise calorie burning with METs
+-----------------------------------------------
+This does not need an external API. Use a local lookup table from the Compendium of Physical Activities.
+
+Sources:
+- https://pacompendium.com/
+- https://pacompendium.com/adult-compendium
+
+1. Decide where activity logs live.
+   Suggested local storage table/model:
+   - id
+   - activityName
+   - met
+   - durationMinutes
+   - userWeightKg
+   - caloriesBurned
+   - loggedAt
+
+2. Add a MET lookup table.
+   Start small:
+   - walking_slow: 2.8
+   - walking_brisk: 4.3
+   - running_easy: 7.0
+   - cycling_light: 4.0
+   - cycling_moderate: 6.8
+   - strength_training: 3.5
+   - yoga: 2.5
+   - swimming_moderate: 5.8
+
+3. Add calculation function.
+   Formula:
+   calories = (MET * 3.5 * weightKg / 200) * durationMinutes
+
+4. Add Flutter service/model.
+   Suggested files:
+   - mobile/lib/features/tracking/activity_met.dart
+   - mobile/lib/features/tracking/activity_log.dart
+   - mobile/lib/features/tracking/calorie_burn_calculator.dart
+
+5. Add UI.
+   Suggested screen:
+   - ActivityLogScreen
+   Inputs:
+   - activity dropdown
+   - duration minutes
+   - user weight from profile/latest weight
+   Output:
+   - estimated calories burned
+   - save log button
+
+6. Connect to home screen.
+   - Show calories burned today.
+   - Optionally subtract burned calories from net calories.
+
+7. Add tests.
+   Example:
+   - 5 MET, 70 kg, 30 min = 183.75 kcal
+
+
+Recommended implementation order
+--------------------------------
+1. Fix OpenAI key and confirm banana photo works.
+2. Davud builds local storage/profile/weight/water tables.
+3. Ferhad connects home placeholders to real local storage.
+4. Ahmed verifies search and food detail with live backend URL.
+5. Bakir verifies barcode and meal-photo flow on a real phone.
+6. Add MET calorie burning because it is offline and low risk.
+7. Add Spoonacular meal planner last because it adds another paid/quota API.
