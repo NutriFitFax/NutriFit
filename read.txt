@@ -10,21 +10,28 @@ Current status
   GET /barcode/{barcode}
   GET /search?q=&page=&page_size=
   POST /estimate-meal
+  GET /meal-plan?time_frame=&target_calories=&diet=
+  GET /recipes/{id}
 - Barcode lookup uses USDA first, then OpenFoodFacts fallback.
 - Search uses USDA.
 - Meal photo uses OpenAI. It must not return fake foods when OpenAI fails.
+- Meal plan and recipe details use Spoonacular.
 - Flutter API client exists in mobile/lib/api/.
 - Camera, barcode, meal photo, search, food detail, home, navigation, and history UI exist.
 - Flutter is not installed on this machine, so mobile tests must be run by someone with Flutter installed.
+- No Supabase/database connection exists in the backend yet. There are no JDBC,
+  Postgres, Supabase, repository, or migration files in this repo.
 
 
 Immediate steps for Esma
 ------------------------
-1. Fix OpenAI key in Render.
+1. Keep required API keys in Render.
    - In Render -> nutrifit-backend -> Environment:
      OPENAI_API_KEY must be a full OpenAI key starting with sk- or sk-proj-.
      OPENAI_MODEL should be gpt-4o.
      USDA_API_KEY should be the data.gov USDA key.
+     SPOONACULAR_API_KEY should be the Spoonacular key.
+     SPOONACULAR_BASE_URL can stay https://api.spoonacular.com.
    - Do not paste real keys into chat or git.
    - After changing env vars, run Manual Deploy -> Deploy latest commit.
 
@@ -35,6 +42,10 @@ Immediate steps for Esma
      https://nutrifit-backend-lnm0.onrender.com/search?q=banana&page_size=2
    - Test barcode fallback:
      https://nutrifit-backend-lnm0.onrender.com/barcode/3017624010701
+   - Test meal plan:
+     https://nutrifit-backend-lnm0.onrender.com/meal-plan?time_frame=day&target_calories=2000
+   - Test recipe details:
+     https://nutrifit-backend-lnm0.onrender.com/recipes/716429
    - Test meal photo from the app using a banana photo. It should return Banana, not chicken.
 
 3. Share the backend URL with the Flutter team.
@@ -104,28 +115,26 @@ Team ownership
 
 New feature: Spoonacular meal planner
 -------------------------------------
-Do this only after the current backend/mobile flows are stable.
+Backend and Flutter API client are now wired. Flutter UI screens are still a team task.
 
-1. Create a Spoonacular API key.
+1. Spoonacular API key is created and should be stored in Render.
    - Go to https://spoonacular.com/food-api/docs
    - Create an account and copy the API key.
    - Store it only in backend environment variables, for example:
      SPOONACULAR_API_KEY=...
    - Do not put the key in Flutter or git.
 
-2. Add backend config.
-   - Add SPOONACULAR_API_KEY and SPOONACULAR_BASE_URL to AppSettings.
-   - Add them to .env.example and Render env vars.
+2. Backend config is implemented.
+   - SPOONACULAR_API_KEY and SPOONACULAR_BASE_URL are in AppSettings.
+   - They are documented in .env.example and render.yaml.
 
-3. Add backend models.
-   Suggested Java records:
+3. Backend models are implemented.
    - MealPlanResponse
    - PlannedMeal
    - RecipeDetails
    - RecipeNutrients
 
-4. Add backend service.
-   Suggested class:
+4. Backend service is implemented.
    - SpoonacularClient
 
    Useful endpoints:
@@ -138,18 +147,17 @@ Do this only after the current backend/mobile flows are stable.
      Params:
      includeNutrition=true
 
-5. Add backend controller endpoints.
-   Suggested NutriFit endpoints:
+5. Backend controller endpoints are implemented.
    - GET /meal-plan?time_frame=day&target_calories=2000&diet=vegetarian
    - GET /recipes/{id}
 
-6. Add tests.
+6. Backend tests are implemented.
    - Use MockWebServer.
    - Test successful meal plan.
    - Test Spoonacular failure -> 502.
    - Test missing key -> clear error.
 
-7. Add Flutter API methods.
+7. Flutter API methods are implemented.
    - api.generateMealPlan(...)
    - api.getRecipeDetails(...)
    - Add Dart models matching backend JSON.
@@ -226,12 +234,31 @@ Sources:
    - 5 MET, 70 kg, 30 min = 183.75 kcal
 
 
+Supabase database connection
+----------------------------
+Current status: not connected in code.
+
+What is missing:
+- A backend database dependency/config.
+- Supabase Postgres connection env vars in Render.
+- Tables or migrations for users, meals, water, weight, activity, and history.
+- Repository/service code that reads and writes those tables.
+
+Safe setup approach:
+1. In Supabase, use the project database connection string, not the public anon key,
+   for backend server-to-database access.
+2. Store it only in Render environment variables. Do not put it in Flutter or git.
+3. Add a backend database health endpoint before adding app data writes.
+4. Add migrations/schema after Davud finalizes the storage models.
+5. Only then connect Flutter screens to backend persistence endpoints.
+
+
 Recommended implementation order
 --------------------------------
-1. Fix OpenAI key and confirm banana photo works.
+1. OpenAI key is fixed and banana photo was confirmed on the live backend.
 2. Davud builds local storage/profile/weight/water tables.
 3. Ferhad connects home placeholders to real local storage.
 4. Ahmed verifies search and food detail with live backend URL.
 5. Bakir verifies barcode and meal-photo flow on a real phone.
 6. Add MET calorie burning because it is offline and low risk.
-7. Add Spoonacular meal planner last because it adds another paid/quota API.
+7. Spoonacular backend and Flutter API client are done; remaining work is Flutter UI.

@@ -1,9 +1,11 @@
 /// NutriFit backend client.
 ///
-/// Owner: Esma. Calls three endpoints on the Java backend service:
+/// Owner: Esma. Calls the Java backend service:
 ///   * GET  /barcode/{barcode}        -> [Food]
 ///   * GET  /search?q=...             -> [SearchResult]
 ///   * POST /estimate-meal (multipart)-> [MealEstimate]
+///   * GET  /meal-plan                -> [MealPlanResponse]
+///   * GET  /recipes/{id}             -> [RecipeDetails]
 ///
 /// Configure the base URL at app start:
 ///
@@ -165,6 +167,35 @@ class NutriFitApi {
       final streamed = await _client.send(request).timeout(timeout * 4);
       final resp = await http.Response.fromStream(streamed);
       return _decode(resp, MealEstimate.fromJson);
+    });
+  }
+
+  /// GET /meal-plan. Uses Spoonacular through the backend.
+  Future<MealPlanResponse> generateMealPlan({
+    String timeFrame = 'day',
+    int? targetCalories,
+    String? diet,
+  }) {
+    return _wrapErrors(() async {
+      final query = <String, dynamic>{
+        'time_frame': timeFrame,
+      };
+      if (targetCalories != null) {
+        query['target_calories'] = targetCalories;
+      }
+      if (diet != null && diet.trim().isNotEmpty) {
+        query['diet'] = diet.trim();
+      }
+      final resp = await _client.get(_u('/meal-plan', query)).timeout(timeout);
+      return _decode(resp, MealPlanResponse.fromJson);
+    });
+  }
+
+  /// GET /recipes/{id}. Uses Spoonacular through the backend.
+  Future<RecipeDetails> getRecipeDetails(String id) {
+    return _wrapErrors(() async {
+      final resp = await _client.get(_u('/recipes/$id')).timeout(timeout);
+      return _decode(resp, RecipeDetails.fromJson);
     });
   }
 

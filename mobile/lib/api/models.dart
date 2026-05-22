@@ -156,3 +156,119 @@ class MealEstimate {
         notes: json['notes'] as String?,
       );
 }
+
+class RecipeNutrients {
+  final double caloriesKcal;
+  final double proteinG;
+  final double carbsG;
+  final double fatG;
+
+  const RecipeNutrients({
+    required this.caloriesKcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+  });
+
+  factory RecipeNutrients.fromJson(Map<String, dynamic> json) =>
+      RecipeNutrients(
+        caloriesKcal: (json['calories_kcal'] as num).toDouble(),
+        proteinG: (json['protein_g'] as num).toDouble(),
+        carbsG: (json['carbs_g'] as num).toDouble(),
+        fatG: (json['fat_g'] as num).toDouble(),
+      );
+}
+
+class PlannedMeal {
+  final String id;
+  final String title;
+  final String? imageUrl;
+  final int? readyInMinutes;
+  final int? servings;
+  final String? sourceUrl;
+
+  const PlannedMeal({
+    required this.id,
+    required this.title,
+    this.imageUrl,
+    this.readyInMinutes,
+    this.servings,
+    this.sourceUrl,
+  });
+
+  factory PlannedMeal.fromJson(Map<String, dynamic> json) => PlannedMeal(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        imageUrl: json['image_url'] as String?,
+        readyInMinutes: (json['ready_in_minutes'] as num?)?.toInt(),
+        servings: (json['servings'] as num?)?.toInt(),
+        sourceUrl: json['source_url'] as String?,
+      );
+}
+
+class MealPlanResponse {
+  final String timeFrame;
+  final int? targetCalories;
+  final String? diet;
+  final List<PlannedMeal> meals;
+  final RecipeNutrients nutrients;
+  final String source;
+
+  const MealPlanResponse({
+    required this.timeFrame,
+    this.targetCalories,
+    this.diet,
+    required this.meals,
+    required this.nutrients,
+    required this.source,
+  });
+
+  factory MealPlanResponse.fromJson(Map<String, dynamic> json) =>
+      MealPlanResponse(
+        timeFrame: json['time_frame'] as String,
+        targetCalories: (json['target_calories'] as num?)?.toInt(),
+        diet: json['diet'] as String?,
+        meals: (json['meals'] as List<dynamic>)
+            .map((e) => PlannedMeal.fromJson(e as Map<String, dynamic>))
+            .toList(growable: false),
+        nutrients:
+            RecipeNutrients.fromJson(json['nutrients'] as Map<String, dynamic>),
+        source: json['source'] as String,
+      );
+}
+
+class RecipeDetails {
+  final String id;
+  final String title;
+  final String? imageUrl;
+  final int? readyInMinutes;
+  final int? servings;
+  final String? sourceUrl;
+  final List<String> ingredients;
+  final RecipeNutrients nutrients;
+
+  const RecipeDetails({
+    required this.id,
+    required this.title,
+    this.imageUrl,
+    this.readyInMinutes,
+    this.servings,
+    this.sourceUrl,
+    required this.ingredients,
+    required this.nutrients,
+  });
+
+  factory RecipeDetails.fromJson(Map<String, dynamic> json) => RecipeDetails(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        imageUrl: json['image_url'] as String?,
+        readyInMinutes: (json['ready_in_minutes'] as num?)?.toInt(),
+        servings: (json['servings'] as num?)?.toInt(),
+        sourceUrl: json['source_url'] as String?,
+        ingredients: (json['ingredients'] as List<dynamic>)
+            .map((e) => e as String)
+            .toList(growable: false),
+        nutrients:
+            RecipeNutrients.fromJson(json['nutrients'] as Map<String, dynamic>),
+      );
+}

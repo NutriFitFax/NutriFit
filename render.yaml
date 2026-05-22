@@ -18,6 +18,10 @@ services:
         value: "*"
       - key: USDA_API_KEY
         sync: false
+      - key: SPOONACULAR_BASE_URL
+        value: https://api.spoonacular.com
+      - key: SPOONACULAR_API_KEY
+        sync: false
       - key: OPENAI_MODEL
         value: gpt-4o
       - key: OPENAI_API_KEY

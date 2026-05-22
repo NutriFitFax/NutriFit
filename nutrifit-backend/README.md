@@ -2,16 +2,19 @@
 
 Java Spring Boot service backing the NutriFit Flutter app. Owned by **Esma Krnjic**.
 
-Three endpoints power the mobile app, plus a health check used by Render/Fly uptime probes:
+Five endpoints power the mobile app, plus a health check used by Render/Fly uptime probes:
 
 | Method | Path                       | Purpose                                  |
 | ------ | -------------------------- | ---------------------------------------- |
 | GET    | `/barcode/{barcode}`       | Look up a product by EAN/UPC             |
 | GET    | `/search?q=`               | Full-text food search                    |
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
+| GET    | `/meal-plan`               | Generate a day/week recipe meal plan     |
+| GET    | `/recipes/{id}`            | Get recipe details and nutrition         |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
 Search is backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). Barcode lookup tries USDA first, then falls back to [Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/) for products USDA does not have. The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set; if OpenAI is not configured or fails, the endpoint returns an upstream error instead of inventing fake foods.
+Meal plans and recipe details are backed by [Spoonacular](https://spoonacular.com/food-api/docs) when `SPOONACULAR_API_KEY` is set.
 
 Live staging URL: <https://nutrifit-backend-lnm0.onrender.com>
 
@@ -33,6 +36,8 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/barcode/077034085228
 curl "http://127.0.0.1:8000/search?q=cheddar%20cheese"
 curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
+curl "http://127.0.0.1:8000/meal-plan?time_frame=day&target_calories=2000&diet=vegetarian"
+curl http://127.0.0.1:8000/recipes/716429
 ```
 
 ## Tests
@@ -41,7 +46,7 @@ curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 mvn test
 ```
 
-Tests use `MockWebServer` to mock USDA FoodData Central, so no network is required and no API key is needed.
+Tests use `MockWebServer` to mock USDA FoodData Central, OpenFoodFacts, and Spoonacular, so no network is required and no API key is needed.
 
 ## Deploy
 
@@ -54,7 +59,7 @@ Render does not provide Java as a native runtime, so this repo deploys the Java 
 1. Push this repo to GitHub.
 2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The current staging URL is <https://nutrifit-backend-lnm0.onrender.com>. Share it with the team.
-4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key and `OPENAI_API_KEY` to your OpenAI key. OpenFoodFacts barcode fallback does not need a key.
+4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key, `OPENAI_API_KEY` to your OpenAI key, and `SPOONACULAR_API_KEY` to your Spoonacular key. OpenFoodFacts barcode fallback does not need a key.
 5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml`. Add the deploy hook URL to the repo secret `RENDER_DEPLOY_HOOK_URL`.
 
 ### Fly.io
@@ -88,6 +93,8 @@ All settings come from environment variables. See `.env.example` for the full li
 | `CORS_ORIGINS`   | `*`     | Tighten for production: list the actual Flutter web / device hosts. |
 | `USDA_API_KEY`   | `DEMO_KEY` | Free data.gov key used for barcode/search. `DEMO_KEY` is only for light local testing. |
 | `OPENFOODFACTS_BASE_URL` | `https://world.openfoodfacts.org` | Public barcode fallback. No key needed for read requests. |
+| `SPOONACULAR_API_KEY` | unset | Required for `/meal-plan` and `/recipes/{id}`. |
+| `SPOONACULAR_BASE_URL` | `https://api.spoonacular.com` | Spoonacular API base URL. |
 | `OPENAI_API_KEY` | unset   | Required for real meal-photo estimation. Missing or failing OpenAI calls return an upstream error. |
 | `OPENAI_MODEL`   | `gpt-4o` | Vision model used by `/estimate-meal`.                              |
 

@@ -15,6 +15,8 @@ public class AppSettings {
     private final String usdaBaseUrl;
     private final String usdaApiKey;
     private final String openFoodFactsBaseUrl;
+    private final String spoonacularBaseUrl;
+    private final String spoonacularApiKey;
     private final double httpTimeoutSeconds;
     private final String openAiApiKey;
     private final String openAiModel;
@@ -27,6 +29,8 @@ public class AppSettings {
             @Value("${USDA_BASE_URL:https://api.nal.usda.gov/fdc/v1}") String usdaBaseUrl,
             @Value("${USDA_API_KEY:DEMO_KEY}") String usdaApiKey,
             @Value("${OPENFOODFACTS_BASE_URL:https://world.openfoodfacts.org}") String openFoodFactsBaseUrl,
+            @Value("${SPOONACULAR_BASE_URL:https://api.spoonacular.com}") String spoonacularBaseUrl,
+            @Value("${SPOONACULAR_API_KEY:}") String spoonacularApiKey,
             @Value("${HTTP_TIMEOUT:8.0}") double httpTimeoutSeconds,
             @Value("${OPENAI_API_KEY:}") String openAiApiKey,
             @Value("${OPENAI_MODEL:gpt-4o}") String openAiModel,
@@ -38,6 +42,8 @@ public class AppSettings {
         this.usdaBaseUrl = usdaBaseUrl;
         this.usdaApiKey = usdaApiKey == null || usdaApiKey.isBlank() ? "DEMO_KEY" : usdaApiKey;
         this.openFoodFactsBaseUrl = openFoodFactsBaseUrl;
+        this.spoonacularBaseUrl = spoonacularBaseUrl;
+        this.spoonacularApiKey = spoonacularApiKey == null || spoonacularApiKey.isBlank() ? null : spoonacularApiKey;
         this.httpTimeoutSeconds = httpTimeoutSeconds;
         this.openAiApiKey = openAiApiKey == null || openAiApiKey.isBlank() ? null : openAiApiKey;
         this.openAiModel = openAiModel;
@@ -73,6 +79,14 @@ public class AppSettings {
 
     public String openFoodFactsBaseUrl() {
         return openFoodFactsBaseUrl;
+    }
+
+    public String spoonacularBaseUrl() {
+        return spoonacularBaseUrl;
+    }
+
+    public String spoonacularApiKey() {
+        return spoonacularApiKey;
     }
 
     public double httpTimeoutSeconds() {

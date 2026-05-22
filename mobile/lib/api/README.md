@@ -40,6 +40,14 @@ final bytes = await imageFile.readAsBytes();
 final estimate = await api.estimateMeal(bytes, contentType: 'image/jpeg');
 print('${estimate.totalCaloriesKcal} kcal total, source=${estimate.source}');
 
+// 4. Meal plan + recipe details
+final plan = await api.generateMealPlan(
+  targetCalories: 2000,
+  diet: 'vegetarian',
+);
+final recipe = await api.getRecipeDetails(plan.meals.first.id);
+print('${recipe.title} - ${recipe.nutrients.caloriesKcal} kcal');
+
 // At app shutdown
 api.close();
 ```
@@ -51,6 +59,8 @@ api.close();
 | GET    | `/barcode/{barcode}`          | `Food`         | 404 -> `NotFoundException`                     |
 | GET    | `/search?q=&page=&page_size=` | `SearchResult` | `page` 1-50, `page_size` 1-50                  |
 | POST   | `/estimate-meal`              | `MealEstimate` | multipart field name = `image`, jpg/png/webp   |
+| GET    | `/meal-plan`                  | `MealPlanResponse` | `time_frame`, `target_calories`, `diet`    |
+| GET    | `/recipes/{id}`               | `RecipeDetails` | Spoonacular recipe details and nutrients       |
 | GET    | `/health`                     | `bool`         | use `api.ping()` for a soft connectivity check |
 
 ## Errors
