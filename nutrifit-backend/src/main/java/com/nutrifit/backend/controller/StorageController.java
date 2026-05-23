@@ -2,6 +2,7 @@ package com.nutrifit.backend.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import com.nutrifit.backend.model.ActivityLogEntry;
 import com.nutrifit.backend.model.DailyStorageSummary;
@@ -16,10 +17,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.DataAccessException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -148,6 +152,12 @@ public class StorageController {
             LocalDate date
     ) {
         return repository().getActivities(normalizeUserId(userId), date == null ? LocalDate.now() : date);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<Map<String, String>> databaseError(DataAccessException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("detail", "database error: " + ex.getClass().getSimpleName()));
     }
 
     private StorageRepository repository() {
