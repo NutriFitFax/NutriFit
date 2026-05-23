@@ -2,7 +2,7 @@
 
 Java Spring Boot service backing the NutriFit Flutter app. Owned by **Esma Krnjic**.
 
-Five endpoints power the mobile app, plus a health check used by Render/Fly uptime probes:
+Backend endpoints power the mobile app, plus health checks used by Render/Fly uptime probes:
 
 | Method | Path                       | Purpose                                  |
 | ------ | -------------------------- | ---------------------------------------- |
@@ -11,10 +11,13 @@ Five endpoints power the mobile app, plus a health check used by Render/Fly upti
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/meal-plan`               | Generate a day/week recipe meal plan     |
 | GET    | `/recipes/{id}`            | Get recipe details and nutrition         |
+| `/storage/*` | profile/meals/water/weight/activity | Persist user tracking data in Supabase Postgres |
+| GET    | `/db-health`               | Database connectivity probe              |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
 Search is backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). Barcode lookup tries USDA first, then falls back to [Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/) for products USDA does not have. The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set; if OpenAI is not configured or fails, the endpoint returns an upstream error instead of inventing fake foods.
 Meal plans and recipe details are backed by [Spoonacular](https://spoonacular.com/food-api/docs) when `SPOONACULAR_API_KEY` is set.
+Storage endpoints are backed by Supabase Postgres when `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD` point at Davud's current Supabase project. On startup, the backend creates namespaced `nutrifit_*` tables when `NUTRIFIT_DB_AUTO_INIT=true`.
 
 Live staging URL: <https://nutrifit-backend-lnm0.onrender.com>
 
@@ -38,6 +41,8 @@ curl "http://127.0.0.1:8000/search?q=cheddar%20cheese"
 curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 curl "http://127.0.0.1:8000/meal-plan?time_frame=day&target_calories=2000&diet=vegetarian"
 curl http://127.0.0.1:8000/recipes/716429
+curl http://127.0.0.1:8000/db-health
+curl -H "X-User-Id: demo-user" http://127.0.0.1:8000/storage/summary
 ```
 
 ## Tests
@@ -59,7 +64,7 @@ Render does not provide Java as a native runtime, so this repo deploys the Java 
 1. Push this repo to GitHub.
 2. Create a new "Blueprint" in Render and point it at the repo. The root `render.yaml` is auto-detected.
 3. Hit deploy. The current staging URL is <https://nutrifit-backend-lnm0.onrender.com>. Share it with the team.
-4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key, `OPENAI_API_KEY` to your OpenAI key, and `SPOONACULAR_API_KEY` to your Spoonacular key. OpenFoodFacts barcode fallback does not need a key.
+4. In the service's Environment tab, set `USDA_API_KEY` to your free data.gov key, `OPENAI_API_KEY` to your OpenAI key, `SPOONACULAR_API_KEY` to your Spoonacular key, and the `SUPABASE_DB_*` values from Davud's current Supabase project. OpenFoodFacts barcode fallback does not need a key.
 5. Auto-deploy on every push to `main` is wired through `.github/workflows/backend-deploy.yml`. Add the deploy hook URL to the repo secret `RENDER_DEPLOY_HOOK_URL`.
 
 ### Fly.io
@@ -97,6 +102,10 @@ All settings come from environment variables. See `.env.example` for the full li
 | `SPOONACULAR_BASE_URL` | `https://api.spoonacular.com` | Spoonacular API base URL. |
 | `OPENAI_API_KEY` | unset   | Required for real meal-photo estimation. Missing or failing OpenAI calls return an upstream error. |
 | `OPENAI_MODEL`   | `gpt-4o` | Vision model used by `/estimate-meal`.                              |
+| `SUPABASE_DB_URL` | unset | JDBC URL for Davud's current Supabase project. |
+| `SUPABASE_DB_USER` | unset | Supabase pooler user, usually `postgres.<project-ref>`. |
+| `SUPABASE_DB_PASSWORD` | unset | Supabase database password. |
+| `NUTRIFIT_DB_AUTO_INIT` | `true` | Creates namespaced `nutrifit_*` tables on startup when DB is configured. |
 
 ## Project layout
 
