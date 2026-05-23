@@ -48,6 +48,27 @@ final plan = await api.generateMealPlan(
 final recipe = await api.getRecipeDetails(plan.meals.first.id);
 print('${recipe.title} - ${recipe.nutrients.caloriesKcal} kcal');
 
+// 5. Storage through Supabase-backed backend
+await api.saveStorageProfile(
+  const StoredUserProfile(
+    displayName: 'Esma',
+    heightCm: 170,
+    goalCaloriesKcal: 2100,
+  ),
+);
+await api.addMealLog(
+  const MealLogEntry(
+    name: 'Banana',
+    caloriesKcal: 105,
+    proteinG: 1.3,
+    carbsG: 27,
+    fatG: 0.4,
+    source: 'manual',
+  ),
+);
+final summary = await api.getDailyStorageSummary();
+print('${summary.totals.caloriesKcal} kcal logged today');
+
 // At app shutdown
 api.close();
 ```
@@ -61,7 +82,11 @@ api.close();
 | POST   | `/estimate-meal`              | `MealEstimate` | multipart field name = `image`, jpg/png/webp   |
 | GET    | `/meal-plan`                  | `MealPlanResponse` | `time_frame`, `target_calories`, `diet`    |
 | GET    | `/recipes/{id}`               | `RecipeDetails` | Spoonacular recipe details and nutrients       |
+| `/storage/*` | profile/meals/water/weight/activity | Supabase-backed user tracking data |
 | GET    | `/health`                     | `bool`         | use `api.ping()` for a soft connectivity check |
+
+Storage calls send `X-User-Id`. Until real auth exists, the default is `demo-user`;
+pass a stable user id from the app once auth/profile ownership is decided.
 
 ## Errors
 
