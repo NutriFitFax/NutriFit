@@ -26,3 +26,14 @@ services:
         value: gpt-4o
       - key: OPENAI_API_KEY
         sync: false
+      # Supabase Postgres (project: NutFit database, ref: gyotsohasnzsjpvoywcp).
+      # Use the Session pooler connection string from Supabase -> Project Settings
+      # -> Database -> Connection string -> JDBC.
+      # Example: jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+      - key: SUPABASE_DB_URL
+        sync: false
+      # Pooler user is usually: postgres.gyotsohasnzsjpvoywcp
+      - key: SUPABASE_DB_USER
+        sync: false
+      - key: SUPABASE_DB_PASSWORD
+        sync: false

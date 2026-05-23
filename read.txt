@@ -7,6 +7,7 @@ Current status
   https://nutrifit-backend-lnm0.onrender.com
 - Backend endpoints currently available:
   GET /health
+  GET /db-health
   GET /barcode/{barcode}
   GET /search?q=&page=&page_size=
   POST /estimate-meal
@@ -19,8 +20,16 @@ Current status
 - Flutter API client exists in mobile/lib/api/.
 - Camera, barcode, meal photo, search, food detail, home, navigation, and history UI exist.
 - Flutter is not installed on this machine, so mobile tests must be run by someone with Flutter installed.
-- No Supabase/database connection exists in the backend yet. There are no JDBC,
-  Postgres, Supabase, repository, or migration files in this repo.
+- Supabase project "NutFit database" (ref: gyotsohasnzsjpvoywcp, region: eu-west-1)
+  has the schema in place (Users, Profile, Meals, Cached_foods, Ai_scan_request,
+  Water_log, Water_goal, Weight_log, Workouts, Exercises, Meal_ideas,
+  User_meal_preferences, User_corrections, Moderation_flags). RLS is enabled on
+  every table. No app writes hit it yet.
+- Backend now has a Postgres JDBC dependency and a conditional DataSource:
+  - GET /db-health returns {configured:false} when SUPABASE_DB_URL is unset,
+    {configured:true, ok:true} when SELECT 1 succeeds, or
+    {configured:true, ok:false, error:...} on failure.
+  - No repositories or migrations yet -- waiting on Davud's storage models.
 
 
 Immediate steps for Esma
@@ -236,21 +245,41 @@ Sources:
 
 Supabase database connection
 ----------------------------
-Current status: not connected in code.
+Current status: wired but not yet activated on Render.
+- Supabase project "NutFit database" (ref: gyotsohasnzsjpvoywcp) is ACTIVE_HEALTHY.
+  Tables and FKs exist; RLS is on; no rows except Meal_ideas (15 seed rows).
+- Backend has a Postgres JDBC driver and a conditional DataSource that only
+  binds when SUPABASE_DB_URL is set. App boots fine without the envs.
+- GET /db-health is the gate. It does not touch app tables.
 
-What is missing:
-- A backend database dependency/config.
-- Supabase Postgres connection env vars in Render.
-- Tables or migrations for users, meals, water, weight, activity, and history.
-- Repository/service code that reads and writes those tables.
+What is still missing:
+- Real SUPABASE_DB_URL/USER/PASSWORD values in Render.
+- Migrations and repository/service code (waiting on Davud's storage models).
 
-Safe setup approach:
-1. In Supabase, use the project database connection string, not the public anon key,
-   for backend server-to-database access.
-2. Store it only in Render environment variables. Do not put it in Flutter or git.
-3. Add a backend database health endpoint before adding app data writes.
-4. Add migrations/schema after Davud finalizes the storage models.
-5. Only then connect Flutter screens to backend persistence endpoints.
+To activate the connection on Render:
+1. In Supabase -> Project Settings -> Database -> Connection string -> JDBC,
+   copy the Session pooler URL. It looks like:
+     jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+   The pooler user is usually:
+     postgres.gyotsohasnzsjpvoywcp
+   The password is the database password you set when you created the project.
+2. In Render -> nutrifit-backend -> Environment, set:
+     SUPABASE_DB_URL       = (the JDBC URL above)
+     SUPABASE_DB_USER      = postgres.gyotsohasnzsjpvoywcp
+     SUPABASE_DB_PASSWORD  = (your Supabase DB password)
+3. Manual Deploy -> Deploy latest commit. Then open:
+     https://nutrifit-backend-lnm0.onrender.com/db-health
+   Before envs are set: {"configured":false,"ok":false}
+   After envs are set:  {"configured":true,"ok":true}
+4. Only after /db-health is green: add migrations/repositories on top of
+   Davud's finalised storage models, then connect Flutter screens.
+
+Safety rules (unchanged):
+- Use the project database connection string, NOT the public anon key.
+- Store it only in Render environment variables. Do not put it in Flutter or git.
+- The MCP "supabase" server gives local tools the same project access; only run
+  apply_migration / execute_sql against the remote project when you have
+  reviewed the SQL.
 
 
 Recommended implementation order
