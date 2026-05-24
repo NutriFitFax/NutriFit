@@ -11,13 +11,12 @@ Backend endpoints power the mobile app, plus health checks used by Render/Fly up
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/meal-plan`               | Generate a day/week recipe meal plan     |
 | GET    | `/recipes/{id}`            | Get recipe details and nutrition         |
-| `/storage/*` | profile/meals/water/weight/activity | Persist user tracking data in Supabase Postgres |
 | GET    | `/db-health`               | Database connectivity probe              |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
 Search is backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). Barcode lookup tries USDA first, then falls back to [Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/) for products USDA does not have. The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set; if OpenAI is not configured or fails, the endpoint returns an upstream error instead of inventing fake foods.
 Meal plans and recipe details are backed by [Spoonacular](https://spoonacular.com/food-api/docs) when `SPOONACULAR_API_KEY` is set.
-Storage endpoints are backed by Supabase Postgres when `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD` point at Davud's current Supabase project. On startup, the backend creates namespaced `nutrifit_*` tables when `NUTRIFIT_DB_AUTO_INIT=true`.
+`/db-health` is backed by Supabase Postgres (project `pyfpxlhmqjdorsqhbtyh`, eu-west-1) when `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD` are set.
 
 Live staging URL: <https://nutrifit-backend-lnm0.onrender.com>
 
@@ -42,7 +41,6 @@ curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 curl "http://127.0.0.1:8000/meal-plan?time_frame=day&target_calories=2000&diet=vegetarian"
 curl http://127.0.0.1:8000/recipes/716429
 curl http://127.0.0.1:8000/db-health
-curl -H "X-User-Id: demo-user" http://127.0.0.1:8000/storage/summary
 ```
 
 ## Tests
@@ -102,10 +100,9 @@ All settings come from environment variables. See `.env.example` for the full li
 | `SPOONACULAR_BASE_URL` | `https://api.spoonacular.com` | Spoonacular API base URL. |
 | `OPENAI_API_KEY` | unset   | Required for real meal-photo estimation. Missing or failing OpenAI calls return an upstream error. |
 | `OPENAI_MODEL`   | `gpt-4o` | Vision model used by `/estimate-meal`.                              |
-| `SUPABASE_DB_URL` | unset | JDBC URL for Davud's current Supabase project. |
-| `SUPABASE_DB_USER` | unset | Supabase pooler user, usually `postgres.<project-ref>`. |
+| `SUPABASE_DB_URL` | unset | JDBC Session pooler URL for project `pyfpxlhmqjdorsqhbtyh`. |
+| `SUPABASE_DB_USER` | unset | Pooler user: `postgres.pyfpxlhmqjdorsqhbtyh`. |
 | `SUPABASE_DB_PASSWORD` | unset | Supabase database password. |
-| `NUTRIFIT_DB_AUTO_INIT` | `true` | Creates namespaced `nutrifit_*` tables on startup when DB is configured. |
 
 ## Project layout
 
@@ -127,6 +124,3 @@ nutrifit-backend/
 +-- pom.xml                 Maven build
 ```
 
-## Contracts with the Flutter app
-
-The Dart client lives in `mobile/lib/api/`. Java response records in `src/main/java/com/nutrifit/backend/model/` are mirrored by Dart classes in `mobile/lib/api/models.dart`. Breaking a JSON field name or type means breaking the app; version-bump or coordinate before changing the contract.

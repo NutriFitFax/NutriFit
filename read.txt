@@ -17,17 +17,14 @@ Current status
 - Search uses USDA.
 - Meal photo uses OpenAI. It must not return fake foods when OpenAI fails.
 - Meal plan and recipe details use Spoonacular.
-- Flutter API client exists in mobile/lib/api/.
 - Camera, barcode, meal photo, search, food detail, home, navigation, and history UI exist.
 - Flutter is not installed on this machine, so mobile tests must be run by someone with Flutter installed.
-- Davud created a newer Supabase project. Render must use that project's
-  SUPABASE_DB_URL, SUPABASE_DB_USER, and SUPABASE_DB_PASSWORD values.
-- Backend now has a Postgres JDBC dependency and a conditional DataSource:
+- Supabase project is "NutFit db" (ref pyfpxlhmqjdorsqhbtyh, eu-west-1). Render must use
+  that project's SUPABASE_DB_URL, SUPABASE_DB_USER, and SUPABASE_DB_PASSWORD values.
+- Backend has a conditional DataSource (Postgres JDBC):
   - GET /db-health returns {configured:false} when SUPABASE_DB_URL is unset,
     {configured:true, ok:true} when SELECT 1 succeeds, or
     {configured:true, ok:false, error:...} on failure.
-  - /storage/* endpoints persist profile, meals, water, weight, and activity logs
-    to namespaced nutrifit_* tables.
 
 
 Immediate steps for Esma
@@ -243,54 +240,35 @@ Sources:
 
 Supabase database connection
 ----------------------------
-Current status: wired in code. Render must point at Davud's newest Supabase project.
-- Backend has a Postgres JDBC driver and a conditional DataSource that only
-  binds when SUPABASE_DB_URL is set. App boots fine without the envs.
-- GET /db-health is the connection gate.
-- /storage/* persists user data in these auto-created tables:
-  - nutrifit_profiles
-  - nutrifit_meal_logs
-  - nutrifit_water_logs
-  - nutrifit_weight_logs
-  - nutrifit_activity_logs
+Project: "NutFit db" (ref pyfpxlhmqjdorsqhbtyh, eu-west-1, Postgres 17.6).
+Backend has a conditional DataSource (only binds when SUPABASE_DB_URL is set).
+App boots fine without the envs. GET /db-health is the connection probe.
 
-What is still missing:
-- Real SUPABASE_DB_URL/USER/PASSWORD values from Davud's new Supabase project in Render.
-- Flutter screens still need to call the storage API methods.
-
-To switch Render to Davud's new Supabase project:
+To wire Render to this Supabase project:
 1. In Supabase -> Project Settings -> Database -> Connection string -> JDBC,
-   copy the Session pooler URL. It looks like:
+   copy the Session pooler URL:
      jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres
-   The pooler user is usually:
-     postgres.<project-ref>
-   The password is the database password you set when you created the project.
+   Pooler user: postgres.pyfpxlhmqjdorsqhbtyh
 2. In Render -> nutrifit-backend -> Environment, set:
-     SUPABASE_DB_URL       = (the JDBC URL above)
-     SUPABASE_DB_USER      = postgres.<project-ref>
-     SUPABASE_DB_PASSWORD  = (your Supabase DB password)
-     NUTRIFIT_DB_AUTO_INIT = true
+     SUPABASE_DB_URL      = (the JDBC URL above)
+     SUPABASE_DB_USER     = postgres.pyfpxlhmqjdorsqhbtyh
+     SUPABASE_DB_PASSWORD = (your Supabase DB password)
 3. Manual Deploy -> Deploy latest commit. Then open:
      https://nutrifit-backend-lnm0.onrender.com/db-health
-   Before envs are set: {"configured":false,"ok":false}
-   After envs are set:  {"configured":true,"ok":true}
-4. Test storage:
-     GET https://nutrifit-backend-lnm0.onrender.com/storage/summary
-   It should return an empty daily summary for demo-user if the DB is connected.
-5. Connect Flutter screens to the API methods in mobile/lib/api/api_client.dart.
+   Before envs: {"configured":false,"ok":false}
+   After envs:  {"configured":true,"ok":true}
 
-Safety rules (unchanged):
-- Use the project database connection string, NOT the public anon key.
+Safety rules:
+- Use the JDBC connection string, NOT the public anon key.
 - Store it only in Render environment variables. Do not put it in Flutter or git.
-- The MCP "supabase" server gives local tools the same project access; only run
-  apply_migration / execute_sql against the remote project when you have
-  reviewed the SQL.
+- The MCP "supabase" server has admin access; only run apply_migration /
+  execute_sql after reviewing the SQL with the team.
 
 
 Recommended implementation order
 --------------------------------
 1. OpenAI key is fixed and banana photo was confirmed on the live backend.
-2. Switch Render SUPABASE_DB_* env vars to Davud's new Supabase project.
+2. Set Render SUPABASE_DB_* env vars to project pyfpxlhmqjdorsqhbtyh (see "Supabase database connection" section).
 3. Ferhad connects home placeholders to the backend storage API.
 4. Ahmed verifies search and food detail with live backend URL.
 5. Bakir verifies barcode and meal-photo flow on a real phone.

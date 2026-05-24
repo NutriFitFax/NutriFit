@@ -26,15 +26,13 @@ services:
         value: gpt-4o
       - key: OPENAI_API_KEY
         sync: false
-      # Supabase Postgres. Use Davud's current project values from Supabase ->
-      # Project Settings -> Database -> Connection string -> JDBC.
+      # Supabase Postgres (project pyfpxlhmqjdorsqhbtyh, eu-west-1).
+      # JDBC Session pooler URL from Supabase -> Project Settings -> Database.
       # Example: jdbc:postgresql://aws-0-eu-west-1.pooler.supabase.com:5432/postgres
       - key: SUPABASE_DB_URL
         sync: false
-      # Pooler user is usually: postgres.<project-ref>
+      # Pooler user: postgres.pyfpxlhmqjdorsqhbtyh
       - key: SUPABASE_DB_USER
         sync: false
       - key: SUPABASE_DB_PASSWORD
         sync: false
-      - key: NUTRIFIT_DB_AUTO_INIT
-        value: "true"
