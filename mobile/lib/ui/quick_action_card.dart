@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app/haptics.dart';
+
 class QuickActionCard extends StatelessWidget {
   final Widget icon;
   final String title;
@@ -19,7 +21,7 @@ class QuickActionCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
+        onTap: () { Haptics.selectionClick(); onTap(); },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

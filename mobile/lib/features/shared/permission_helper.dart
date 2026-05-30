@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../app/haptics.dart';
+
 class PermissionHelper {
   static Future<bool> requestCamera(BuildContext context) async {
     final status = await Permission.camera.request();
@@ -18,11 +20,12 @@ class PermissionHelper {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
+              onPressed: () { Haptics.selectionClick(); Navigator.of(ctx).pop(); },
               child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () {
+                Haptics.selectionClick();
                 Navigator.of(ctx).pop();
                 openAppSettings();
               },

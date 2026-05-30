@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../app/haptics.dart';
+
 class FlashToggle extends StatefulWidget {
   final MobileScannerController controller;
   const FlashToggle({super.key, required this.controller});
@@ -19,6 +21,7 @@ class _FlashToggleState extends State<FlashToggle> {
       color: Colors.white,
       tooltip: _torchOn ? 'Turn off flash' : 'Turn on flash',
       onPressed: () {
+        Haptics.selectionClick();
         widget.controller.toggleTorch();
         setState(() => _torchOn = !_torchOn);
       },

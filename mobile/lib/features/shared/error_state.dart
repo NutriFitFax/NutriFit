@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/haptics.dart';
+
 class ErrorState extends StatelessWidget {
   final String message;
   final String buttonLabel;
@@ -29,7 +31,7 @@ class ErrorState extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: onRetry, child: Text(buttonLabel)),
+            FilledButton(onPressed: () { Haptics.selectionClick(); onRetry(); }, child: Text(buttonLabel)),
           ],
         ),
       ),

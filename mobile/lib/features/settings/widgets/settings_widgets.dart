@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/haptics.dart';
 import '../../../app/nutri_colors.dart';
 
 /// Accent options used by the Appearance setting.
@@ -126,7 +127,7 @@ class SettingsRow extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap == null ? null : () { Haptics.selectionClick(); onTap!(); },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
           child: Row(

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../api/api_client.dart';
 import '../../api/api_exception.dart';
 import '../../api/models.dart';
+import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../../screens/food_detail_screen.dart';
@@ -91,6 +92,7 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
+                      Haptics.selectionClick();
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -110,6 +112,7 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
                   flex: 2,
                   child: FilledButton.icon(
                     onPressed: () {
+                      Haptics.lightImpact();
                       // TODO(Davud): persist to daily log.
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${_food!.name} logged')),
@@ -288,11 +291,11 @@ class _ErrorView extends StatelessWidget {
         const SizedBox(height: 12),
         Text(message, textAlign: TextAlign.center),
         const SizedBox(height: 16),
-        FilledButton(onPressed: onRetry, child: const Text('Retry')),
+        FilledButton(onPressed: () { Haptics.selectionClick(); onRetry(); }, child: const Text('Retry')),
         const SizedBox(height: 8),
-        OutlinedButton(onPressed: onScanAgain, child: const Text('Scan again')),
+        OutlinedButton(onPressed: () { Haptics.selectionClick(); onScanAgain(); }, child: const Text('Scan again')),
         if (onEnterManually != null)
-          TextButton(onPressed: onEnterManually, child: const Text('Search by name')),
+          TextButton(onPressed: () { Haptics.selectionClick(); onEnterManually!(); }, child: const Text('Search by name')),
       ],
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../api/models.dart';
+import '../../../app/haptics.dart';
 import '../../../app/nutri_colors.dart';
 import 'confidence_badge.dart';
 
@@ -23,7 +24,7 @@ class FoodItemCard extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap == null ? null : () { Haptics.selectionClick(); onTap!(); },
         borderRadius: BorderRadius.circular(24),
         child: Ink(
           decoration: BoxDecoration(

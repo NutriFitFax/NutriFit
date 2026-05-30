@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../app/haptics.dart';
 import '../api/api_exception.dart';
 import '../api/models.dart';
 import '../features/history/viewed_food_history_store.dart';
@@ -76,7 +77,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: _loading ? null : _search,
+                  onPressed: _loading ? null : () { Haptics.selectionClick(); _search(); },
                   child: const Text('Go'),
                 ),
               ],

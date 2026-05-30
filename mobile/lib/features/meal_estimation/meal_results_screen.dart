@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../api/api_exception.dart';
+import '../../app/haptics.dart';
 import '../../api/models.dart';
 import '../../app/nutri_colors.dart';
 import '../../features/history/viewed_food_history_store.dart';
@@ -275,7 +276,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             Text(message, textAlign: TextAlign.center, style: TextStyle(color: c.ink, fontSize: 15)),
             const SizedBox(height: 24),
-            FilledButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Go back')),
+            FilledButton(onPressed: () { Haptics.selectionClick(); Navigator.of(context).pop(); }, child: const Text('Go back')),
           ],
         ),
       ),
@@ -302,7 +303,7 @@ class _NoFoodView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            FilledButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Try again')),
+            FilledButton(onPressed: () { Haptics.selectionClick(); Navigator.of(context).pop(); }, child: const Text('Try again')),
           ],
         ),
       ),

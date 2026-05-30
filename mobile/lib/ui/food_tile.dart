@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/models.dart';
+import '../app/haptics.dart';
 import '../app/nutri_colors.dart';
 
 /// Compact food row used in search results, recents, today's meals, etc.
@@ -63,7 +64,7 @@ class FoodTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: onTap == null ? null : () { Haptics.selectionClick(); onTap!(); },
           borderRadius: BorderRadius.circular(18),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

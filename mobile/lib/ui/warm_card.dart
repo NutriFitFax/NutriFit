@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/haptics.dart';
 import '../app/nutri_colors.dart';
 
 /// A warm, cream-surface card with a soft border. Tap-aware (ripple) when
@@ -51,7 +52,7 @@ class WarmCard extends StatelessWidget {
               : null,
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: onTap == null ? null : () { Haptics.selectionClick(); onTap!(); },
           borderRadius: radii,
           child: Padding(padding: padding, child: child),
         ),

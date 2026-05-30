@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../api/api_client.dart';
+import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import 'meal_results_screen.dart';
@@ -127,7 +128,7 @@ class _MealPreviewScreenState extends State<MealPreviewScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _analyzing ? null : () => Navigator.of(context).maybePop(),
+                    onPressed: _analyzing ? null : () { Haptics.selectionClick(); Navigator.of(context).maybePop(); },
                     icon: const Icon(Icons.refresh, size: 18),
                     label: const Text('Retake'),
                   ),
@@ -136,7 +137,7 @@ class _MealPreviewScreenState extends State<MealPreviewScreen> {
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: _analyzing ? null : _analyze,
+                    onPressed: _analyzing ? null : () { Haptics.mediumImpact(); _analyze(); },
                     icon: _analyzing
                         ? const SizedBox(
                             width: 18, height: 18,

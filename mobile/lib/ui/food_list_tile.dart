@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/models.dart';
+import '../app/haptics.dart';
 
 class FoodListTile extends StatelessWidget {
   final String title;
@@ -26,7 +27,7 @@ class FoodListTile extends StatelessWidget {
     ];
 
     return ListTile(
-      onTap: onTap,
+      onTap: onTap == null ? null : () { Haptics.selectionClick(); onTap!(); },
       title: Text(title),
       subtitle: Text(subtitleParts.join(' · ')),
       trailing: trailingText == null

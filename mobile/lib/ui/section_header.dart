@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/haptics.dart';
 import '../app/nutri_colors.dart';
 
 /// A small all-caps label used inside cards (e.g. "TODAY'S ENERGY", "WATER").
@@ -67,7 +68,7 @@ class SeeAllLink extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.nutri;
     return InkWell(
-      onTap: onTap,
+      onTap: () { Haptics.selectionClick(); onTap(); },
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

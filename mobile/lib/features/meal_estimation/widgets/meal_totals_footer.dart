@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../api/models.dart';
+import '../../../app/haptics.dart';
 import '../../../app/nutri_colors.dart';
 
 class MealTotalsFooter extends StatelessWidget {
@@ -64,7 +65,7 @@ class MealTotalsFooter extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () { /* TODO(Davud): bulk log */ },
+                    onPressed: () { Haptics.selectionClick(); /* TODO(Davud): bulk log */ },
                     child: const Text('Adjust portions'),
                   ),
                 ),
@@ -73,6 +74,7 @@ class MealTotalsFooter extends StatelessWidget {
                   flex: 2,
                   child: FilledButton.icon(
                     onPressed: () {
+                      Haptics.mediumImpact();
                       // TODO(Davud): bulk log
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${t.items.length} foods logged to today')),
