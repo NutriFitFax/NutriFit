@@ -19,10 +19,13 @@ class NotificationService {
   static const _channelMeal  = 'nutrifit_meal_reminders';
   static const _channelWater = 'nutrifit_water_reminders';
 
-  // Fixed notification IDs — stable so cancel always hits the right one.
   static const _mealIds  = [100, 101, 102];
-  static const _waterIds = [200, 201, 202, 203, 204, 205, 206,
-                             207, 208, 209, 210, 211, 212, 213, 214];
+  // 24 water slots — enough for hourly reminders across a full day.
+  static const _waterIds = [
+    200, 201, 202, 203, 204, 205, 206, 207,
+    208, 209, 210, 211, 212, 213, 214, 215,
+    216, 217, 218, 219, 220, 221, 222, 223,
+  ];
 
   Future<void> init() async {
     tz.initializeTimeZones();
@@ -56,23 +59,21 @@ class NotificationService {
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  /// Schedules (or cancels) the three daily meal reminder notifications.
-  Future<void> setMealReminders(bool enabled) async {
+  /// Schedules (or cancels) daily meal reminder notifications.
+  ///
+  /// [times] is a list of (hour, minute) pairs — one per meal.
+  Future<void> setMealReminders(bool enabled, List<(int, int)> times) async {
     if (!_ready) return;
     for (final id in _mealIds) { await _plugin.cancel(id); }
     if (!enabled) return;
 
     await _requestPermission();
 
-    const meals = [
-      (100,  8,  0, 'Breakfast time',  'Log your breakfast in NutriFit.'),
-      (101, 12, 30, 'Lunch time',      'Log your lunch in NutriFit.'),
-      (102, 18, 30, 'Dinner time',     'Log your dinner in NutriFit.'),
-    ];
-
-    for (final (id, hour, min, title, body) in meals) {
+    final labels = ['Breakfast time', 'Lunch time', 'Dinner time'];
+    for (var i = 0; i < times.length && i < _mealIds.length; i++) {
+      final (hour, min) = times[i];
       await _plugin.zonedSchedule(
-        id, title, body,
+        _mealIds[i], labels[i], 'Log your meal in NutriFit.',
         _nextDailyInstance(hour, min),
         const NotificationDetails(
           android: AndroidNotificationDetails(
@@ -91,24 +92,35 @@ class NotificationService {
     }
   }
 
-  /// Schedules (or cancels) hourly water reminders from 8 AM to 10 PM.
-  Future<void> setWaterReminders(bool enabled) async {
+  /// Schedules (or cancels) repeating water reminders between [startH]:[startM]
+  /// and [endH]:[endM], firing every [intervalMin] minutes.
+  Future<void> setWaterReminders(
+    bool enabled,
+    int startH, int startM,
+    int endH,   int endM,
+    int intervalMin,
+  ) async {
     if (!_ready) return;
     for (final id in _waterIds) { await _plugin.cancel(id); }
     if (!enabled) return;
 
     await _requestPermission();
 
-    for (var i = 0; i < _waterIds.length; i++) {
+    var totalMin = startH * 60 + startM;
+    final endMin  = endH  * 60 + endM;
+    final stepMin = intervalMin;
+    var idx = 0;
+
+    while (totalMin <= endMin && idx < _waterIds.length) {
       await _plugin.zonedSchedule(
-        _waterIds[i],
+        _waterIds[idx],
         'Stay hydrated',
         'Time to drink a glass of water.',
-        _nextDailyInstance(8 + i, 0),
+        _nextDailyInstance(totalMin ~/ 60, totalMin % 60),
         const NotificationDetails(
           android: AndroidNotificationDetails(
             _channelWater, 'Water Reminders',
-            channelDescription: 'Hourly hydration reminders',
+            channelDescription: 'Hydration reminders',
             importance: Importance.low,
             priority: Priority.low,
           ),
@@ -119,6 +131,8 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
+      totalMin += stepMin;
+      idx++;
     }
   }
 

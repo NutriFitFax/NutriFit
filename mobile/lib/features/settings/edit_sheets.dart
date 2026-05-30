@@ -255,3 +255,275 @@ Widget _round(BuildContext context, IconData icon, VoidCallback onTap) {
     ),
   );
 }
+
+// ── Meal reminder times ──────────────────────────────────────────────────
+
+/// Holds the three meal reminder times.
+class MealReminderTimes {
+  final TimeOfDay breakfast;
+  final TimeOfDay lunch;
+  final TimeOfDay dinner;
+  const MealReminderTimes(this.breakfast, this.lunch, this.dinner);
+
+  List<(int, int)> get asPairs =>
+      [(breakfast.hour, breakfast.minute),
+       (lunch.hour, lunch.minute),
+       (dinner.hour, dinner.minute)];
+}
+
+Future<MealReminderTimes?> showMealTimesSheet(
+    BuildContext context, MealReminderTimes current) {
+  return _showSheet<MealReminderTimes>(
+    context,
+    _MealTimesSheet(current: current),
+  );
+}
+
+class _MealTimesSheet extends StatefulWidget {
+  final MealReminderTimes current;
+  const _MealTimesSheet({required this.current});
+
+  @override
+  State<_MealTimesSheet> createState() => _MealTimesSheetState();
+}
+
+class _MealTimesSheetState extends State<_MealTimesSheet> {
+  late TimeOfDay _breakfast;
+  late TimeOfDay _lunch;
+  late TimeOfDay _dinner;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _breakfast = widget.current.breakfast;
+    _lunch     = widget.current.lunch;
+    _dinner    = widget.current.dinner;
+  }
+
+  static int _toMin(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  Future<void> _pick(TimeOfDay current, ValueChanged<TimeOfDay> onPicked) async {
+    // No MediaQuery override — clock respects the device's 12h/24h setting.
+    final picked = await showTimePicker(context: context, initialTime: current);
+    if (picked != null) { onPicked(picked); setState(() => _error = null); }
+  }
+
+  void _trySave() {
+    final b = _toMin(_breakfast), l = _toMin(_lunch), d = _toMin(_dinner);
+    if (b >= l) {
+      setState(() => _error = 'Breakfast must be earlier than Lunch.');
+      return;
+    }
+    if (l >= d) {
+      setState(() => _error = 'Lunch must be earlier than Dinner.');
+      return;
+    }
+    Navigator.of(context).pop(MealReminderTimes(_breakfast, _lunch, _dinner));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Meal reminder times',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22)),
+            const SizedBox(height: 4),
+            Text('Tap a meal to change its time.',
+                style: TextStyle(color: c.ink2, fontSize: 13.5)),
+            const SizedBox(height: 16),
+            _TimePickerRow('Breakfast', _breakfast,
+                () => _pick(_breakfast, (t) => setState(() => _breakfast = t))),
+            Divider(height: 1, color: c.line),
+            _TimePickerRow('Lunch', _lunch,
+                () => _pick(_lunch, (t) => setState(() => _lunch = t))),
+            Divider(height: 1, color: c.line),
+            _TimePickerRow('Dinner', _dinner,
+                () => _pick(_dinner, (t) => setState(() => _dinner = t))),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(_error!, style: TextStyle(color: c.warn, fontSize: 13)),
+            ],
+            const SizedBox(height: 20),
+            FilledButton(onPressed: _trySave, child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Water reminder schedule ──────────────────────────────────────────────
+
+/// Interval is stored in minutes.
+class WaterSchedule {
+  final TimeOfDay start;
+  final TimeOfDay end;
+  final int intervalMinutes;
+  const WaterSchedule({required this.start, required this.end, required this.intervalMinutes});
+}
+
+/// Available interval options (minutes → display label).
+const _intervalOptions = [
+  (30,  '30 min'),
+  (60,  '1 hour'),
+  (90,  '1.5 h'),
+  (120, '2 hours'),
+  (180, '3 hours'),
+];
+
+Future<WaterSchedule?> showWaterScheduleSheet(
+    BuildContext context, WaterSchedule current) {
+  return _showSheet<WaterSchedule>(
+    context,
+    _WaterScheduleSheet(current: current),
+  );
+}
+
+class _WaterScheduleSheet extends StatefulWidget {
+  final WaterSchedule current;
+  const _WaterScheduleSheet({required this.current});
+
+  @override
+  State<_WaterScheduleSheet> createState() => _WaterScheduleSheetState();
+}
+
+class _WaterScheduleSheetState extends State<_WaterScheduleSheet> {
+  late TimeOfDay _start;
+  late TimeOfDay _end;
+  late int _interval;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _start    = widget.current.start;
+    _end      = widget.current.end;
+    _interval = widget.current.intervalMinutes;
+  }
+
+  static int _toMin(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  Future<void> _pick(TimeOfDay current, ValueChanged<TimeOfDay> onPicked) async {
+    final picked = await showTimePicker(context: context, initialTime: current);
+    if (picked != null) { onPicked(picked); setState(() => _error = null); }
+  }
+
+  void _trySave() {
+    if (_toMin(_start) >= _toMin(_end)) {
+      setState(() => _error = 'Start time must be earlier than end time.');
+      return;
+    }
+    Navigator.of(context).pop(
+        WaterSchedule(start: _start, end: _end, intervalMinutes: _interval));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Water reminder schedule',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22)),
+            const SizedBox(height: 4),
+            Text('Remind me to drink water between these times.',
+                style: TextStyle(color: c.ink2, fontSize: 13.5)),
+            const SizedBox(height: 16),
+            _TimePickerRow('From', _start,
+                () => _pick(_start, (t) => setState(() => _start = t))),
+            Divider(height: 1, color: c.line),
+            _TimePickerRow('Until', _end,
+                () => _pick(_end, (t) => setState(() => _end = t))),
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(_error!, style: TextStyle(color: c.warn, fontSize: 13)),
+            ],
+            const SizedBox(height: 20),
+            Text('EVERY',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                    color: c.ink2, letterSpacing: 0.8)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (min, label) in _intervalOptions)
+                  GestureDetector(
+                    onTap: () { Haptics.selectionClick(); setState(() => _interval = min); },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: _interval == min ? c.primary : c.surfaceSunken,
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: _interval == min ? c.primary : c.line,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 13.5, fontWeight: FontWeight.w600,
+                          color: _interval == min ? Colors.white : c.ink2,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            FilledButton(onPressed: _trySave, child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared time picker row ───────────────────────────────────────────────
+
+class _TimePickerRow extends StatelessWidget {
+  final String label;
+  final TimeOfDay time;
+  final VoidCallback onTap;
+  const _TimePickerRow(this.label, this.time, this.onTap);
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return InkWell(
+      onTap: () { Haptics.selectionClick(); onTap(); },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+            ),
+            // time.format(context) respects the device's 12h/24h preference.
+            Text(time.format(context),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
+                    color: c.primary)),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right, size: 18, color: c.ink3),
+          ],
+        ),
+      ),
+    );
+  }
+}

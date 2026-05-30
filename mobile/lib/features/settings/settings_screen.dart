@@ -42,7 +42,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _waterMl;
 
   bool _mealReminders = true;
+  late MealReminderTimes _mealTimes;
+
   bool _waterReminders = false;
+  late TimeOfDay _waterStart;
+  late TimeOfDay _waterEnd;
+  late int _waterInterval;
+
   bool _haptics = true;
 
   String get _avatarLetter =>
@@ -67,7 +73,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _accent         = prefs.accent;
     _waterMl        = prefs.waterGoalMl;
     _mealReminders  = prefs.mealReminders;
+    _mealTimes      = _parseMealTimes(prefs.mealReminderTimes);
     _waterReminders = prefs.waterReminders;
+    _waterStart     = _parseTime(prefs.waterReminderStart);
+    _waterEnd       = _parseTime(prefs.waterReminderEnd);
+    _waterInterval  = prefs.waterReminderIntervalMinutes;
     _haptics        = prefs.haptics;
     _loadFromApi();
   }
@@ -195,25 +205,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SettingsToggleRow(
               icon: Icons.restaurant_outlined, iconColor: c.protein, iconBg: c.proteinSoft,
               title: 'Meal reminders',
-              subtitle: 'Nudge me to log meals',
+              subtitle: _mealReminders ? _mealTimesDisplay : 'Nudge me to log meals',
               value: _mealReminders,
-              onChanged: (v) {
+              onChanged: (v) async {
                 setState(() => _mealReminders = v);
-                SettingsPrefs.instance.setMealReminders(v);
-                NotificationService.instance.setMealReminders(v);
+                await SettingsPrefs.instance.setMealReminders(v);
+                await NotificationService.instance.setMealReminders(v, _mealTimes.asPairs);
+                if (mounted) _toast(v ? 'Meal reminders on · $_mealTimesDisplay' : 'Meal reminders turned off');
               },
             ),
+            if (_mealReminders)
+              SettingsRow(
+                icon: Icons.schedule_outlined, iconColor: c.protein, iconBg: c.proteinSoft,
+                title: 'Reminder times',
+                value: _mealTimesDisplay,
+                onTap: _editMealTimes,
+              ),
             SettingsToggleRow(
               icon: Icons.water_drop_outlined, iconColor: c.water, iconBg: c.waterSoft,
               title: 'Water reminders',
-              subtitle: 'Hourly hydration nudges',
+              subtitle: _waterReminders ? _waterScheduleDisplay : 'Hourly hydration nudges',
               value: _waterReminders,
-              onChanged: (v) {
+              onChanged: (v) async {
                 setState(() => _waterReminders = v);
-                SettingsPrefs.instance.setWaterReminders(v);
-                NotificationService.instance.setWaterReminders(v);
+                await SettingsPrefs.instance.setWaterReminders(v);
+                await NotificationService.instance.setWaterReminders(
+                  v,
+                  _waterStart.hour, _waterStart.minute,
+                  _waterEnd.hour,   _waterEnd.minute,
+                  _waterInterval,
+                );
+                if (mounted) _toast(v ? 'Water reminders on · $_waterScheduleDisplay' : 'Water reminders turned off');
               },
             ),
+            if (_waterReminders)
+              SettingsRow(
+                icon: Icons.schedule_outlined, iconColor: c.water, iconBg: c.waterSoft,
+                title: 'Schedule',
+                value: _waterScheduleDisplay,
+                onTap: _editWaterSchedule,
+              ),
             SettingsToggleRow(
               icon: Icons.vibration, iconColor: c.fat, iconBg: c.fatSoft,
               title: 'Haptic feedback',
@@ -453,6 +484,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ],
     );
+  }
+
+  // ── Time helpers ──────────────────────────────────────────────────────────
+
+  static TimeOfDay _parseTime(String hhmm) {
+    final parts = hhmm.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  static MealReminderTimes _parseMealTimes(List<String> list) => MealReminderTimes(
+        _parseTime(list[0]),
+        _parseTime(list[1]),
+        _parseTime(list[2]),
+      );
+
+  static String _fmtTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  String get _mealTimesDisplay =>
+      '${_fmtTime(_mealTimes.breakfast)}, ${_fmtTime(_mealTimes.lunch)}, ${_fmtTime(_mealTimes.dinner)}';
+
+  String get _waterScheduleDisplay =>
+      '${_fmtTime(_waterStart)} – ${_fmtTime(_waterEnd)}, every ${_fmtInterval(_waterInterval)}';
+
+  static String _fmtInterval(int minutes) {
+    if (minutes < 60) return '${minutes}min';
+    if (minutes == 60) return '1h';
+    if (minutes % 60 == 0) return '${minutes ~/ 60}h';
+    return '${minutes ~/ 60}h ${minutes % 60}min';
+  }
+
+  Future<void> _editMealTimes() async {
+    final result = await showMealTimesSheet(context, _mealTimes);
+    if (result == null || !mounted) return;
+    setState(() => _mealTimes = result);
+    final strings = [
+      _fmtTime(result.breakfast),
+      _fmtTime(result.lunch),
+      _fmtTime(result.dinner),
+    ];
+    await SettingsPrefs.instance.setMealReminderTimes(strings);
+    if (_mealReminders) {
+      await NotificationService.instance.setMealReminders(true, result.asPairs);
+      if (mounted) _toast('Meal reminder times updated');
+    }
+  }
+
+  Future<void> _editWaterSchedule() async {
+    final result = await showWaterScheduleSheet(
+      context,
+      WaterSchedule(start: _waterStart, end: _waterEnd, intervalMinutes: _waterInterval),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _waterStart    = result.start;
+      _waterEnd      = result.end;
+      _waterInterval = result.intervalMinutes;
+    });
+    await SettingsPrefs.instance.setWaterReminderStart(_fmtTime(result.start));
+    await SettingsPrefs.instance.setWaterReminderEnd(_fmtTime(result.end));
+    await SettingsPrefs.instance.setWaterReminderIntervalMinutes(result.intervalMinutes);
+    if (_waterReminders) {
+      await NotificationService.instance.setWaterReminders(
+        true,
+        result.start.hour, result.start.minute,
+        result.end.hour,   result.end.minute,
+        result.intervalMinutes,
+      );
+      if (mounted) _toast('Water reminder schedule updated');
+    }
   }
 
   static String _thousands(int n) {

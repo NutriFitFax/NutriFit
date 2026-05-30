@@ -54,8 +54,31 @@ class SettingsPrefs {
   bool get mealReminders => _p.getBool(_kMealReminders) ?? true;
   Future<void> setMealReminders(bool v) => _p.setBool(_kMealReminders, v);
 
+  static const _kMealTimes = 'meal_reminder_times';
+  static const _defaultMealTimes = ['08:00', '12:30', '18:30'];
+
+  List<String> get mealReminderTimes =>
+      _p.getStringList(_kMealTimes) ?? _defaultMealTimes;
+  Future<void> setMealReminderTimes(List<String> t) =>
+      _p.setStringList(_kMealTimes, t);
+
   bool get waterReminders => _p.getBool(_kWaterReminders) ?? false;
   Future<void> setWaterReminders(bool v) => _p.setBool(_kWaterReminders, v);
+
+  static const _kWaterStart       = 'water_reminder_start';
+  static const _kWaterEnd         = 'water_reminder_end';
+  // New key (minutes) — avoids colliding with old key that stored hours.
+  static const _kWaterIntervalMin = 'water_reminder_interval_min';
+
+  String get waterReminderStart => _p.getString(_kWaterStart) ?? '08:00';
+  Future<void> setWaterReminderStart(String t) => _p.setString(_kWaterStart, t);
+
+  String get waterReminderEnd => _p.getString(_kWaterEnd) ?? '22:00';
+  Future<void> setWaterReminderEnd(String t) => _p.setString(_kWaterEnd, t);
+
+  int get waterReminderIntervalMinutes => _p.getInt(_kWaterIntervalMin) ?? 60;
+  Future<void> setWaterReminderIntervalMinutes(int minutes) =>
+      _p.setInt(_kWaterIntervalMin, minutes);
 
   static const _kHaptics = 'haptics';
 
