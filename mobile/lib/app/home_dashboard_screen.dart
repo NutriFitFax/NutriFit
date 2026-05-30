@@ -52,11 +52,13 @@ class _MealLog {
 class HomeDashboardScreen extends StatelessWidget {
   final ViewedFoodHistoryStore history;
   final void Function(AppTabId tab) onOpenTab;
+  final VoidCallback? onOpenSettings;
 
   const HomeDashboardScreen({
     super.key,
     required this.history,
     required this.onOpenTab,
+    this.onOpenSettings,
   });
 
   @override
@@ -111,22 +113,25 @@ class HomeDashboardScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft, end: Alignment.bottomRight,
-                          colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
+                    GestureDetector(
+                      onTap: onOpenSettings,
+                      child: Container(
+                        width: 44, height: 44,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft, end: Alignment.bottomRight,
+                            colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
+                          ),
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(color: c.line),
                         ),
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(color: c.line),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'B',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
-                            ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'B',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
+                              ),
+                        ),
                       ),
                     ),
                   ],

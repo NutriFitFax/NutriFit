@@ -6,6 +6,7 @@ import '../features/barcode/barcode_scanner_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/history/viewed_food_history_store.dart';
 import '../features/meal_estimation/meal_entry_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../screens/search_screen.dart';
 import '../ui/barcode_icon.dart';
 import 'home_dashboard_screen.dart';
@@ -60,6 +61,11 @@ class _AppShellState extends State<AppShell> {
         build: () => HomeDashboardScreen(
           history: widget.history,
           onOpenTab: _openTab,
+          onOpenSettings: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => SettingsScreen(history: widget.history),
+            ),
+          ),
         ),
       ),
       _TabDef(
