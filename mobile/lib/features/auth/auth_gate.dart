@@ -31,3 +31,4 @@ class AuthGate extends StatelessWidget {
     return AppShell(api: api, history: history);
   }
 }
+
