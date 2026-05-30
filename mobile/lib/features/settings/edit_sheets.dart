@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
 import '../auth/user_profile.dart';
 
@@ -248,7 +249,7 @@ Widget _round(BuildContext context, IconData icon, VoidCallback onTap) {
     color: Colors.white,
     shape: CircleBorder(side: BorderSide(color: c.line)),
     child: InkWell(
-      onTap: () { HapticFeedback.selectionClick(); onTap(); },
+      onTap: () { Haptics.selectionClick(); onTap(); },
       customBorder: const CircleBorder(),
       child: SizedBox(width: 42, height: 42, child: Icon(icon, size: 20, color: c.ink)),
     ),

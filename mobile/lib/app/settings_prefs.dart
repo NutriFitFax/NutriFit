@@ -47,4 +47,18 @@ class SettingsPrefs {
 
   int get waterGoalMl => _p.getInt(_kWaterMl) ?? 2500;
   Future<void> setWaterGoalMl(int ml) => _p.setInt(_kWaterMl, ml);
+
+  static const _kMealReminders  = 'meal_reminders';
+  static const _kWaterReminders = 'water_reminders';
+
+  bool get mealReminders => _p.getBool(_kMealReminders) ?? true;
+  Future<void> setMealReminders(bool v) => _p.setBool(_kMealReminders, v);
+
+  bool get waterReminders => _p.getBool(_kWaterReminders) ?? false;
+  Future<void> setWaterReminders(bool v) => _p.setBool(_kWaterReminders, v);
+
+  static const _kHaptics = 'haptics';
+
+  bool get haptics => _p.getBool(_kHaptics) ?? true;
+  Future<void> setHaptics(bool v) => _p.setBool(_kHaptics, v);
 }

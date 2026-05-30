@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'haptics.dart';
 
 import '../features/history/viewed_food_history_store.dart';
 import '../screens/food_detail_screen.dart';
@@ -72,7 +72,7 @@ class HomeDashboardScreen extends StatelessWidget {
       body: RefreshIndicator(
         color: c.primary,
         onRefresh: () async {
-          HapticFeedback.mediumImpact();
+          Haptics.mediumImpact();
           await Future<void>.delayed(const Duration(milliseconds: 600));
         },
         child: CustomScrollView(
@@ -595,7 +595,7 @@ class _QuickAction extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: () { HapticFeedback.selectionClick(); onTap(); },
+        onTap: () { Haptics.selectionClick(); onTap(); },
         borderRadius: BorderRadius.circular(18),
         child: Ink(
           decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(18)),

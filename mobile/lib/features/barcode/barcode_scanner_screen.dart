@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+
+import '../../app/haptics.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/api_client.dart';
@@ -71,7 +72,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
     if (barcode == null || barcode.isEmpty) return;
 
     _controller.stop();
-    HapticFeedback.heavyImpact();
+    Haptics.heavyImpact();
 
     setState(() => _sheetOpen = true);
     showModalBottomSheet<void>(
@@ -98,7 +99,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   }
 
   Future<void> _toggleTorch() async {
-    HapticFeedback.selectionClick();
+    Haptics.selectionClick();
     await _controller.toggleTorch();
     if (mounted) setState(() => _torchOn = !_torchOn);
   }

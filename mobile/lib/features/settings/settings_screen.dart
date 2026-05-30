@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 import '../../api/api_client.dart';
+import '../../app/haptics.dart';
 import '../../api/models.dart';
+import '../../app/notification_service.dart';
 import '../../app/nutri_colors.dart';
 import '../../app/settings_prefs.dart';
 import '../auth/user_profile.dart';
@@ -63,9 +63,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     final prefs = SettingsPrefs.instance;
-    _unit    = prefs.unit;
-    _accent  = prefs.accent;
-    _waterMl = prefs.waterGoalMl;
+    _unit           = prefs.unit;
+    _accent         = prefs.accent;
+    _waterMl        = prefs.waterGoalMl;
+    _mealReminders  = prefs.mealReminders;
+    _waterReminders = prefs.waterReminders;
+    _haptics        = prefs.haptics;
     _loadFromApi();
   }
 
@@ -175,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 (UnitSystem.imperial, 'Imperial'),
               ],
               onChanged: (u) {
-                HapticFeedback.selectionClick();
+                Haptics.selectionClick();
                 setState(() => _unit = u);
                 SettingsPrefs.instance.setUnit(u);
               },
@@ -184,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.palette_outlined, iconColor: c.primary, iconBg: c.primaryTint,
               value: _accent,
               onChanged: (a) {
-                HapticFeedback.selectionClick();
+                Haptics.selectionClick();
                 setState(() => _accent = a);
                 SettingsPrefs.instance.setAccent(a);
               },
@@ -194,20 +197,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Meal reminders',
               subtitle: 'Nudge me to log meals',
               value: _mealReminders,
-              onChanged: (v) => setState(() => _mealReminders = v),
+              onChanged: (v) {
+                setState(() => _mealReminders = v);
+                SettingsPrefs.instance.setMealReminders(v);
+                NotificationService.instance.setMealReminders(v);
+              },
             ),
             SettingsToggleRow(
               icon: Icons.water_drop_outlined, iconColor: c.water, iconBg: c.waterSoft,
               title: 'Water reminders',
               subtitle: 'Hourly hydration nudges',
               value: _waterReminders,
-              onChanged: (v) => setState(() => _waterReminders = v),
+              onChanged: (v) {
+                setState(() => _waterReminders = v);
+                SettingsPrefs.instance.setWaterReminders(v);
+                NotificationService.instance.setWaterReminders(v);
+              },
             ),
             SettingsToggleRow(
               icon: Icons.vibration, iconColor: c.fat, iconBg: c.fatSoft,
               title: 'Haptic feedback',
               value: _haptics,
-              onChanged: (v) { setState(() => _haptics = v); if (v) HapticFeedback.lightImpact(); },
+              onChanged: (v) {
+                setState(() => _haptics = v);
+                SettingsPrefs.instance.setHaptics(v);
+                if (v) Haptics.lightImpact();
+              },
             ),
           ]),
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../app/haptics.dart';
 
 import '../../api/api_client.dart';
 import '../../app/nutri_colors.dart';
@@ -14,7 +15,7 @@ class MealEntryScreen extends StatelessWidget {
   const MealEntryScreen({super.key, required this.api, required this.history});
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
-    HapticFeedback.selectionClick();
+    Haptics.selectionClick();
     if (source == ImageSource.camera) {
       final granted = await PermissionHelper.requestCamera(context);
       if (!granted) return;

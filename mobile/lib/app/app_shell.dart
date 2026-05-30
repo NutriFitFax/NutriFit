@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../api/api_client.dart';
+import 'haptics.dart';
 import '../features/barcode/barcode_scanner_screen.dart';
 import '../features/history/history_screen.dart';
 import '../features/history/viewed_food_history_store.dart';
@@ -38,7 +38,7 @@ class _AppShellState extends State<AppShell> {
     final next = AppTabId.values.indexOf(id);
     if (next == -1 || next == _index) return;
     _selectTab(next);
-    HapticFeedback.lightImpact();
+    Haptics.lightImpact();
   }
 
   void _selectTab(int index) {

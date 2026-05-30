@@ -4,6 +4,7 @@ import 'api/api_client.dart';
 import 'api/api_config.dart';
 import 'app/app_shell.dart';
 import 'app/app_theme.dart';
+import 'app/notification_service.dart';
 import 'app/settings_prefs.dart';
 import 'features/history/viewed_food_history_store.dart';
 import 'features/settings/widgets/settings_widgets.dart';
@@ -11,6 +12,7 @@ import 'features/settings/widgets/settings_widgets.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SettingsPrefs.init();
+  await NotificationService.instance.init();
   runApp(
     NutriFitApp(
       api: NutriFitApi(baseUrl: ApiConfig.baseUrl),

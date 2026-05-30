@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
 import '../../screens/food_detail_screen.dart';
 import '../../ui/section_header.dart';
@@ -35,7 +35,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       body: RefreshIndicator(
         color: c.primary,
         onRefresh: () async {
-          HapticFeedback.mediumImpact();
+          Haptics.mediumImpact();
           await Future<void>.delayed(const Duration(milliseconds: 600));
         },
         child: ValueListenableBuilder<List<ViewedFoodEntry>>(
@@ -106,7 +106,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             label: Text(f.label),
                             selected: active,
                             onSelected: (_) {
-                              HapticFeedback.selectionClick();
+                              Haptics.selectionClick();
                               setState(() => _filter = f.id);
                             },
                             selectedColor: c.primary,
