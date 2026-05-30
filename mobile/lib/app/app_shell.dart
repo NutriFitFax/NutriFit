@@ -63,7 +63,10 @@ class _AppShellState extends State<AppShell> {
           onOpenTab: _openTab,
           onOpenSettings: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
-              builder: (_) => SettingsScreen(history: widget.history),
+              builder: (_) => SettingsScreen(
+                api: widget.api,
+                history: widget.history,
+              ),
             ),
           ),
         ),

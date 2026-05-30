@@ -8,8 +8,16 @@ import 'nutri_colors.dart';
 /// - Display / numerals: Newsreader (warm serif)
 /// - UI body / labels:   Manrope (clean geometric sans)
 /// - Color tokens live in [NutriColors] (ThemeExtension); see [nutri_colors.dart].
-ThemeData buildAppTheme() {
-  const c = NutriColors.light;
+///
+/// Pass [primary] to swap the accent colour; derived shades are computed
+/// from it automatically so the rest of the palette stays warm and consistent.
+ThemeData buildAppTheme({Color primary = const Color(0xFF2F6A4B)}) {
+  final c = NutriColors.light.copyWith(
+    primary: primary,
+    primaryDeep: _hsl(primary, lightnessOffset: -0.12),
+    primarySoft: _hsl(primary, lightness: 0.87, saturationScale: 0.45),
+    primaryTint: _hsl(primary, lightness: 0.92, saturationScale: 0.70),
+  );
 
   final colorScheme = ColorScheme.fromSeed(
     seedColor: c.primary,
@@ -52,7 +60,7 @@ ThemeData buildAppTheme() {
     colorScheme: colorScheme,
     scaffoldBackgroundColor: c.bg,
     textTheme: textTheme,
-    extensions: const [NutriColors.light],
+    extensions: [c],
 
     appBarTheme: AppBarTheme(
       backgroundColor: c.bg,
@@ -171,4 +179,16 @@ ThemeData buildAppTheme() {
       circularTrackColor: c.line,
     ),
   );
+}
+
+Color _hsl(
+  Color color, {
+  double? lightness,
+  double lightnessOffset = 0,
+  double saturationScale = 1.0,
+}) {
+  final hsl = HSLColor.fromColor(color);
+  final l = (lightness ?? hsl.lightness + lightnessOffset).clamp(0.0, 1.0);
+  final s = (hsl.saturation * saturationScale).clamp(0.0, 1.0);
+  return hsl.withLightness(l).withSaturation(s).toColor();
 }

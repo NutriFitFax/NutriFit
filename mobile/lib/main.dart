@@ -4,9 +4,13 @@ import 'api/api_client.dart';
 import 'api/api_config.dart';
 import 'app/app_shell.dart';
 import 'app/app_theme.dart';
+import 'app/settings_prefs.dart';
 import 'features/history/viewed_food_history_store.dart';
+import 'features/settings/widgets/settings_widgets.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SettingsPrefs.init();
   runApp(
     NutriFitApp(
       api: NutriFitApi(baseUrl: ApiConfig.baseUrl),
@@ -15,25 +19,38 @@ void main() {
   );
 }
 
-class NutriFitApp extends StatelessWidget {
+class NutriFitApp extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
 
-  const NutriFitApp({
-    super.key,
-    required this.api,
-    required this.history,
-  });
+  const NutriFitApp({super.key, required this.api, required this.history});
+
+  @override
+  State<NutriFitApp> createState() => _NutriFitAppState();
+}
+
+class _NutriFitAppState extends State<NutriFitApp> {
+  @override
+  void initState() {
+    super.initState();
+    SettingsPrefs.instance.accentNotifier.addListener(_onAccentChanged);
+  }
+
+  @override
+  void dispose() {
+    SettingsPrefs.instance.accentNotifier.removeListener(_onAccentChanged);
+    super.dispose();
+  }
+
+  void _onAccentChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
+    final primary = nutriAccentColor[SettingsPrefs.instance.accent]!;
     return MaterialApp(
       title: 'NutriFit',
-      theme: buildAppTheme(),
-      home: AppShell(
-        api: api,
-        history: history,
-      ),
+      theme: buildAppTheme(primary: primary),
+      home: AppShell(api: widget.api, history: widget.history),
     );
   }
 }

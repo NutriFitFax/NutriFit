@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../api/api_client.dart';
+import '../../api/models.dart';
 import '../../app/nutri_colors.dart';
+import '../../app/settings_prefs.dart';
 import '../auth/user_profile.dart';
 import '../history/viewed_food_history_store.dart';
 import 'edit_sheets.dart';
 import 'widgets/settings_widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
+  final NutriFitApi api;
   final UserProfile? profile;
   final ViewedFoodHistoryStore? history;
-  final ValueChanged<NutriAccent>? onAccentChanged;
   final VoidCallback? onLogout;
   final VoidCallback? onDeleteAccount;
-  final NutriAccent initialAccent;
-  final UnitSystem initialUnit;
 
   const SettingsScreen({
     super.key,
+    required this.api,
     this.profile,
     this.history,
-    this.onAccentChanged,
     this.onLogout,
     this.onDeleteAccount,
-    this.initialAccent = NutriAccent.forest,
-    this.initialUnit = UnitSystem.metric,
   });
 
   @override
@@ -35,13 +34,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late UserProfile _profile = widget.profile ??
       const UserProfile(name: 'Bakir H.', email: 'bakir@nutrifit.app', weightKg: 74.2, heightCm: 181);
 
-  // Goals — TODO: load/save via your daily-log / preferences store.
   int _calorieGoal = 2150;
   MacroGoals _macros = const MacroGoals(130, 240, 70);
-  int _waterMl = 2500;
 
-  late UnitSystem _unit = widget.initialUnit;
-  late NutriAccent _accent = widget.initialAccent;
+  late UnitSystem _unit;
+  late NutriAccent _accent;
+  late int _waterMl;
 
   bool _mealReminders = true;
   bool _waterReminders = false;
@@ -60,6 +58,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final (ft, inch) = UnitConvert.cmToFeetInches(_profile.heightCm);
     return "$ft'$inch\"";
   }
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = SettingsPrefs.instance;
+    _unit    = prefs.unit;
+    _accent  = prefs.accent;
+    _waterMl = prefs.waterGoalMl;
+    _loadFromApi();
+  }
+
+  // ── Backend ──────────────────────────────────────────────────────────────
+
+  Future<void> _loadFromApi() async {
+    try {
+      final stored = await widget.api.getStorageProfile();
+      if (!mounted) return;
+      setState(() {
+        _profile = UserProfile(
+          name: stored.displayName?.isNotEmpty == true
+              ? stored.displayName!
+              : _profile.name,
+          email: _profile.email,
+          weightKg: _profile.weightKg,
+          heightCm: stored.heightCm ?? _profile.heightCm,
+        );
+        if (stored.goalCaloriesKcal != null) {
+          _calorieGoal = stored.goalCaloriesKcal!.round();
+        }
+        _macros = MacroGoals(
+          stored.goalProteinG?.round() ?? _macros.protein,
+          stored.goalCarbsG?.round()   ?? _macros.carbs,
+          stored.goalFatG?.round()     ?? _macros.fat,
+        );
+      });
+    } catch (_) {
+      // Keep defaults when the backend is unreachable.
+    }
+  }
+
+  Future<void> _saveToApi() async {
+    try {
+      await widget.api.saveStorageProfile(StoredUserProfile(
+        displayName:      _profile.name,
+        heightCm:         _profile.heightCm,
+        goalCaloriesKcal: _calorieGoal.toDouble(),
+        goalProteinG:     _macros.protein.toDouble(),
+        goalCarbsG:       _macros.carbs.toDouble(),
+        goalFatG:         _macros.fat.toDouble(),
+      ));
+    } catch (_) {}
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: '${_thousands(_calorieGoal)} kcal',
               onTap: () async {
                 final v = await showEditCalorieGoalSheet(context, _calorieGoal);
-                if (v != null) setState(() => _calorieGoal = v); // TODO: persist
+                if (v != null) { setState(() => _calorieGoal = v); _saveToApi(); }
               },
             ),
             SettingsRow(
@@ -95,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: 'P ${_macros.protein} · C ${_macros.carbs} · F ${_macros.fat} g',
               onTap: () async {
                 final v = await showEditMacrosSheet(context, _macros);
-                if (v != null) setState(() => _macros = v); // TODO: persist
+                if (v != null) { setState(() => _macros = v); _saveToApi(); }
               },
             ),
             SettingsRow(
@@ -104,7 +156,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: '${(_waterMl / 1000).toStringAsFixed(1)} L',
               onTap: () async {
                 final v = await showEditWaterSheet(context, _waterMl);
-                if (v != null) setState(() => _waterMl = v); // TODO: persist
+                if (v != null) {
+                  setState(() => _waterMl = v);
+                  SettingsPrefs.instance.setWaterGoalMl(v);
+                }
               },
             ),
           ]),
@@ -119,7 +174,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 (UnitSystem.metric, 'Metric'),
                 (UnitSystem.imperial, 'Imperial'),
               ],
-              onChanged: (u) { HapticFeedback.selectionClick(); setState(() => _unit = u); }, // TODO: persist
+              onChanged: (u) {
+                HapticFeedback.selectionClick();
+                setState(() => _unit = u);
+                SettingsPrefs.instance.setUnit(u);
+              },
             ),
             SettingsAccentRow(
               icon: Icons.palette_outlined, iconColor: c.primary, iconBg: c.primaryTint,
@@ -127,7 +186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (a) {
                 HapticFeedback.selectionClick();
                 setState(() => _accent = a);
-                widget.onAccentChanged?.call(a);
+                SettingsPrefs.instance.setAccent(a);
               },
             ),
             SettingsToggleRow(
@@ -135,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Meal reminders',
               subtitle: 'Nudge me to log meals',
               value: _mealReminders,
-              onChanged: (v) => setState(() => _mealReminders = v), // TODO: schedule notifications
+              onChanged: (v) => setState(() => _mealReminders = v),
             ),
             SettingsToggleRow(
               icon: Icons.water_drop_outlined, iconColor: c.water, iconBg: c.waterSoft,
@@ -158,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.ios_share, iconColor: c.primary, iconBg: c.primaryTint,
               title: 'Export my data',
               subtitle: 'Download a copy of your logs',
-              onTap: () => _toast('Export coming soon'), // TODO: export to JSON/CSV
+              onTap: () => _toast('Export coming soon'),
             ),
             SettingsRow(
               icon: Icons.delete_sweep_outlined, iconColor: c.warn, iconBg: c.proteinSoft,
@@ -220,7 +279,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Profile hero card ─────────────────────────────────────────────────
+  // ── Profile hero card ─────────────────────────────────────────────────────
+
   Widget _profileHero(NutriColors c) {
     return Material(
       type: MaterialType.transparency,
@@ -228,7 +288,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(24),
         onTap: () async {
           final updated = await showEditProfileSheet(context, _profile);
-          if (updated != null) setState(() => _profile = updated); // TODO: persist
+          if (updated != null) {
+            setState(() => _profile = updated);
+            _saveToApi();
+          }
         },
         child: Ink(
           decoration: BoxDecoration(
@@ -297,7 +360,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ── Actions ────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────
+
   void _toast(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -310,7 +374,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       destructive: true,
     );
     if (ok == true) {
-      widget.history?.clear(); // TODO: also clear daily logs if desired
+      widget.history?.clear();
       if (mounted) _toast('History cleared');
     }
   }
