@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'api/api_client.dart';
 import 'api/api_config.dart';
-import 'app/app_shell.dart';
+import 'app/auth_gate.dart';
 import 'app/app_theme.dart';
 import 'app/notification_service.dart';
 import 'app/settings_prefs.dart';
@@ -52,7 +52,7 @@ class _NutriFitAppState extends State<NutriFitApp> {
     return MaterialApp(
       title: 'NutriFit',
       theme: buildAppTheme(primary: primary),
-      home: AppShell(api: widget.api, history: widget.history),
+      home: AuthGate(api: widget.api, history: widget.history),
     );
   }
 }
