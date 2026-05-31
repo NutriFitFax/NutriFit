@@ -214,7 +214,7 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
         ));
       },
       children: [
-        _Labeled(label: 'Name', child: TextField(controller: _name, maxLength: 24, maxLengthEnforcement: MaxLengthEnforcement.enforced)),
+        _Labeled(label: 'Username', child: TextField(controller: _name, maxLength: 24, maxLengthEnforcement: MaxLengthEnforcement.enforced)),
         if (_isImperial)
           Row(
             children: [

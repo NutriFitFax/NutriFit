@@ -94,14 +94,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      const FieldLabel('Full name'),
+                      const FieldLabel('Username'),
                       AuthTextField(
                         controller: _name,
-                        hint: 'Your name',
+                        hint: 'Your username',
                         icon: Icons.person_outline,
                         keyboardType: TextInputType.name,
                         validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                            (v == null || v.trim().isEmpty) ? 'Enter your username' : null,
                       ),
                       const SizedBox(height: 14),
 

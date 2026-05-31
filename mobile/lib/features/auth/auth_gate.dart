@@ -95,6 +95,7 @@ class _AuthGateState extends State<AuthGate> {
     widget.store.clearAllData();
     SettingsPrefs.instance.clearUserEmail();
     widget.api.userId = 'demo-user';
+    Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() {});
   }
 
