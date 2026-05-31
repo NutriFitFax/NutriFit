@@ -36,18 +36,22 @@ class NotificationService {
       // Falls back to UTC — notifications will still fire, just offset.
     }
 
-    await _plugin.initialize(
-      const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(
-          // Don't ask for permission at init — ask when the user enables a reminder.
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
+    try {
+      await _plugin.initialize(
+        const InitializationSettings(
+          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          iOS: DarwinInitializationSettings(
+            // Don't ask for permission at init — ask when the user enables a reminder.
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false,
+          ),
         ),
-      ),
-    );
-    _ready = true;
+      );
+      _ready = true;
+    } catch (_) {
+      // Notifications not supported on this platform — all methods no-op via _ready.
+    }
   }
 
   Future<void> _requestPermission() async {

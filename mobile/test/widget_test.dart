@@ -10,15 +10,17 @@ import 'package:nutrifit/main.dart';
 
 // Minimal in-memory store so tests never touch SQLite.
 class _FakeStore implements DailyLogStore {
-  static const _empty = DailyLog(
+  // Single notifier instance — must not be recreated on each access or
+  // ValueListenableBuilder will listen to one object and read from another.
+  final _notifier = ValueNotifier(const DailyLog(
     goalCalories: 2000, goalProteinG: 130, goalCarbsG: 240, goalFatG: 70,
     goalWaterMl: 2500, consumedCalories: 0, consumedProteinG: 0,
     consumedCarbsG: 0, consumedFatG: 0, consumedWaterMl: 0,
     meals: [], latestWeightKg: null, heightCm: 170, weightTrend: [],
-  );
+  ));
 
   @override
-  ValueListenable<DailyLog> get todayListenable => ValueNotifier(_empty);
+  ValueListenable<DailyLog> get todayListenable => _notifier;
 
   @override Future<void> logMeal({required String name, required double caloriesKcal, required double proteinG, required double carbsG, required double fatG}) async {}
   @override Future<void> deleteMeal(int id) async {}
