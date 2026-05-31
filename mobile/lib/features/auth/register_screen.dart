@@ -1,41 +1,43 @@
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatefulWidget {
-  final void Function(String email) onLogin;
-  final VoidCallback onRegister;
+class RegisterScreen extends StatefulWidget {
+  final void Function(String email, String name) onRegister;
+  final VoidCallback onBackToLogin;
 
-  const LoginScreen({
+  const RegisterScreen({
     super.key,
-    required this.onLogin,
     required this.onRegister,
+    required this.onBackToLogin,
   });
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
   bool _loading = false;
   bool _obscurePassword = true;
-  String? _error;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _loading = true; _error = null; });
-    // No real auth backend — validate locally and store email as userId.
+    setState(() => _loading = true);
     await Future<void>.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
-    widget.onLogin(_emailController.text.trim());
+    widget.onRegister(_emailController.text.trim(), _nameController.text.trim());
   }
 
   @override
@@ -51,39 +53,35 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 40),
                 Text(
-                  'NutriFit',
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: Colors.green[700],
+                  'Create account',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Track smarter. Live better.',
+                  'Track your nutrition, reach your goals.',
                   style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
-                if (_error != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red[50],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
-                    ),
-                    child: Text(_error!, style: TextStyle(color: Colors.red[700])),
+                const SizedBox(height: 36),
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Full name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
                   ),
-                  const SizedBox(height: 16),
-                ],
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Enter your name' : null,
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   autocorrect: false,
-                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
@@ -99,8 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: const OutlineInputBorder(),
@@ -114,7 +110,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Enter your password' : null,
+                      (v == null || v.length < 6) ? 'At least 6 characters' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _confirmController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Confirm password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  validator: (v) => v != _passwordController.text
+                      ? 'Passwords do not match'
+                      : null,
                 ),
                 const SizedBox(height: 28),
                 FilledButton(
@@ -130,12 +139,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Log in'),
+                      : const Text('Create account'),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: _loading ? null : widget.onRegister,
-                  child: const Text('Create account'),
+                  onPressed: _loading ? null : widget.onBackToLogin,
+                  child: const Text('Already have an account? Log in'),
                 ),
               ],
             ),

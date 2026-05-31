@@ -19,8 +19,17 @@ class AppShell extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
   final DailyLogStore store;
+  final VoidCallback? onLogout;
+  final VoidCallback? onDeleteAccount;
 
-  const AppShell({super.key, required this.api, required this.history, required this.store});
+  const AppShell({
+    super.key,
+    required this.api,
+    required this.history,
+    required this.store,
+    this.onLogout,
+    this.onDeleteAccount,
+  });
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -69,6 +78,8 @@ class _AppShellState extends State<AppShell> {
               builder: (_) => SettingsScreen(
                 api: widget.api,
                 history: widget.history,
+                onLogout: widget.onLogout,
+                onDeleteAccount: widget.onDeleteAccount,
               ),
             ),
           ),

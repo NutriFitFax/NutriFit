@@ -16,9 +16,13 @@ void main() async {
   await SettingsPrefs.init();
   await NotificationService.instance.init();
   final store = await SqliteDailyLogStore.open();
+  final savedEmail = SettingsPrefs.instance.getUserEmail();
   runApp(
     NutriFitApp(
-      api: NutriFitApi(baseUrl: ApiConfig.baseUrl),
+      api: NutriFitApi(
+        baseUrl: ApiConfig.baseUrl,
+        userId: savedEmail ?? 'demo-user',
+      ),
       history: InMemoryViewedFoodHistoryStore(),
       store: store,
     ),
