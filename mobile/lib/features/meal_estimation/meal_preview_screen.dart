@@ -126,16 +126,13 @@ class _MealPreviewScreenState extends State<MealPreviewScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _analyzing ? null : () { Haptics.selectionClick(); Navigator.of(context).maybePop(); },
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Retake'),
-                  ),
+                OutlinedButton.icon(
+                  onPressed: _analyzing ? null : () { Haptics.selectionClick(); Navigator.of(context).maybePop(); },
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Retake'),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  flex: 2,
                   child: FilledButton.icon(
                     onPressed: _analyzing ? null : () { Haptics.mediumImpact(); _analyze(); },
                     icon: _analyzing
