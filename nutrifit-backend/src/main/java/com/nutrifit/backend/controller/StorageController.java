@@ -143,6 +143,23 @@ public class StorageController {
     }
 
     /**
+     * Delete the calling user's account and every piece of data they own.
+     * Wipes: meal_logs, water_logs, weight_logs, activity_logs, user_profiles, users.
+     */
+    @DeleteMapping("/account")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAccount(@RequestHeader("X-User-Id") String userId) {
+        db.ifPresent(jdbc -> {
+            jdbc.update("DELETE FROM meal_logs     WHERE user_id = ?", userId);
+            jdbc.update("DELETE FROM water_logs    WHERE user_id = ?", userId);
+            jdbc.update("DELETE FROM weight_logs   WHERE user_id = ?", userId);
+            jdbc.update("DELETE FROM activity_logs WHERE user_id = ?", userId);
+            jdbc.update("DELETE FROM user_profiles WHERE user_id = ?", userId);
+            jdbc.update("DELETE FROM users         WHERE email   = ?", userId);
+        });
+    }
+
+    /**
      * Read back the account row for the current user (identified by X-User-Id = email).
      * Returns 404 if the email is not registered — the Flutter login screen uses this
      * to block unregistered users from logging in.

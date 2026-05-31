@@ -96,12 +96,21 @@ class _AuthGateState extends State<AuthGate> {
     setState(() {});
   }
 
-  void _handleDeleteAccount() {
-    widget.store.clearAllData();
-    SettingsPrefs.instance.clearUserEmail();
+  Future<void> _handleDeleteAccount() async {
+    // Delete from backend first (all 6 tables: users, user_profiles, and all logs).
+    try {
+      await widget.api.deleteAccount();
+    } catch (_) {
+      // Backend unavailable — proceed with local-only deletion.
+    }
+    // Clear local SQLite logs and session.
+    await widget.store.clearAllData();
+    await SettingsPrefs.instance.clearUserEmail();
     widget.api.userId = 'demo-user';
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() {});
+    if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      setState(() {});
+    }
   }
 
   // ── Build ─────────────────────────────────────────────────────────────
