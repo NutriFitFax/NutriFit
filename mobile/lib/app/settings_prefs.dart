@@ -142,16 +142,31 @@ class SettingsPrefs {
   static const _kActivityLevel = 'activity_level';
 
   Gender get gender => Gender.values.firstWhere(
-    (g) => g.name == (_p.getString(_kGender) ?? ''),
+    // Fall back to the pre-rename 'sex' key so existing users keep their value.
+    (g) => g.name == (_p.getString(_kGender) ?? _p.getString('sex') ?? ''),
     orElse: () => Gender.male,
   );
   Future<void> setGender(Gender g) => _p.setString(_kGender, g.name);
 
-  ActivityLevel get activityLevel => ActivityLevel.values.firstWhere(
-    (a) => a.name == (_p.getString(_kActivityLevel) ?? ''),
-    orElse: () => ActivityLevel.medium,
-  );
-  Future<void> setActivityLevel(ActivityLevel a) => _p.setString(_kActivityLevel, a.name);
+  /// Parses an activity level string that may come from the old build (which
+  /// stored snake_case keys via `_activityLevelKey`) or the current build
+  /// (which stores the Dart enum `.name`, i.e. camelCase).
+  static ActivityLevel parseActivityLevel(String? s,
+      {ActivityLevel fallback = ActivityLevel.medium}) {
+    if (s == null || s.isEmpty) return fallback;
+    switch (s) {
+      case 'moderate':     return ActivityLevel.medium;
+      case 'very_active':  return ActivityLevel.active;
+      case 'extra_active': return ActivityLevel.veryActive;
+    }
+    return ActivityLevel.values.firstWhere((a) => a.name == s,
+        orElse: () => fallback);
+  }
+
+  ActivityLevel get activityLevel =>
+      parseActivityLevel(_p.getString(_kActivityLevel));
+  Future<void> setActivityLevel(ActivityLevel a) =>
+      _p.setString(_kActivityLevel, a.name);
 
   static const _kUserEmail = 'user_email';
 

@@ -65,9 +65,14 @@ public class StorageController {
                         goal_protein_g    DOUBLE PRECISION,
                         goal_carbs_g      DOUBLE PRECISION,
                         goal_fat_g        DOUBLE PRECISION,
+                        sex               TEXT,
+                        activity_level    TEXT,
                         updated_at        TIMESTAMPTZ DEFAULT NOW()
                     )
                     """);
+                // Migrate existing rows: add columns if the table was created before this version.
+                jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS sex TEXT");
+                jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS activity_level TEXT");
                 jdbc.execute("""
                     CREATE TABLE IF NOT EXISTS meal_logs (
                         id           TEXT PRIMARY KEY,
@@ -203,8 +208,9 @@ public class StorageController {
         db.get().update("""
                 INSERT INTO user_profiles
                     (user_id, display_name, height_cm, goal_calories_kcal,
-                     goal_protein_g, goal_carbs_g, goal_fat_g, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                     goal_protein_g, goal_carbs_g, goal_fat_g,
+                     sex, activity_level, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                 ON CONFLICT (user_id) DO UPDATE SET
                     display_name       = EXCLUDED.display_name,
                     height_cm          = EXCLUDED.height_cm,
@@ -212,11 +218,14 @@ public class StorageController {
                     goal_protein_g     = EXCLUDED.goal_protein_g,
                     goal_carbs_g       = EXCLUDED.goal_carbs_g,
                     goal_fat_g         = EXCLUDED.goal_fat_g,
+                    sex                = EXCLUDED.sex,
+                    activity_level     = EXCLUDED.activity_level,
                     updated_at         = NOW()
                 """,
                 userId, body.displayName(), body.heightCm(),
                 body.goalCaloriesKcal(), body.goalProteinG(),
-                body.goalCarbsG(), body.goalFatG());
+                body.goalCarbsG(), body.goalFatG(),
+                body.sex(), body.activityLevel());
         return getProfile(userId);
     }
 
@@ -432,6 +441,8 @@ public class StorageController {
                 (Double) rs.getObject("goal_protein_g"),
                 (Double) rs.getObject("goal_carbs_g"),
                 (Double) rs.getObject("goal_fat_g"),
+                rs.getString("sex"),
+                rs.getString("activity_level"),
                 rs.getString("updated_at"));
     }
 
@@ -486,7 +497,7 @@ public class StorageController {
     }
 
     private static StoredUserProfile emptyProfile(String userId) {
-        return new StoredUserProfile(userId, null, null, null, null, null, null, null);
+        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null);
     }
 
     private static DailyStorageSummary emptySummary(String userId, String date) {

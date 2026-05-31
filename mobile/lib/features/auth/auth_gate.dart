@@ -71,6 +71,8 @@ class _AuthGateState extends State<AuthGate> {
         goalProteinG: profile.proteinGoalG.toDouble(),
         goalCarbsG: profile.carbsGoalG.toDouble(),
         goalFatG: profile.fatGoalG.toDouble(),
+        sex: profile.gender.name,
+        activityLevel: profile.activityLevel.name,
         updatedAt: null,
       ));
     } catch (_) {

@@ -1,9 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 /// Lightweight on-device user profile collected during sign-up.
-///
-/// NOTE: per the SRS (no accounts / no cloud sync) this is intended to live in
-/// local storage only (e.g. Davud's SQLite layer or shared_preferences). The
-/// auth screens build and return a [UserProfile]; persistence is the host's
-/// responsibility. Nothing here calls a backend.
+@immutable
 class UserProfile {
   final String name;
   final String email;
@@ -11,7 +9,6 @@ class UserProfile {
   /// Canonical metric values — convert at the edges for display only.
   final double weightKg;
   final double heightCm;
-
   final Gender gender;
   final ActivityLevel activityLevel;
 
@@ -38,7 +35,6 @@ class UserProfile {
     return weightKg / (m * m);
   }
 
-  /// WHO BMI category label.
   String get bmiCategory {
     final b = bmi;
     if (b < 18.5) return 'Underweight';
@@ -60,49 +56,47 @@ class UserProfile {
     int? proteinGoalG,
     int? carbsGoalG,
     int? fatGoalG,
-  }) {
-    return UserProfile(
-      name: name ?? this.name,
-      email: email ?? this.email,
-      weightKg: weightKg ?? this.weightKg,
-      heightCm: heightCm ?? this.heightCm,
-      gender: gender ?? this.gender,
-      activityLevel: activityLevel ?? this.activityLevel,
-      proteinGoalG: proteinGoalG ?? this.proteinGoalG,
-      carbsGoalG: carbsGoalG ?? this.carbsGoalG,
-      fatGoalG: fatGoalG ?? this.fatGoalG,
-    );
-  }
+  }) => UserProfile(
+    name: name ?? this.name,
+    email: email ?? this.email,
+    weightKg: weightKg ?? this.weightKg,
+    heightCm: heightCm ?? this.heightCm,
+    gender: gender ?? this.gender,
+    activityLevel: activityLevel ?? this.activityLevel,
+    proteinGoalG: proteinGoalG ?? this.proteinGoalG,
+    carbsGoalG: carbsGoalG ?? this.carbsGoalG,
+    fatGoalG: fatGoalG ?? this.fatGoalG,
+  );
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'email': email,
-        'weight_kg': weightKg,
-        'height_cm': heightCm,
-        'gender': gender.name,
-        'activity_level': activityLevel.name,
-        'protein_goal_g': proteinGoalG,
-        'carbs_goal_g': carbsGoalG,
-        'fat_goal_g': fatGoalG,
-      };
+    'name': name,
+    'email': email,
+    'weight_kg': weightKg,
+    'height_cm': heightCm,
+    'gender': gender.name,
+    'activity_level': activityLevel.name,
+    'protein_goal_g': proteinGoalG,
+    'carbs_goal_g': carbsGoalG,
+    'fat_goal_g': fatGoalG,
+  };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        name: json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        weightKg: (json['weight_kg'] as num?)?.toDouble() ?? 70,
-        heightCm: (json['height_cm'] as num?)?.toDouble() ?? 170,
-        gender: Gender.values.firstWhere(
-          (g) => g.name == json['gender'],
-          orElse: () => Gender.other,
-        ),
-        activityLevel: ActivityLevel.values.firstWhere(
-          (a) => a.name == json['activity_level'],
-          orElse: () => ActivityLevel.medium,
-        ),
-        proteinGoalG: (json['protein_goal_g'] as num?)?.toInt() ?? 130,
-        carbsGoalG: (json['carbs_goal_g'] as num?)?.toInt() ?? 240,
-        fatGoalG: (json['fat_goal_g'] as num?)?.toInt() ?? 70,
-      );
+    name: json['name'] as String? ?? '',
+    email: json['email'] as String? ?? '',
+    weightKg: (json['weight_kg'] as num?)?.toDouble() ?? 70,
+    heightCm: (json['height_cm'] as num?)?.toDouble() ?? 170,
+    gender: Gender.values.firstWhere(
+      (g) => g.name == json['gender'],
+      orElse: () => Gender.other,
+    ),
+    activityLevel: ActivityLevel.values.firstWhere(
+      (a) => a.name == json['activity_level'],
+      orElse: () => ActivityLevel.medium,
+    ),
+    proteinGoalG: (json['protein_goal_g'] as num?)?.toInt() ?? 130,
+    carbsGoalG: (json['carbs_goal_g'] as num?)?.toInt() ?? 240,
+    fatGoalG: (json['fat_goal_g'] as num?)?.toInt() ?? 70,
+  );
 }
 
 /// Biological sex / gender option used for goal estimation.
@@ -119,10 +113,10 @@ enum ActivityLevel { sedentary, light, medium, active, veryActive }
 
 const Map<ActivityLevel, String> activityLabel = {
   ActivityLevel.sedentary: 'Sedentary',
-  ActivityLevel.light: 'Light',
-  ActivityLevel.medium: 'Medium',
-  ActivityLevel.active: 'Active',
-  ActivityLevel.veryActive: 'Very active',
+  ActivityLevel.light: 'Lightly Active',
+  ActivityLevel.medium: 'Moderately Active',
+  ActivityLevel.active: 'Very Active',
+  ActivityLevel.veryActive: 'Extra Active',
 };
 
 const Map<ActivityLevel, String> activityDescription = {
@@ -133,8 +127,7 @@ const Map<ActivityLevel, String> activityDescription = {
   ActivityLevel.veryActive: 'Hard exercise or a physical job',
 };
 
-/// Harris–Benedict style activity multipliers, handy if you later derive a
-/// calorie goal from BMR.
+/// Harris–Benedict style activity multipliers.
 const Map<ActivityLevel, double> activityMultiplier = {
   ActivityLevel.sedentary: 1.2,
   ActivityLevel.light: 1.375,
@@ -143,17 +136,14 @@ const Map<ActivityLevel, double> activityMultiplier = {
   ActivityLevel.veryActive: 1.9,
 };
 
-/// Measurement unit system for the profile-setup screen.
 enum UnitSystem { metric, imperial }
 
-/// Small pure-function helpers for unit conversion used by the profile screen.
 class UnitConvert {
   static double kgToLb(double kg) => kg * 2.2046226218;
   static double lbToKg(double lb) => lb / 2.2046226218;
 
   static double cmToTotalInches(double cm) => cm / 2.54;
 
-  /// Returns (feet, inches) from centimetres.
   static (int, int) cmToFeetInches(double cm) {
     final totalIn = cmToTotalInches(cm).round();
     return (totalIn ~/ 12, totalIn % 12);

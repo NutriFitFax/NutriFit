@@ -25,6 +25,7 @@ class _FakeStore implements DailyLogStore {
   @override Future<void> logWeight(double weightKg) async {}
   @override Future<void> refresh() async {}
   @override Future<void> clearAllData() async {}
+  @override Future<void> resetTodayWater() async {}
 }
 
 const _baseUrl = 'http://localhost';

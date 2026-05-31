@@ -115,6 +115,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         stored.goalCarbsG?.round()   ?? _macros.carbs,
         stored.goalFatG?.round()     ?? _macros.fat,
       );
+      final gender = stored.sex != null
+          ? Gender.values.firstWhere((g) => g.name == stored.sex,
+              orElse: () => _gender)
+          : _gender;
+      // Use the legacy-aware parser so old backend values (e.g. 'very_active')
+      // are correctly mapped to the current enum instead of falling back to medium.
+      final activity = SettingsPrefs.parseActivityLevel(
+          stored.activityLevel, fallback: _activity);
       // Mirror to local storage so DailyLogStore picks up the latest goals
       // on the next refresh, even when the backend becomes unavailable later.
       await Future.wait([
@@ -124,6 +132,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SettingsPrefs.instance.setGoalProteinG(macros.protein),
         SettingsPrefs.instance.setGoalCarbsG(macros.carbs),
         SettingsPrefs.instance.setGoalFatG(macros.fat),
+        SettingsPrefs.instance.setGender(gender),
+        SettingsPrefs.instance.setActivityLevel(activity),
       ]);
       if (!mounted) return;
       setState(() {
@@ -135,6 +145,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
         _calorieGoal = cal;
         _macros      = macros;
+        _gender      = gender;
+        _activity    = activity;
       });
     } catch (_) {
       // Keep defaults when the backend is unreachable.
@@ -150,6 +162,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         goalProteinG:     _macros.protein.toDouble(),
         goalCarbsG:       _macros.carbs.toDouble(),
         goalFatG:         _macros.fat.toDouble(),
+        sex:              _gender.name,
+        activityLevel:    _activity.name,
       ));
     } catch (_) {}
   }
@@ -493,6 +507,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _miniStat(c, _weightDisplay),
                         _miniStat(c, _heightDisplay),
                         _miniStat(c, 'BMI ${_profile.bmi.toStringAsFixed(1)}'),
+                        _miniStat(c, genderLabel[_gender]!),
+                        _miniStat(c, activityLabel[_activity]!),
                       ],
                     ),
                   ],
