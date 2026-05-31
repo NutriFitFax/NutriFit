@@ -486,12 +486,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 2),
                     Text(_profile.email, style: TextStyle(fontSize: 13, color: c.ink2)),
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
                       children: [
                         _miniStat(c, _weightDisplay),
-                        const SizedBox(width: 8),
                         _miniStat(c, _heightDisplay),
-                        const SizedBox(width: 8),
                         _miniStat(c, 'BMI ${_profile.bmi.toStringAsFixed(1)}'),
                       ],
                     ),

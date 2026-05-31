@@ -84,6 +84,8 @@ class _AuthGateState extends State<AuthGate> {
     await SettingsPrefs.instance.setGoalCarbsG(profile.carbsGoalG);
     await SettingsPrefs.instance.setGoalFatG(profile.fatGoalG);
     await SettingsPrefs.instance.setGoalCaloriesKcal(profile.macroCalories);
+    await SettingsPrefs.instance.setGender(profile.gender);
+    await SettingsPrefs.instance.setActivityLevel(profile.activityLevel);
   }
 
   // ── Navigation ────────────────────────────────────────────────────────

@@ -143,7 +143,7 @@ class SettingsPrefs {
 
   Gender get gender => Gender.values.firstWhere(
     (g) => g.name == (_p.getString(_kGender) ?? ''),
-    orElse: () => Gender.other,
+    orElse: () => Gender.male,
   );
   Future<void> setGender(Gender g) => _p.setString(_kGender, g.name);
 
