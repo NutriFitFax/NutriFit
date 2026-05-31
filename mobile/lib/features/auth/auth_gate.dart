@@ -65,10 +65,10 @@ class _AuthGateState extends State<AuthGate> {
         userId: profile.email,
         displayName: profile.name,
         heightCm: profile.heightCm,
-        goalCaloriesKcal: SettingsPrefs.instance.goalCaloriesKcal.toDouble(),
-        goalProteinG: SettingsPrefs.instance.goalProteinG.toDouble(),
-        goalCarbsG: SettingsPrefs.instance.goalCarbsG.toDouble(),
-        goalFatG: SettingsPrefs.instance.goalFatG.toDouble(),
+        goalCaloriesKcal: profile.macroCalories.toDouble(),
+        goalProteinG: profile.proteinGoalG.toDouble(),
+        goalCarbsG: profile.carbsGoalG.toDouble(),
+        goalFatG: profile.fatGoalG.toDouble(),
         updatedAt: null,
       ));
     } catch (_) {
@@ -78,6 +78,10 @@ class _AuthGateState extends State<AuthGate> {
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
     await SettingsPrefs.instance.setHeightCm(profile.heightCm);
+    await SettingsPrefs.instance.setGoalProteinG(profile.proteinGoalG);
+    await SettingsPrefs.instance.setGoalCarbsG(profile.carbsGoalG);
+    await SettingsPrefs.instance.setGoalFatG(profile.fatGoalG);
+    await SettingsPrefs.instance.setGoalCaloriesKcal(profile.macroCalories);
   }
 
   // ── Navigation ────────────────────────────────────────────────────────
