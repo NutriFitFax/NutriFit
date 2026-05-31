@@ -664,6 +664,79 @@ class _WaterScheduleSheetState extends State<_WaterScheduleSheet> {
   }
 }
 
+// ── Edit activity level ───────────────────────────────────────────────────
+Future<ActivityLevel?> showEditActivitySheet(BuildContext context, ActivityLevel current) =>
+    _showSheet<ActivityLevel>(context, _EditActivitySheet(current: current));
+
+class _EditActivitySheet extends StatefulWidget {
+  final ActivityLevel current;
+  const _EditActivitySheet({required this.current});
+
+  @override
+  State<_EditActivitySheet> createState() => _EditActivitySheetState();
+}
+
+class _EditActivitySheetState extends State<_EditActivitySheet> {
+  late ActivityLevel _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.current;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return _SheetScaffold(
+      title: 'Activity level',
+      subtitle: 'Used to tailor your daily calorie goal.',
+      onSave: () => Navigator.of(context).pop(_selected),
+      children: [
+        for (final level in ActivityLevel.values) ...[
+          if (level != ActivityLevel.values.first)
+            Divider(height: 1, color: c.line),
+          InkWell(
+            onTap: () { Haptics.selectionClick(); setState(() => _selected = level); },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          activityLabel[level]!,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: _selected == level ? c.primary : c.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          activityDescription[level]!,
+                          style: TextStyle(fontSize: 12.5, color: c.ink2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_selected == level)
+                    Icon(Icons.check_circle_rounded, color: c.primary, size: 22)
+                  else
+                    Icon(Icons.circle_outlined, color: c.line, size: 22),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // ── Shared time picker row ───────────────────────────────────────────────
 
 class _TimePickerRow extends StatelessWidget {

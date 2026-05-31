@@ -497,7 +497,7 @@ public class StorageController {
     }
 
     private static StoredUserProfile emptyProfile(String userId) {
-        return new StoredUserProfile(userId, null, null, null, null, null, null, null);
+        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null);
     }
 
     private static DailyStorageSummary emptySummary(String userId, String date) {

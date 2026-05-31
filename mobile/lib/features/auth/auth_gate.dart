@@ -67,12 +67,12 @@ class _AuthGateState extends State<AuthGate> {
         userId: profile.email,
         displayName: profile.name,
         heightCm: profile.heightCm,
-        goalCaloriesKcal: SettingsPrefs.instance.goalCaloriesKcal.toDouble(),
-        goalProteinG: SettingsPrefs.instance.goalProteinG.toDouble(),
-        goalCarbsG: SettingsPrefs.instance.goalCarbsG.toDouble(),
-        goalFatG: SettingsPrefs.instance.goalFatG.toDouble(),
-        sex: profile.sex?.name,
-        activityLevel: _activityLevelKey(profile.activityLevel),
+        goalCaloriesKcal: profile.macroCalories.toDouble(),
+        goalProteinG: profile.proteinGoalG.toDouble(),
+        goalCarbsG: profile.carbsGoalG.toDouble(),
+        goalFatG: profile.fatGoalG.toDouble(),
+        sex: profile.gender.name,
+        activityLevel: profile.activityLevel.name,
         updatedAt: null,
       ));
     } catch (_) {
@@ -82,23 +82,13 @@ class _AuthGateState extends State<AuthGate> {
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
     await SettingsPrefs.instance.setHeightCm(profile.heightCm);
-    if (profile.sex != null) {
-      await SettingsPrefs.instance.setSex(profile.sex!.name);
-    }
-    final actKey = _activityLevelKey(profile.activityLevel);
-    if (actKey != null) {
-      await SettingsPrefs.instance.setActivityLevel(actKey);
-    }
+    await SettingsPrefs.instance.setGoalProteinG(profile.proteinGoalG);
+    await SettingsPrefs.instance.setGoalCarbsG(profile.carbsGoalG);
+    await SettingsPrefs.instance.setGoalFatG(profile.fatGoalG);
+    await SettingsPrefs.instance.setGoalCaloriesKcal(profile.macroCalories);
+    await SettingsPrefs.instance.setGender(profile.gender);
+    await SettingsPrefs.instance.setActivityLevel(profile.activityLevel);
   }
-
-  static String? _activityLevelKey(ActivityLevel? level) => switch (level) {
-    ActivityLevel.sedentary   => 'sedentary',
-    ActivityLevel.light       => 'light',
-    ActivityLevel.moderate    => 'moderate',
-    ActivityLevel.veryActive  => 'very_active',
-    ActivityLevel.extraActive => 'extra_active',
-    null                      => null,
-  };
 
   // ── Navigation ────────────────────────────────────────────────────────
 

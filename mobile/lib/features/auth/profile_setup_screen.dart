@@ -5,7 +5,7 @@ import '../../app/nutri_colors.dart';
 import 'user_profile.dart';
 import 'auth_widgets.dart';
 
-/// Step 2 of sign-up: collect weight, height, sex and activity level.
+/// Step 2 of sign-up: collect weight, height, gender and activity level.
 class ProfileSetupScreen extends StatefulWidget {
   final String name;
   final String email;
@@ -29,13 +29,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   double? _weightKg;
   double? _heightCm;
   UnitSystem _unit = UnitSystem.metric;
-  Sex? _sex;
+  Gender? _gender;
   ActivityLevel? _activityLevel;
 
-  final _weightCtrl  = TextEditingController();
+  final _weightCtrl   = TextEditingController();
   final _heightCmCtrl = TextEditingController();
-  final _feetCtrl    = TextEditingController();
-  final _inchCtrl    = TextEditingController();
+  final _feetCtrl     = TextEditingController();
+  final _inchCtrl     = TextEditingController();
 
   @override
   void dispose() {
@@ -67,8 +67,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (kg != null) _weightKg = kg.clamp(_minKg, _maxKg);
       if (cm != null) _heightCm = cm.clamp(_minCm, _maxCm);
     } else {
-      final lb = double.tryParse(_weightCtrl.text);
-      final ft = int.tryParse(_feetCtrl.text);
+      final lb   = double.tryParse(_weightCtrl.text);
+      final ft   = int.tryParse(_feetCtrl.text);
       final inch = double.tryParse(_inchCtrl.text);
       if (lb != null) _weightKg = UnitConvert.lbToKg(lb).clamp(_minKg, _maxKg);
       if (ft != null && inch != null) {
@@ -96,9 +96,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       );
       return;
     }
-    if (_sex == null) {
+    if (_gender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your sex')),
+        const SnackBar(content: Text('Please select your gender')),
       );
       return;
     }
@@ -114,8 +114,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       email: widget.email,
       weightKg: double.parse(_weightKg!.toStringAsFixed(1)),
       heightCm: _heightCm!.roundToDouble(),
-      sex: _sex,
-      activityLevel: _activityLevel,
+      gender: _gender!,
+      activityLevel: _activityLevel!,
     ));
   }
 
@@ -141,12 +141,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     child: InkWell(
                       onTap: () => Navigator.of(context).maybePop(),
                       customBorder: const CircleBorder(),
-                      child: SizedBox(width: 40, height: 40, child: Icon(Icons.chevron_left, size: 26, color: c.ink)),
+                      child: SizedBox(width: 40, height: 40,
+                        child: Icon(Icons.chevron_left, size: 26, color: c.ink)),
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text('STEP 2 OF 2',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: c.ink2)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8, color: c.ink2)),
                 ],
               ),
               const SizedBox(height: 14),
@@ -155,7 +157,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 height: 120,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [c.primary, c.primaryDeep]),
+                  gradient: LinearGradient(begin: Alignment.topLeft,
+                    end: Alignment.bottomRight, colors: [c.primary, c.primaryDeep]),
                 ),
                 padding: const EdgeInsets.all(18),
                 alignment: Alignment.bottomLeft,
@@ -163,10 +166,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text('PERSONALISE', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
+                    Text('PERSONALISE',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.0)),
                     const SizedBox(height: 4),
                     Text('Tailors your calorie & macro goals.',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: const Color(0xFFFDFAF0), fontSize: 17, height: 1.25)),
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: const Color(0xFFFDFAF0), fontSize: 17, height: 1.25)),
                   ],
                 ),
               ),
@@ -177,81 +183,92 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               _UnitToggle(value: _unit, onChanged: _switchUnit),
               const SizedBox(height: 18),
 
-              // ── Weight & Height ────────────────────────────────────────
+              // ── Weight ─────────────────────────────────────────────────
               const FieldLabel('Weight'),
               _MeasureField(
-                controller: _weightCtrl, unit: _unit == UnitSystem.metric ? 'kg' : 'lb',
+                controller: _weightCtrl,
+                unit: _unit == UnitSystem.metric ? 'kg' : 'lb',
                 hintText: 'weight', allowDecimal: true,
                 onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize,
               ),
               const SizedBox(height: 14),
 
+              // ── Height ─────────────────────────────────────────────────
               const FieldLabel('Height'),
               if (_unit == UnitSystem.metric)
                 _MeasureField(
-                  controller: _heightCmCtrl, unit: 'cm', hintText: 'height', allowDecimal: false,
+                  controller: _heightCmCtrl, unit: 'cm', hintText: 'height',
+                  allowDecimal: false,
                   onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize,
                 )
               else
                 Row(children: [
-                  Expanded(child: _MeasureField(controller: _feetCtrl, unit: 'ft', hintText: 'height', allowDecimal: false, onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize)),
+                  Expanded(child: _MeasureField(controller: _feetCtrl, unit: 'ft',
+                    hintText: 'height', allowDecimal: false,
+                    onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize)),
                   const SizedBox(width: 10),
-                  Expanded(child: _MeasureField(controller: _inchCtrl, unit: 'in', hintText: 'height', allowDecimal: false, onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize)),
+                  Expanded(child: _MeasureField(controller: _inchCtrl, unit: 'in',
+                    hintText: 'height', allowDecimal: false,
+                    onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize)),
                 ]),
 
               if (profile != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(color: c.primaryTint, borderRadius: BorderRadius.circular(99)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 7, height: 7, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
-                      const SizedBox(width: 8),
-                      Text.rich(TextSpan(
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.primaryDeep),
-                        children: [
-                          const TextSpan(text: 'BMI '),
-                          TextSpan(text: profile.bmi.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w800)),
-                          TextSpan(text: ' · ${profile.bmiCategory}'),
-                        ],
-                      )),
-                    ],
-                  ),
+                  decoration: BoxDecoration(color: c.primaryTint,
+                    borderRadius: BorderRadius.circular(99)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Container(width: 7, height: 7,
+                      decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Text.rich(TextSpan(
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                        color: c.primaryDeep),
+                      children: [
+                        const TextSpan(text: 'BMI '),
+                        TextSpan(text: profile.bmi.toStringAsFixed(1),
+                          style: const TextStyle(fontWeight: FontWeight.w800)),
+                        TextSpan(text: ' · ${profile.bmiCategory}'),
+                      ],
+                    )),
+                  ]),
                 ),
               ],
               const SizedBox(height: 22),
 
-              // ── Sex ────────────────────────────────────────────────────
-              const FieldLabel('Sex'),
+              // ── Gender ─────────────────────────────────────────────────
+              const FieldLabel('Gender'),
               Row(
-                children: Sex.values.map((s) {
-                  final selected = _sex == s;
-                  final label = switch (s) {
-                    Sex.male   => 'Male',
-                    Sex.female => 'Female',
-                    Sex.other  => 'Other',
-                  };
+                children: Gender.values.map((g) {
+                  final selected = _gender == g;
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: () { HapticFeedback.selectionClick(); setState(() => _sex = s); },
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _gender = g);
+                        },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 140),
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           decoration: BoxDecoration(
                             color: selected ? c.primary : c.surfaceSunken,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: selected ? c.primary : c.line),
+                            border: Border.all(
+                              color: selected ? c.primary : c.line,
+                              width: selected ? 1.5 : 1,
+                            ),
                           ),
                           alignment: Alignment.center,
-                          child: Text(label,
+                          child: Text(
+                            genderLabel[g]!,
                             style: TextStyle(
                               fontSize: 14, fontWeight: FontWeight.w600,
                               color: selected ? Colors.white : c.ink2,
-                            )),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -262,7 +279,56 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
               // ── Activity level ─────────────────────────────────────────
               const FieldLabel('Activity level'),
-              ..._activityOptions(c),
+              ...ActivityLevel.values.map((level) {
+                final selected = _activityLevel == level;
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _activityLevel = level);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 140),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: selected ? c.primarySoft : c.surfaceSunken,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: selected ? c.primary : c.line,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(children: [
+                      Container(
+                        width: 20, height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selected ? c.primary : Colors.transparent,
+                          border: Border.all(
+                            color: selected ? c.primary : c.ink3, width: 2),
+                        ),
+                        child: selected
+                            ? const Icon(Icons.check, size: 13, color: Colors.white)
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(activityLabel[level]!,
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                                color: selected ? c.primaryDeep : c.ink)),
+                            Text(activityDescription[level]!,
+                              style: TextStyle(fontSize: 12,
+                                color: selected ? c.primaryDeep : c.ink2)),
+                          ],
+                        ),
+                      ),
+                    ]),
+                  ),
+                );
+              }),
               const SizedBox(height: 26),
 
               FilledButton(
@@ -282,59 +348,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
     );
   }
-
-  List<Widget> _activityOptions(NutriColors c) {
-    const options = [
-      (ActivityLevel.sedentary,  'Sedentary',       'Desk job, little or no exercise'),
-      (ActivityLevel.light,      'Lightly Active',  'Light exercise 1–3 days/week'),
-      (ActivityLevel.moderate,   'Moderately Active','Moderate exercise 3–5 days/week'),
-      (ActivityLevel.veryActive, 'Very Active',     'Hard exercise 6–7 days/week'),
-      (ActivityLevel.extraActive,'Extra Active',    'Physical job + daily exercise'),
-    ];
-    return options.map((opt) {
-      final (level, title, subtitle) = opt;
-      final selected = _activityLevel == level;
-      return GestureDetector(
-        onTap: () { HapticFeedback.selectionClick(); setState(() => _activityLevel = level); },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: selected ? c.primarySoft : c.surfaceSunken,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: selected ? c.primary : c.line, width: selected ? 1.5 : 1),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 20, height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? c.primary : Colors.transparent,
-                  border: Border.all(color: selected ? c.primary : c.ink3, width: 2),
-                ),
-                child: selected ? const Icon(Icons.check, size: 13, color: Colors.white) : null,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: selected ? c.primaryDeep : c.ink)),
-                    Text(subtitle, style: TextStyle(fontSize: 12, color: selected ? c.primaryDeep : c.ink2)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }).toList();
-  }
 }
-
-// ── Reusable sub-widgets ─────────────────────────────────────────────────────
 
 class _UnitToggle extends StatelessWidget {
   final UnitSystem value;
@@ -366,10 +380,13 @@ class _UnitToggle extends StatelessWidget {
           decoration: BoxDecoration(
             color: on ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: on ? [BoxShadow(color: c.ink.withValues(alpha: 0.08), blurRadius: 3, offset: const Offset(0, 1))] : null,
+            boxShadow: on ? [BoxShadow(color: c.ink.withValues(alpha: 0.08),
+              blurRadius: 3, offset: const Offset(0, 1))] : null,
           ),
           alignment: Alignment.center,
-          child: Text(label, style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: on ? c.ink : c.ink2)),
+          child: Text(label,
+            style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600,
+              color: on ? c.ink : c.ink2)),
         ),
       ),
     );
@@ -394,30 +411,35 @@ class _MeasureField extends StatelessWidget {
     final c = context.nutri;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      decoration: BoxDecoration(color: c.surface, border: Border.all(color: c.line), borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              onEditingComplete: () { onEditingComplete?.call(); FocusScope.of(context).unfocus(); },
-              keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-              inputFormatters: [FilteringTextInputFormatter.allow(allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))],
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26),
-              decoration: InputDecoration(
-                isDense: true, filled: false,
-                border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                hintText: hintText,
-                hintStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26, color: c.ink.withValues(alpha: 0.25)),
-              ),
+      decoration: BoxDecoration(color: c.surface, border: Border.all(color: c.line),
+        borderRadius: BorderRadius.circular(16)),
+      child: Row(children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onChanged: onChanged,
+            onEditingComplete: () {
+              onEditingComplete?.call();
+              FocusScope.of(context).unfocus();
+            },
+            keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
+            inputFormatters: [FilteringTextInputFormatter.allow(
+              allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))],
+            style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26),
+            decoration: InputDecoration(
+              isDense: true, filled: false,
+              border: InputBorder.none, enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              hintText: hintText,
+              hintStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontSize: 26, color: c.ink.withValues(alpha: 0.25)),
             ),
           ),
-          const SizedBox(width: 8),
-          Text(unit, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.ink2)),
-        ],
-      ),
+        ),
+        const SizedBox(width: 8),
+        Text(unit, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.ink2)),
+      ]),
     );
   }
 }
