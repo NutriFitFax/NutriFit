@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
-  final void Function(String email) onLogin;
+  /// Called with the entered email. Returns null on success or an error string.
+  final Future<String?> Function(String email) onLogin;
   final VoidCallback onRegister;
 
   const LoginScreen({
@@ -32,10 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
-    // No real auth backend — validate locally and store email as userId.
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    final error = await widget.onLogin(_emailController.text.trim());
     if (!mounted) return;
-    widget.onLogin(_emailController.text.trim());
+    if (error != null) {
+      setState(() { _loading = false; _error = error; });
+    }
+    // On success auth_gate rebuilds the tree — no need to reset _loading.
   }
 
   @override

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final void Function(String email, String name) onRegister;
+  /// Called with email and name. Returns null on success or an error string.
+  final Future<String?> Function(String email, String name) onRegister;
   final VoidCallback onBackToLogin;
 
   const RegisterScreen({
@@ -22,6 +23,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmController = TextEditingController();
   bool _loading = false;
   bool _obscurePassword = true;
+  String? _error;
 
   @override
   void dispose() {
@@ -34,10 +36,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
+    setState(() { _loading = true; _error = null; });
+    final error = await widget.onRegister(
+      _emailController.text.trim(),
+      _nameController.text.trim(),
+    );
     if (!mounted) return;
-    widget.onRegister(_emailController.text.trim(), _nameController.text.trim());
+    if (error != null) {
+      setState(() { _loading = false; _error = error; });
+    }
+    // On success auth_gate navigates to app — no need to reset _loading.
   }
 
   @override
@@ -65,7 +73,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   'Track your nutrition, reach your goals.',
                   style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 16),
+                if (_error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Text(_error!, style: TextStyle(color: Colors.red[700])),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,

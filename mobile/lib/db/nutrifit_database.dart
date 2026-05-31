@@ -1,5 +1,7 @@
+import 'dart:io';
+
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class NutrifitDatabase {
   NutrifitDatabase._();
@@ -7,7 +9,16 @@ class NutrifitDatabase {
   static Database? _db;
 
   static Future<Database> open() async {
-    _db ??= await openDatabase(
+    if (_db != null) return _db!;
+
+    // sqflite only ships a native driver for Android/iOS.
+    // On Windows/Linux desktop use the FFI driver instead.
+    if (Platform.isWindows || Platform.isLinux) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
+    _db = await openDatabase(
       join(await getDatabasesPath(), 'nutrifit_v1.db'),
       version: 1,
       onCreate: _create,
