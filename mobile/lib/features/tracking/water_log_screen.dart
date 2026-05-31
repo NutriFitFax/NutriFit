@@ -154,7 +154,7 @@ class _WaterLogScreenState extends State<WaterLogScreen> {
                 label: const Text('Custom amount'),
               ),
 
-              if (log.meals.isEmpty && cur == 0) ...[
+              if (cur == 0) ...[
                 const SizedBox(height: 28),
                 Center(
                   child: Text(

@@ -74,6 +74,14 @@ class SqliteDailyLogStore implements DailyLogStore {
   @override
   Future<void> refresh() => _refresh();
 
+  @override
+  Future<void> clearAllData() async {
+    await _db.delete('meal_logs');
+    await _db.delete('water_logs');
+    await _db.delete('weight_logs');
+    await _refresh();
+  }
+
   Future<void> _refresh() async {
     final today = _dateKey(DateTime.now());
     final prefs = SettingsPrefs.instance;

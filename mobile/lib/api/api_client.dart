@@ -39,8 +39,12 @@ class NutriFitApi {
   final http.Client _client;
   final bool _ownsClient;
 
+  /// The currently signed-in user. Set this after login; reset on logout.
+  String userId;
+
   NutriFitApi({
     required this.baseUrl,
+    this.userId = 'demo-user',
     this.timeout = const Duration(seconds: 10),
     http.Client? client,
   })  : _client = client ?? http.Client(),
@@ -109,11 +113,8 @@ class NutriFitApi {
     }
   }
 
-  Map<String, String> _userHeaders(String userId) => {
-        'X-User-Id': userId,
-      };
-
-  Map<String, String> _jsonHeaders(String userId) => {
+  Map<String, String> get _userHeaders => {'X-User-Id': userId};
+  Map<String, String> get _jsonHeaders => {
         'Content-Type': 'application/json',
         'X-User-Id': userId,
       };
@@ -235,26 +236,21 @@ class NutriFitApi {
     });
   }
 
-  Future<StoredUserProfile> getStorageProfile({
-    String userId = 'demo-user',
-  }) {
+  Future<StoredUserProfile> getStorageProfile() {
     return _wrapErrors(() async {
       final resp = await _client
-          .get(_u('/storage/profile'), headers: _userHeaders(userId))
+          .get(_u('/storage/profile'), headers: _userHeaders)
           .timeout(timeout);
       return _decode(resp, StoredUserProfile.fromJson);
     });
   }
 
-  Future<StoredUserProfile> saveStorageProfile(
-    StoredUserProfile profile, {
-    String userId = 'demo-user',
-  }) {
+  Future<StoredUserProfile> saveStorageProfile(StoredUserProfile profile) {
     return _wrapErrors(() async {
       final resp = await _client
           .put(
             _u('/storage/profile'),
-            headers: _jsonHeaders(userId),
+            headers: _jsonHeaders,
             body: jsonEncode(profile.toJson()),
           )
           .timeout(timeout);
@@ -262,32 +258,26 @@ class NutriFitApi {
     });
   }
 
-  Future<DailyStorageSummary> getDailyStorageSummary({
-    String userId = 'demo-user',
-    DateTime? date,
-  }) {
+  Future<DailyStorageSummary> getDailyStorageSummary({DateTime? date}) {
     return _wrapErrors(() async {
       final resp = await _client
           .get(
             _u('/storage/summary', {
               if (date != null) 'date': _date(date),
             }),
-            headers: _userHeaders(userId),
+            headers: _userHeaders,
           )
           .timeout(timeout);
       return _decode(resp, DailyStorageSummary.fromJson);
     });
   }
 
-  Future<MealLogEntry> addMealLog(
-    MealLogEntry meal, {
-    String userId = 'demo-user',
-  }) {
+  Future<MealLogEntry> addMealLog(MealLogEntry meal) {
     return _wrapErrors(() async {
       final resp = await _client
           .post(
             _u('/storage/meals'),
-            headers: _jsonHeaders(userId),
+            headers: _jsonHeaders,
             body: jsonEncode(meal.toJson()),
           )
           .timeout(timeout);
@@ -295,45 +285,36 @@ class NutriFitApi {
     });
   }
 
-  Future<List<MealLogEntry>> getMealLogs({
-    String userId = 'demo-user',
-    DateTime? date,
-  }) {
+  Future<List<MealLogEntry>> getMealLogs({DateTime? date}) {
     return _wrapErrors(() async {
       final resp = await _client
           .get(
             _u('/storage/meals', {
               if (date != null) 'date': _date(date),
             }),
-            headers: _userHeaders(userId),
+            headers: _userHeaders,
           )
           .timeout(timeout);
       return _decodeList(resp, MealLogEntry.fromJson);
     });
   }
 
-  Future<void> deleteMealLog(
-    String id, {
-    String userId = 'demo-user',
-  }) {
+  Future<void> deleteMealLog(String id) {
     return _wrapErrors(() async {
       final resp = await _client
-          .delete(_u('/storage/meals/$id'), headers: _userHeaders(userId))
+          .delete(_u('/storage/meals/$id'), headers: _userHeaders)
           .timeout(timeout);
       if (resp.statusCode == 204) return;
       _throwForStatus(resp.statusCode, resp.body);
     });
   }
 
-  Future<WaterLogEntry> addWaterLog(
-    WaterLogEntry water, {
-    String userId = 'demo-user',
-  }) {
+  Future<WaterLogEntry> addWaterLog(WaterLogEntry water) {
     return _wrapErrors(() async {
       final resp = await _client
           .post(
             _u('/storage/water'),
-            headers: _jsonHeaders(userId),
+            headers: _jsonHeaders,
             body: jsonEncode(water.toJson()),
           )
           .timeout(timeout);
@@ -341,32 +322,26 @@ class NutriFitApi {
     });
   }
 
-  Future<List<WaterLogEntry>> getWaterLogs({
-    String userId = 'demo-user',
-    DateTime? date,
-  }) {
+  Future<List<WaterLogEntry>> getWaterLogs({DateTime? date}) {
     return _wrapErrors(() async {
       final resp = await _client
           .get(
             _u('/storage/water', {
               if (date != null) 'date': _date(date),
             }),
-            headers: _userHeaders(userId),
+            headers: _userHeaders,
           )
           .timeout(timeout);
       return _decodeList(resp, WaterLogEntry.fromJson);
     });
   }
 
-  Future<WeightLogEntry> addWeightLog(
-    WeightLogEntry weight, {
-    String userId = 'demo-user',
-  }) {
+  Future<WeightLogEntry> addWeightLog(WeightLogEntry weight) {
     return _wrapErrors(() async {
       final resp = await _client
           .post(
             _u('/storage/weight'),
-            headers: _jsonHeaders(userId),
+            headers: _jsonHeaders,
             body: jsonEncode(weight.toJson()),
           )
           .timeout(timeout);
@@ -374,30 +349,24 @@ class NutriFitApi {
     });
   }
 
-  Future<List<WeightLogEntry>> getWeightLogs({
-    String userId = 'demo-user',
-    int limit = 30,
-  }) {
+  Future<List<WeightLogEntry>> getWeightLogs({int limit = 30}) {
     return _wrapErrors(() async {
       final resp = await _client
           .get(
             _u('/storage/weight', {'limit': limit}),
-            headers: _userHeaders(userId),
+            headers: _userHeaders,
           )
           .timeout(timeout);
       return _decodeList(resp, WeightLogEntry.fromJson);
     });
   }
 
-  Future<ActivityLogEntry> addActivityLog(
-    ActivityLogEntry activity, {
-    String userId = 'demo-user',
-  }) {
+  Future<ActivityLogEntry> addActivityLog(ActivityLogEntry activity) {
     return _wrapErrors(() async {
       final resp = await _client
           .post(
             _u('/storage/activity'),
-            headers: _jsonHeaders(userId),
+            headers: _jsonHeaders,
             body: jsonEncode(activity.toJson()),
           )
           .timeout(timeout);
@@ -405,17 +374,14 @@ class NutriFitApi {
     });
   }
 
-  Future<List<ActivityLogEntry>> getActivityLogs({
-    String userId = 'demo-user',
-    DateTime? date,
-  }) {
+  Future<List<ActivityLogEntry>> getActivityLogs({DateTime? date}) {
     return _wrapErrors(() async {
       final resp = await _client
           .get(
             _u('/storage/activity', {
               if (date != null) 'date': _date(date),
             }),
-            headers: _userHeaders(userId),
+            headers: _userHeaders,
           )
           .timeout(timeout);
       return _decodeList(resp, ActivityLogEntry.fromJson);

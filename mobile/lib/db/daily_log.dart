@@ -89,4 +89,7 @@ abstract class DailyLogStore {
 
   /// Re-reads goals from SettingsPrefs and re-queries the DB.
   Future<void> refresh();
+
+  /// Wipes all local logs (used on account deletion).
+  Future<void> clearAllData();
 }
