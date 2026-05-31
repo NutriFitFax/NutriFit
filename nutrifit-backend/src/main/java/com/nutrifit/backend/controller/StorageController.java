@@ -176,22 +176,20 @@ public class StorageController {
             @RequestHeader("X-User-Id") String userId,
             @RequestBody MealLogEntry body) {
         String id  = uuid();
-        String now = nowIso();
+        String ts  = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
             db.get().update("""
                     INSERT INTO meal_logs
                         (id, user_id, logged_at, name, calories_kcal,
                          protein_g, carbs_g, fat_g, source)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?::timestamptz, ?, ?, ?, ?, ?, ?)
                     """,
-                    id, userId,
-                    body.loggedAt() != null ? body.loggedAt() : now,
+                    id, userId, ts,
                     body.name(), body.caloriesKcal(),
                     body.proteinG(), body.carbsG(), body.fatG(),
                     body.source() != null ? body.source() : "manual");
         }
-        return new MealLogEntry(id, userId,
-                body.loggedAt() != null ? body.loggedAt() : now,
+        return new MealLogEntry(id, userId, ts,
                 body.name(), body.caloriesKcal(),
                 body.proteinG(), body.carbsG(), body.fatG(),
                 body.source() != null ? body.source() : "manual");
@@ -221,17 +219,13 @@ public class StorageController {
             @RequestHeader("X-User-Id") String userId,
             @RequestBody WaterLogEntry body) {
         String id  = uuid();
-        String now = nowIso();
+        String tsW = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
             db.get().update(
-                    "INSERT INTO water_logs (id, user_id, logged_at, amount_ml) VALUES (?, ?, ?, ?)",
-                    id, userId,
-                    body.loggedAt() != null ? body.loggedAt() : now,
-                    body.amountMl());
+                    "INSERT INTO water_logs (id, user_id, logged_at, amount_ml) VALUES (?, ?, ?::timestamptz, ?)",
+                    id, userId, tsW, body.amountMl());
         }
-        return new WaterLogEntry(id, userId,
-                body.loggedAt() != null ? body.loggedAt() : now,
-                body.amountMl());
+        return new WaterLogEntry(id, userId, tsW, body.amountMl());
     }
 
     @GetMapping("/water")
@@ -249,17 +243,13 @@ public class StorageController {
             @RequestHeader("X-User-Id") String userId,
             @RequestBody WeightLogEntry body) {
         String id  = uuid();
-        String now = nowIso();
+        String tsWt = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
             db.get().update(
-                    "INSERT INTO weight_logs (id, user_id, logged_at, weight_kg) VALUES (?, ?, ?, ?)",
-                    id, userId,
-                    body.loggedAt() != null ? body.loggedAt() : now,
-                    body.weightKg());
+                    "INSERT INTO weight_logs (id, user_id, logged_at, weight_kg) VALUES (?, ?, ?::timestamptz, ?)",
+                    id, userId, tsWt, body.weightKg());
         }
-        return new WeightLogEntry(id, userId,
-                body.loggedAt() != null ? body.loggedAt() : now,
-                body.weightKg());
+        return new WeightLogEntry(id, userId, tsWt, body.weightKg());
     }
 
     @GetMapping("/weight")
@@ -277,19 +267,17 @@ public class StorageController {
             @RequestHeader("X-User-Id") String userId,
             @RequestBody ActivityLogEntry body) {
         String id  = uuid();
-        String now = nowIso();
+        String tsA = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
             db.get().update("""
                     INSERT INTO activity_logs
                         (id, user_id, logged_at, name, met, duration_minutes, calories_burned_kcal)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?::timestamptz, ?, ?, ?, ?)
                     """,
-                    id, userId,
-                    body.loggedAt() != null ? body.loggedAt() : now,
+                    id, userId, tsA,
                     body.name(), body.met(), body.durationMinutes(), body.caloriesBurnedKcal());
         }
-        return new ActivityLogEntry(id, userId,
-                body.loggedAt() != null ? body.loggedAt() : now,
+        return new ActivityLogEntry(id, userId, tsA,
                 body.name(), body.met(), body.durationMinutes(), body.caloriesBurnedKcal());
     }
 
