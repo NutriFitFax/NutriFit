@@ -6,6 +6,7 @@ import '../../app/app_shell.dart';
 import '../../app/settings_prefs.dart';
 import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
+import '../../api/api_exception.dart';
 import 'login_screen.dart';
 import 'user_profile.dart';
 
@@ -35,9 +36,13 @@ class _AuthGateState extends State<AuthGate> {
   Future<String?> _handleLogin(String email) async {
     widget.api.userId = email;
     try {
-      await widget.api.getStorageProfile();
+      // Throws NotFoundException (404) if email is not in the users table.
+      await widget.api.getUserAccount();
+    } on NotFoundException {
+      widget.api.userId = 'demo-user';
+      return 'No account found for $email. Please register first.';
     } catch (_) {
-      // Backend unavailable — allow offline login with whatever is in local DB.
+      // Network error / backend down — allow offline login.
     }
     await SettingsPrefs.instance.setUserEmail(email);
     await SettingsPrefs.instance.setDisplayName(email.split('@').first);

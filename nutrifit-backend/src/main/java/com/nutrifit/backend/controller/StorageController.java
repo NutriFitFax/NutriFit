@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -138,10 +139,16 @@ public class StorageController {
         return new UserAccount(id, body.email(), body.displayName(), now);
     }
 
-    /** Read back the account row for the current user (identified by X-User-Id = email). */
+    /**
+     * Read back the account row for the current user (identified by X-User-Id = email).
+     * Returns 404 if the email is not registered — the Flutter login screen uses this
+     * to block unregistered users from logging in.
+     */
     @GetMapping("/users/me")
     public UserAccount getUser(@RequestHeader("X-User-Id") String email) {
-        if (db.isEmpty()) return new UserAccount(null, email, null, null);
+        if (db.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "database not configured");
+        }
         List<UserAccount> rows = db.get().query(
                 "SELECT * FROM users WHERE email = ?",
                 (rs, rowNum) -> new UserAccount(
@@ -150,7 +157,10 @@ public class StorageController {
                         rs.getString("display_name"),
                         rs.getString("created_at")),
                 email);
-        return rows.isEmpty() ? new UserAccount(null, email, null, null) : rows.get(0);
+        if (rows.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "no account found for " + email);
+        }
+        return rows.get(0);
     }
 
     // ── Profile ───────────────────────────────────────────────────────────

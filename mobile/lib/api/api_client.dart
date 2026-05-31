@@ -236,6 +236,18 @@ class NutriFitApi {
     });
   }
 
+  /// GET /storage/users/me — verify the current user is registered.
+  /// Throws [NotFoundException] if the email is not in the users table.
+  Future<void> getUserAccount() {
+    return _wrapErrors(() async {
+      final resp = await _client
+          .get(_u('/storage/users/me'), headers: _userHeaders)
+          .timeout(timeout);
+      if (resp.statusCode >= 200 && resp.statusCode < 300) return;
+      _throwForStatus(resp.statusCode, resp.body);
+    });
+  }
+
   /// POST /storage/users — create account row in the users table.
   Future<void> registerUser({required String email, required String displayName}) {
     return _wrapErrors(() async {
