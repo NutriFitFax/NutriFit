@@ -24,6 +24,7 @@ enum UnitSystem { metric, imperial }
 
 class UnitConvert {
   static double kgToLb(double kg) => kg * 2.20462;
+  static double lbToKg(double lb) => lb / 2.20462;
 
   static (int, int) cmToFeetInches(double cm) {
     final totalInches = (cm / 2.54).round();

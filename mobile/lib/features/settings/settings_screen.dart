@@ -79,6 +79,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _waterEnd       = _parseTime(prefs.waterReminderEnd);
     _waterInterval  = prefs.waterReminderIntervalMinutes;
     _haptics        = prefs.haptics;
+    // Restore locally-persisted goals so they survive without the backend.
+    _calorieGoal = prefs.goalCaloriesKcal;
+    _macros      = MacroGoals(prefs.goalProteinG, prefs.goalCarbsG, prefs.goalFatG);
+    _profile = UserProfile(
+      name:     prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
+      email:    _profile.email,
+      weightKg: _profile.weightKg,
+      heightCm: prefs.heightCm == 170.0 ? _profile.heightCm : prefs.heightCm,
+    );
     _loadFromApi();
   }
 
@@ -88,23 +97,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final stored = await widget.api.getStorageProfile();
       if (!mounted) return;
+      final name     = stored.displayName?.isNotEmpty == true ? stored.displayName! : _profile.name;
+      final heightCm = stored.heightCm ?? _profile.heightCm;
+      final cal      = stored.goalCaloriesKcal?.round() ?? _calorieGoal;
+      final macros   = MacroGoals(
+        stored.goalProteinG?.round() ?? _macros.protein,
+        stored.goalCarbsG?.round()   ?? _macros.carbs,
+        stored.goalFatG?.round()     ?? _macros.fat,
+      );
+      // Mirror to local storage so DailyLogStore picks up the latest goals
+      // on the next refresh, even when the backend becomes unavailable later.
+      await Future.wait([
+        SettingsPrefs.instance.setDisplayName(name),
+        SettingsPrefs.instance.setHeightCm(heightCm),
+        SettingsPrefs.instance.setGoalCaloriesKcal(cal),
+        SettingsPrefs.instance.setGoalProteinG(macros.protein),
+        SettingsPrefs.instance.setGoalCarbsG(macros.carbs),
+        SettingsPrefs.instance.setGoalFatG(macros.fat),
+      ]);
+      if (!mounted) return;
       setState(() {
         _profile = UserProfile(
-          name: stored.displayName?.isNotEmpty == true
-              ? stored.displayName!
-              : _profile.name,
-          email: _profile.email,
+          name:     name,
+          email:    _profile.email,
           weightKg: _profile.weightKg,
-          heightCm: stored.heightCm ?? _profile.heightCm,
+          heightCm: heightCm,
         );
-        if (stored.goalCaloriesKcal != null) {
-          _calorieGoal = stored.goalCaloriesKcal!.round();
-        }
-        _macros = MacroGoals(
-          stored.goalProteinG?.round() ?? _macros.protein,
-          stored.goalCarbsG?.round()   ?? _macros.carbs,
-          stored.goalFatG?.round()     ?? _macros.fat,
-        );
+        _calorieGoal = cal;
+        _macros      = macros;
       });
     } catch (_) {
       // Keep defaults when the backend is unreachable.
@@ -151,7 +171,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: '${_thousands(_calorieGoal)} kcal',
               onTap: () async {
                 final v = await showEditCalorieGoalSheet(context, _calorieGoal);
-                if (v != null) { setState(() => _calorieGoal = v); _saveToApi(); }
+                if (v != null) {
+                  setState(() => _calorieGoal = v);
+                  SettingsPrefs.instance.setGoalCaloriesKcal(v);
+                  _saveToApi();
+                }
               },
             ),
             SettingsRow(
@@ -160,7 +184,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: 'P ${_macros.protein} · C ${_macros.carbs} · F ${_macros.fat} g',
               onTap: () async {
                 final v = await showEditMacrosSheet(context, _macros);
-                if (v != null) { setState(() => _macros = v); _saveToApi(); }
+                if (v != null) {
+                  setState(() => _macros = v);
+                  SettingsPrefs.instance.setGoalProteinG(v.protein);
+                  SettingsPrefs.instance.setGoalCarbsG(v.carbs);
+                  SettingsPrefs.instance.setGoalFatG(v.fat);
+                  _saveToApi();
+                }
               },
             ),
             SettingsRow(
@@ -336,6 +366,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final updated = await showEditProfileSheet(context, _profile);
           if (updated != null) {
             setState(() => _profile = updated);
+            SettingsPrefs.instance.setDisplayName(updated.name);
+            SettingsPrefs.instance.setHeightCm(updated.heightCm);
             _saveToApi();
           }
         },
