@@ -138,6 +138,21 @@ class SettingsPrefs {
     await _p.remove(_kAvatarPath);
   }
 
+  static const _kGender        = 'gender';
+  static const _kActivityLevel = 'activity_level';
+
+  Gender get gender => Gender.values.firstWhere(
+    (g) => g.name == (_p.getString(_kGender) ?? ''),
+    orElse: () => Gender.other,
+  );
+  Future<void> setGender(Gender g) => _p.setString(_kGender, g.name);
+
+  ActivityLevel get activityLevel => ActivityLevel.values.firstWhere(
+    (a) => a.name == (_p.getString(_kActivityLevel) ?? ''),
+    orElse: () => ActivityLevel.medium,
+  );
+  Future<void> setActivityLevel(ActivityLevel a) => _p.setString(_kActivityLevel, a.name);
+
   static const _kUserEmail = 'user_email';
 
   String? getUserEmail() => _p.getString(_kUserEmail);

@@ -42,6 +42,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _calorieGoal = 2150;
   MacroGoals _macros = const MacroGoals(130, 240, 70);
 
+  late Gender _gender;
+  late ActivityLevel _activity;
+
   late UnitSystem _unit;
   late NutriAccent _accent;
   late int _waterMl;
@@ -87,6 +90,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // Restore locally-persisted goals so they survive without the backend.
     _calorieGoal = prefs.goalCaloriesKcal;
     _macros      = MacroGoals(prefs.goalProteinG, prefs.goalCarbsG, prefs.goalFatG);
+    _gender      = prefs.gender;
+    _activity    = prefs.activityLevel;
     _profile = UserProfile(
       name:     prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
       email:    prefs.getUserEmail() ?? _profile.email,
@@ -207,6 +212,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (v != null) {
                   setState(() => _waterMl = v);
                   SettingsPrefs.instance.setWaterGoalMl(v);
+                }
+              },
+            ),
+            SettingsSegmentedRow<Gender>(
+              icon: Icons.person_outline, iconColor: c.primary, iconBg: c.primaryTint,
+              title: 'Sex',
+              value: _gender,
+              options: const [
+                (Gender.male,   'Male'),
+                (Gender.female, 'Female'),
+                (Gender.other,  'Other'),
+              ],
+              onChanged: (g) {
+                Haptics.selectionClick();
+                setState(() => _gender = g);
+                SettingsPrefs.instance.setGender(g);
+              },
+            ),
+            SettingsRow(
+              icon: Icons.directions_run, iconColor: c.carbs, iconBg: c.carbsSoft,
+              title: 'Activity level',
+              value: activityLabel[_activity],
+              onTap: () async {
+                final v = await showEditActivitySheet(context, _activity);
+                if (v != null) {
+                  setState(() => _activity = v);
+                  SettingsPrefs.instance.setActivityLevel(v);
                 }
               },
             ),
