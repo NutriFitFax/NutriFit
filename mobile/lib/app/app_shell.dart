@@ -19,7 +19,7 @@ class AppShell extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
   final DailyLogStore store;
-  final VoidCallback? onLogout;
+  final Future<void> Function()? onLogout;
   final Future<void> Function()? onDeleteAccount;
 
   const AppShell({

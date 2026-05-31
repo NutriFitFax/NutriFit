@@ -90,6 +90,9 @@ abstract class DailyLogStore {
   /// Re-reads goals from SettingsPrefs and re-queries the DB.
   Future<void> refresh();
 
+  /// Deletes today's water entries so the intake counter resets to 0.
+  Future<void> resetTodayWater();
+
   /// Wipes all local logs (used on account deletion).
   Future<void> clearAllData();
 }

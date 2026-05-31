@@ -46,6 +46,8 @@ class _AuthGateState extends State<AuthGate> {
     }
     await SettingsPrefs.instance.setUserEmail(email);
     await SettingsPrefs.instance.setDisplayName(email.split('@').first);
+    // Reset today's water intake so every login starts with a fresh counter.
+    await widget.store.resetTodayWater();
     return null;
   }
 
@@ -89,11 +91,15 @@ class _AuthGateState extends State<AuthGate> {
 
   // ── Logout / delete ───────────────────────────────────────────────────
 
-  void _handleLogout() {
-    SettingsPrefs.instance.clearUserEmail();
+  Future<void> _handleLogout() async {
+    // Reset today's water intake before logging out so the next session starts fresh.
+    await widget.store.resetTodayWater();
+    await SettingsPrefs.instance.clearUserEmail();
     widget.api.userId = 'demo-user';
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() {});
+    if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      setState(() {});
+    }
   }
 
   Future<void> _handleDeleteAccount() async {

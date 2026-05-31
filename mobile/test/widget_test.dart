@@ -27,6 +27,7 @@ class _FakeStore implements DailyLogStore {
   @override Future<void> logWater(int amountMl) async {}
   @override Future<void> logWeight(double weightKg) async {}
   @override Future<void> refresh() async {}
+  @override Future<void> resetTodayWater() async {}
   @override Future<void> clearAllData() async {}
 }
 

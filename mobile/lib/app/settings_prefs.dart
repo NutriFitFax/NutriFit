@@ -53,7 +53,7 @@ class SettingsPrefs {
       UnitSystem.values[(_p.getInt(_kUnit) ?? 0).clamp(0, UnitSystem.values.length - 1)];
   Future<void> setUnit(UnitSystem u) => _p.setInt(_kUnit, u.index);
 
-  int get waterGoalMl => _p.getInt(_kWaterMl) ?? 2500;
+  int get waterGoalMl => _p.getInt(_kWaterMl) ?? 2000;
   Future<void> setWaterGoalMl(int ml) => _p.setInt(_kWaterMl, ml);
 
   static const _kMealReminders  = 'meal_reminders';

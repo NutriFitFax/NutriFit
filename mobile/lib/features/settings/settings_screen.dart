@@ -19,7 +19,7 @@ class SettingsScreen extends StatefulWidget {
   final NutriFitApi api;
   final UserProfile? profile;
   final ViewedFoodHistoryStore? history;
-  final VoidCallback? onLogout;
+  final Future<void> Function()? onLogout;
   final Future<void> Function()? onDeleteAccount;
 
   const SettingsScreen({
@@ -507,7 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       message: 'You can log back in anytime. Your on-device data stays put.',
       confirmLabel: 'Log out',
     );
-    if (ok == true) widget.onLogout?.call();
+    if (ok == true) await widget.onLogout?.call();
   }
 
   Future<void> _confirmDelete() async {
