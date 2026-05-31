@@ -84,4 +84,31 @@ class SettingsPrefs {
 
   bool get haptics => _p.getBool(_kHaptics) ?? true;
   Future<void> setHaptics(bool v) => _p.setBool(_kHaptics, v);
+
+  // ── Goal fields (persisted locally so DailyLogStore can read them) ────────
+
+  static const _kGoalCalories = 'goal_calories_kcal';
+  static const _kGoalProtein  = 'goal_protein_g';
+  static const _kGoalCarbs    = 'goal_carbs_g';
+  static const _kGoalFat      = 'goal_fat_g';
+  static const _kHeightCm     = 'height_cm';
+  static const _kDisplayName  = 'display_name';
+
+  int get goalCaloriesKcal => _p.getInt(_kGoalCalories) ?? 2150;
+  Future<void> setGoalCaloriesKcal(int v) => _p.setInt(_kGoalCalories, v);
+
+  int get goalProteinG => _p.getInt(_kGoalProtein) ?? 130;
+  Future<void> setGoalProteinG(int v) => _p.setInt(_kGoalProtein, v);
+
+  int get goalCarbsG => _p.getInt(_kGoalCarbs) ?? 240;
+  Future<void> setGoalCarbsG(int v) => _p.setInt(_kGoalCarbs, v);
+
+  int get goalFatG => _p.getInt(_kGoalFat) ?? 70;
+  Future<void> setGoalFatG(int v) => _p.setInt(_kGoalFat, v);
+
+  double get heightCm => _p.getDouble(_kHeightCm) ?? 170.0;
+  Future<void> setHeightCm(double v) => _p.setDouble(_kHeightCm, v);
+
+  String get displayName => _p.getString(_kDisplayName) ?? 'friend';
+  Future<void> setDisplayName(String v) => _p.setString(_kDisplayName, v);
 }

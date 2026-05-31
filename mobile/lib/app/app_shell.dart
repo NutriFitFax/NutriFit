@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../db/daily_log.dart';
 import 'haptics.dart';
 import '../features/barcode/barcode_scanner_screen.dart';
 import '../features/history/history_screen.dart';
@@ -17,8 +18,9 @@ enum AppTabId { home, search, barcode, meal, history }
 class AppShell extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
 
-  const AppShell({super.key, required this.api, required this.history});
+  const AppShell({super.key, required this.api, required this.history, required this.store});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -59,6 +61,7 @@ class _AppShellState extends State<AppShell> {
         icon: Icon(Icons.home_outlined, color: unselectedColor),
         activeIcon: Icon(Icons.home_rounded, color: selectedColor),
         build: () => HomeDashboardScreen(
+          store: widget.store,
           history: widget.history,
           onOpenTab: _openTab,
           onOpenSettings: () => Navigator.of(context).push(

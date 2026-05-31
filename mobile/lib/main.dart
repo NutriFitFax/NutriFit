@@ -6,6 +6,8 @@ import 'app/app_shell.dart';
 import 'app/app_theme.dart';
 import 'app/notification_service.dart';
 import 'app/settings_prefs.dart';
+import 'db/daily_log.dart';
+import 'db/sqlite_daily_log_store.dart';
 import 'features/history/viewed_food_history_store.dart';
 import 'features/settings/widgets/settings_widgets.dart';
 
@@ -13,10 +15,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SettingsPrefs.init();
   await NotificationService.instance.init();
+  final store = await SqliteDailyLogStore.open();
   runApp(
     NutriFitApp(
       api: NutriFitApi(baseUrl: ApiConfig.baseUrl),
       history: InMemoryViewedFoodHistoryStore(),
+      store: store,
     ),
   );
 }
@@ -24,8 +28,9 @@ void main() async {
 class NutriFitApp extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
 
-  const NutriFitApp({super.key, required this.api, required this.history});
+  const NutriFitApp({super.key, required this.api, required this.history, required this.store});
 
   @override
   State<NutriFitApp> createState() => _NutriFitAppState();
@@ -52,7 +57,7 @@ class _NutriFitAppState extends State<NutriFitApp> {
     return MaterialApp(
       title: 'NutriFit',
       theme: buildAppTheme(primary: primary),
-      home: AppShell(api: widget.api, history: widget.history),
+      home: AppShell(api: widget.api, history: widget.history, store: widget.store),
     );
   }
 }
