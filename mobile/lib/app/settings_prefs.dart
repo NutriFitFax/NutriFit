@@ -26,6 +26,7 @@ class SettingsPrefs {
     accentNotifier = ValueNotifier(
       NutriAccent.values[(_p.getInt(_kAccent) ?? 0).clamp(0, NutriAccent.values.length - 1)],
     );
+    displayNameNotifier = ValueNotifier(_p.getString(_kDisplayName) ?? 'friend');
   }
 
   static const _kAccent   = 'accent_index';
@@ -34,6 +35,9 @@ class SettingsPrefs {
 
   /// Notifies listeners when the accent changes so the app theme can rebuild.
   late final ValueNotifier<NutriAccent> accentNotifier;
+
+  /// Notifies listeners when the display name changes.
+  late final ValueNotifier<String> displayNameNotifier;
 
   NutriAccent get accent => accentNotifier.value;
   Future<void> setAccent(NutriAccent a) async {
@@ -92,6 +96,7 @@ class SettingsPrefs {
   static const _kGoalCarbs    = 'goal_carbs_g';
   static const _kGoalFat      = 'goal_fat_g';
   static const _kHeightCm     = 'height_cm';
+  static const _kWeightKg     = 'weight_kg';
   static const _kDisplayName  = 'display_name';
 
   int get goalCaloriesKcal => _p.getInt(_kGoalCalories) ?? 2150;
@@ -109,8 +114,14 @@ class SettingsPrefs {
   double get heightCm => _p.getDouble(_kHeightCm) ?? 170.0;
   Future<void> setHeightCm(double v) => _p.setDouble(_kHeightCm, v);
 
+  double get weightKg => _p.getDouble(_kWeightKg) ?? 0.0;
+  Future<void> setWeightKg(double v) => _p.setDouble(_kWeightKg, v);
+
   String get displayName => _p.getString(_kDisplayName) ?? 'friend';
-  Future<void> setDisplayName(String v) => _p.setString(_kDisplayName, v);
+  Future<void> setDisplayName(String v) async {
+    displayNameNotifier.value = v;
+    await _p.setString(_kDisplayName, v);
+  }
 
   static const _kUserEmail = 'user_email';
 

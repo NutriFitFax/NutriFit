@@ -46,10 +46,7 @@ class HomeDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c    = context.nutri;
-    final name = SettingsPrefs.instance.displayName;
-    final avatarLetter =
-        name.trim().isEmpty ? 'U' : name.trim()[0].toUpperCase();
+    final c = context.nutri;
 
     return Scaffold(
       backgroundColor: c.bg,
@@ -68,60 +65,67 @@ class HomeDashboardScreen extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
                   sliver: SliverToBoxAdapter(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _dateLabel(),
-                                style: TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w700,
-                                  color: c.ink2, letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              RichText(
-                                text: TextSpan(
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26, height: 1.1),
-                                  children: [
-                                    TextSpan(text: '${_greeting()}, '),
-                                    TextSpan(
-                                      text: name,
-                                      style: TextStyle(
-                                        color: c.primary,
-                                        fontStyle: FontStyle.italic,
-                                      ),
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: SettingsPrefs.instance.displayNameNotifier,
+                      builder: (context, name, _) {
+                        final displayName = name.trim().isEmpty ? 'User' : name.trim();
+                        final avatarLetter = displayName[0].toUpperCase();
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _dateLabel(),
+                                    style: TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w700,
+                                      color: c.ink2, letterSpacing: 0.8,
                                     ),
-                                  ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  RichText(
+                                    text: TextSpan(
+                                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 26, height: 1.1),
+                                      children: [
+                                        TextSpan(text: '${_greeting()}, '),
+                                        TextSpan(
+                                          text: displayName,
+                                          style: TextStyle(
+                                            color: c.primary,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: onOpenSettings,
+                              child: Container(
+                                width: 44, height: 44,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                                    colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(99),
+                                  border: Border.all(color: c.line),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  avatarLetter,
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
+                                      ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: onOpenSettings,
-                          child: Container(
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                                colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
-                              ),
-                              borderRadius: BorderRadius.circular(99),
-                              border: Border.all(color: c.line),
                             ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              avatarLetter,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

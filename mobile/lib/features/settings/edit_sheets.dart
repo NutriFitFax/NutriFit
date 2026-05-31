@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
+import '../../app/settings_prefs.dart';
 import '../auth/user_profile.dart';
 
 /// Bottom sheets used by the Settings screen to edit values. Each returns the
@@ -102,39 +103,166 @@ TextField _numField(TextEditingController ctrl, {String suffix = '', bool decima
 }
 
 // ── Edit profile ───────────────────────────────────────────────────────────
-Future<UserProfile?> showEditProfileSheet(BuildContext context, UserProfile p) {
-  final name = TextEditingController(text: p.name);
-  final email = TextEditingController(text: p.email);
-  final weight = TextEditingController(text: p.weightKg.toStringAsFixed(1));
-  final height = TextEditingController(text: p.heightCm.round().toString());
+Future<UserProfile?> showEditProfileSheet(BuildContext context, UserProfile p) =>
+    _showSheet<UserProfile>(context, _EditProfileSheet(profile: p));
 
-  return _showSheet<UserProfile>(
-    context,
-    _SheetScaffold(
+class _EditProfileSheet extends StatefulWidget {
+  final UserProfile profile;
+  const _EditProfileSheet({required this.profile});
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  late final bool _isImperial;
+  late final TextEditingController _name;
+  late final TextEditingController _weight;
+  late final TextEditingController _height;    // cm — metric only
+  late final TextEditingController _heightFt;  // ft  — imperial only
+  late final TextEditingController _heightIn;  // in  — imperial only
+  late double _bmi;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.profile;
+    _isImperial = SettingsPrefs.instance.unit == UnitSystem.imperial;
+    _name = TextEditingController(text: p.name);
+    _bmi  = p.bmi;
+
+    if (_isImperial) {
+      _weight   = TextEditingController(text: UnitConvert.kgToLb(p.weightKg).round().toString());
+      _height   = TextEditingController();
+      final (ft, inch) = UnitConvert.cmToFeetInches(p.heightCm);
+      _heightFt = TextEditingController(text: ft.toString());
+      _heightIn = TextEditingController(text: inch.toString());
+      _heightFt.addListener(_recompute);
+      _heightIn.addListener(_recompute);
+    } else {
+      _weight   = TextEditingController(text: p.weightKg.toStringAsFixed(1));
+      _height   = TextEditingController(text: p.heightCm.round().toString());
+      _heightFt = TextEditingController();
+      _heightIn = TextEditingController();
+      _height.addListener(_recompute);
+    }
+    _weight.addListener(_recompute);
+  }
+
+  void _recompute() {
+    double wk;
+    double hc;
+    if (_isImperial) {
+      final lb = double.tryParse(_weight.text);
+      final ft = int.tryParse(_heightFt.text);
+      final inch = int.tryParse(_heightIn.text);
+      if (lb == null || ft == null || inch == null) return;
+      wk = UnitConvert.lbToKg(lb);
+      hc = UnitConvert.feetInchesToCm(ft, inch);
+    } else {
+      final parsedWk = double.tryParse(_weight.text);
+      final parsedHc = double.tryParse(_height.text);
+      if (parsedWk == null || parsedHc == null || parsedHc <= 0) return;
+      wk = parsedWk;
+      hc = parsedHc;
+    }
+    final hm = hc / 100;
+    if (hm > 0) setState(() => _bmi = wk / (hm * hm));
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _weight.dispose();
+    _height.dispose();
+    _heightFt.dispose();
+    _heightIn.dispose();
+    super.dispose();
+  }
+
+  String get _bmiCategory {
+    if (_bmi < 18.5) return 'Underweight';
+    if (_bmi < 25.0) return 'Normal';
+    if (_bmi < 30.0) return 'Overweight';
+    return 'Obese';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.profile;
+    final c = context.nutri;
+    return _SheetScaffold(
       title: 'Edit profile',
       onSave: () {
-        final wk = (double.tryParse(weight.text) ?? p.weightKg).clamp(30.0, 300.0);
-        final hc = (double.tryParse(height.text) ?? p.heightCm).clamp(100.0, 272.0);
+        double wk;
+        double hc;
+        if (_isImperial) {
+          final lb = (double.tryParse(_weight.text) ?? UnitConvert.kgToLb(p.weightKg)).clamp(66.0, 661.0);
+          wk = UnitConvert.lbToKg(lb);
+          final ft   = int.tryParse(_heightFt.text) ?? UnitConvert.cmToFeetInches(p.heightCm).$1;
+          final inch = int.tryParse(_heightIn.text) ?? UnitConvert.cmToFeetInches(p.heightCm).$2;
+          hc = UnitConvert.feetInchesToCm(ft, inch).clamp(100.0, 272.0);
+        } else {
+          wk = (double.tryParse(_weight.text) ?? p.weightKg).clamp(30.0, 300.0);
+          hc = (double.tryParse(_height.text) ?? p.heightCm).clamp(100.0, 272.0);
+        }
         Navigator.of(context).pop(UserProfile(
-          name: name.text.trim(),
-          email: email.text.trim(),
+          name: _name.text.trim(),
+          email: p.email,
           weightKg: double.parse(wk.toStringAsFixed(1)),
           heightCm: hc.roundToDouble(),
         ));
       },
       children: [
-        _Labeled(label: 'Full name', child: TextField(controller: name)),
-        _Labeled(label: 'Email', child: TextField(controller: email, keyboardType: TextInputType.emailAddress)),
-        Row(
-          children: [
-            Expanded(child: _Labeled(label: 'Weight', child: _numField(weight, suffix: 'kg', decimal: true))),
-            const SizedBox(width: 12),
-            Expanded(child: _Labeled(label: 'Height', child: _numField(height, suffix: 'cm'))),
-          ],
+        _Labeled(label: 'Name', child: TextField(controller: _name, maxLength: 24, maxLengthEnforcement: MaxLengthEnforcement.enforced)),
+        if (_isImperial)
+          Row(
+            children: [
+              Expanded(child: _Labeled(label: 'Weight', child: _numField(_weight, suffix: 'lb'))),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _Labeled(
+                  label: 'Height',
+                  child: Row(
+                    children: [
+                      Expanded(child: _numField(_heightFt, suffix: 'ft')),
+                      const SizedBox(width: 6),
+                      Expanded(child: _numField(_heightIn, suffix: 'in')),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: _Labeled(label: 'Weight', child: _numField(_weight, suffix: 'kg', decimal: true))),
+              const SizedBox(width: 12),
+              Expanded(child: _Labeled(label: 'Height', child: _numField(_height, suffix: 'cm'))),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: c.surfaceSunken,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  'BMI ${_bmi.toStringAsFixed(1)} · $_bmiCategory',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.ink2),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 // ── Edit calorie goal ────────────────────────────────────────────────────

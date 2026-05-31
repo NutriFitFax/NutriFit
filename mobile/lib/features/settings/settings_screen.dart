@@ -84,8 +84,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _macros      = MacroGoals(prefs.goalProteinG, prefs.goalCarbsG, prefs.goalFatG);
     _profile = UserProfile(
       name:     prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
-      email:    _profile.email,
-      weightKg: _profile.weightKg,
+      email:    prefs.getUserEmail() ?? _profile.email,
+      weightKg: prefs.weightKg == 0.0 ? _profile.weightKg : prefs.weightKg,
       heightCm: prefs.heightCm == 170.0 ? _profile.heightCm : prefs.heightCm,
     );
     _loadFromApi();
@@ -368,6 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             setState(() => _profile = updated);
             SettingsPrefs.instance.setDisplayName(updated.name);
             SettingsPrefs.instance.setHeightCm(updated.heightCm);
+            SettingsPrefs.instance.setWeightKg(updated.weightKg);
             _saveToApi();
           }
         },
