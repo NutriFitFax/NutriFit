@@ -111,4 +111,10 @@ class SettingsPrefs {
 
   String get displayName => _p.getString(_kDisplayName) ?? 'friend';
   Future<void> setDisplayName(String v) => _p.setString(_kDisplayName, v);
+
+  static const _kUserEmail = 'user_email';
+
+  String? getUserEmail() => _p.getString(_kUserEmail);
+  Future<void> setUserEmail(String email) => _p.setString(_kUserEmail, email);
+  Future<void> clearUserEmail() => _p.remove(_kUserEmail);
 }
