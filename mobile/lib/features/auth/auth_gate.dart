@@ -7,7 +7,7 @@ import '../../app/settings_prefs.dart';
 import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import 'login_screen.dart';
-import 'register_screen.dart';
+import 'user_profile.dart';
 
 class AuthGate extends StatefulWidget {
   final NutriFitApi api;
@@ -26,38 +26,34 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
-  bool _showRegister = false;
-
   bool get _isLoggedIn => SettingsPrefs.instance.getUserEmail() != null;
 
   // ── Login ─────────────────────────────────────────────────────────────
 
-  /// Returns null on success, or an error message to show the user.
+  /// Verifies the account with the backend and saves credentials locally.
+  /// Returns null on success or an error message to show the user.
   Future<String?> _handleLogin(String email) async {
     widget.api.userId = email;
     try {
-      // Verify the account exists on the backend.
       await widget.api.getStorageProfile();
     } catch (_) {
       // Backend unavailable — allow offline login with whatever is in local DB.
     }
     await SettingsPrefs.instance.setUserEmail(email);
     await SettingsPrefs.instance.setDisplayName(email.split('@').first);
-    if (mounted) setState(() {});
     return null;
   }
 
-  // ── Register ──────────────────────────────────────────────────────────
+  // ── Sign-up ───────────────────────────────────────────────────────────
 
-  /// Returns null on success, or an error message to show the user.
-  Future<String?> _handleRegister(String email, String name) async {
-    widget.api.userId = email;
+  /// Creates the user profile on the backend and saves credentials locally.
+  Future<void> _handleProfileCreated(UserProfile profile) async {
+    widget.api.userId = profile.email;
     try {
-      // Create the user profile on the backend so the account exists in the DB.
       await widget.api.saveStorageProfile(StoredUserProfile(
-        userId: email,
-        displayName: name.isNotEmpty ? name : email.split('@').first,
-        heightCm: null,
+        userId: profile.email,
+        displayName: profile.name,
+        heightCm: profile.heightCm,
         goalCaloriesKcal: SettingsPrefs.instance.goalCaloriesKcal.toDouble(),
         goalProteinG: SettingsPrefs.instance.goalProteinG.toDouble(),
         goalCarbsG: SettingsPrefs.instance.goalCarbsG.toDouble(),
@@ -67,11 +63,17 @@ class _AuthGateState extends State<AuthGate> {
     } catch (_) {
       // Backend unavailable — proceed with local-only registration.
     }
-    final displayName = name.isNotEmpty ? name : email.split('@').first;
-    await SettingsPrefs.instance.setUserEmail(email);
-    await SettingsPrefs.instance.setDisplayName(displayName);
-    if (mounted) setState(() { _showRegister = false; });
-    return null;
+    await SettingsPrefs.instance.setUserEmail(profile.email);
+    await SettingsPrefs.instance.setDisplayName(profile.name);
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────
+
+  /// Called after login or sign-up succeeds. Pops any auth routes and
+  /// rebuilds to show AppShell.
+  void _handleAuthenticated() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() {});
   }
 
   // ── Logout / delete ───────────────────────────────────────────────────
@@ -79,14 +81,14 @@ class _AuthGateState extends State<AuthGate> {
   void _handleLogout() {
     SettingsPrefs.instance.clearUserEmail();
     widget.api.userId = 'demo-user';
-    setState(() { _showRegister = false; });
+    setState(() {});
   }
 
   void _handleDeleteAccount() {
     widget.store.clearAllData();
     SettingsPrefs.instance.clearUserEmail();
     widget.api.userId = 'demo-user';
-    setState(() { _showRegister = false; });
+    setState(() {});
   }
 
   // ── Build ─────────────────────────────────────────────────────────────
@@ -94,15 +96,10 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (!_isLoggedIn) {
-      if (_showRegister) {
-        return RegisterScreen(
-          onRegister: _handleRegister,
-          onBackToLogin: () => setState(() => _showRegister = false),
-        );
-      }
       return LoginScreen(
         onLogin: _handleLogin,
-        onRegister: () => setState(() => _showRegister = true),
+        onAuthenticated: _handleAuthenticated,
+        onProfileCreated: _handleProfileCreated,
       );
     }
 
