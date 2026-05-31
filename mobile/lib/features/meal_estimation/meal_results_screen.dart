@@ -6,6 +6,7 @@ import '../../api/api_exception.dart';
 import '../../app/haptics.dart';
 import '../../api/models.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../../screens/food_detail_screen.dart';
 import '../../ui/food_view_data.dart';
@@ -15,11 +16,13 @@ import 'widgets/meal_totals_footer.dart';
 class MealResultsScreen extends StatefulWidget {
   final Future<MealEstimate> estimateFuture;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
 
   const MealResultsScreen({
     super.key,
     required this.estimateFuture,
     required this.history,
+    required this.store,
   });
 
   @override
@@ -111,6 +114,17 @@ class _MealResultsScreenState extends State<MealResultsScreen> {
                           food: FoodViewData.fromEstimatedFood(e.items[i]),
                           history: widget.history,
                           sourceLabel: 'Meal Photo',
+                          onLog: (grams) {
+                            final item = e.items[i];
+                            final m = item.macrosPer100g.forGrams(grams);
+                            return widget.store.logMeal(
+                              name: item.name,
+                              caloriesKcal: m.caloriesKcal,
+                              proteinG: m.proteinG,
+                              carbsG: m.carbsG,
+                              fatG: m.fatG,
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -119,7 +133,7 @@ class _MealResultsScreenState extends State<MealResultsScreen> {
             ],
           ),
         ),
-        MealTotalsFooter(estimate: e),
+        MealTotalsFooter(estimate: e, store: widget.store),
       ],
     );
   }

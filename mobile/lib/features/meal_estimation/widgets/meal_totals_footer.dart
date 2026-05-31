@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../api/models.dart';
 import '../../../app/haptics.dart';
 import '../../../app/nutri_colors.dart';
+import '../../../db/daily_log.dart';
 
 class MealTotalsFooter extends StatelessWidget {
   final MealEstimate estimate;
-  const MealTotalsFooter({super.key, required this.estimate});
+  final DailyLogStore store;
+  const MealTotalsFooter({super.key, required this.estimate, required this.store});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,12 @@ class MealTotalsFooter extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () { Haptics.selectionClick(); /* TODO(Davud): bulk log */ },
+                    onPressed: () {
+                      Haptics.selectionClick();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tap a food above to adjust its portion')),
+                      );
+                    },
                     child: const Text('Adjust portions'),
                   ),
                 ),
@@ -73,13 +80,24 @@ class MealTotalsFooter extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Haptics.mediumImpact();
-                      // TODO(Davud): bulk log
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${t.items.length} foods logged to today')),
-                      );
-                      Navigator.of(context).popUntil((r) => r.isFirst);
+                      for (final item in t.items) {
+                        final m = item.macrosPer100g.forGrams(item.estimatedGrams);
+                        await store.logMeal(
+                          name: item.name,
+                          caloriesKcal: m.caloriesKcal,
+                          proteinG: m.proteinG,
+                          carbsG: m.carbsG,
+                          fatG: m.fatG,
+                        );
+                      }
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${t.items.length} foods logged to today')),
+                        );
+                        Navigator.of(context).popUntil((r) => r.isFirst);
+                      }
                     },
                     icon: const Icon(Icons.check, size: 18),
                     label: Text('Log all ${t.items.length}'),

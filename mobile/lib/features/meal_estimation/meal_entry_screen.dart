@@ -5,6 +5,7 @@ import '../../app/haptics.dart';
 
 import '../../api/api_client.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../shared/permission_helper.dart';
 import 'meal_preview_screen.dart';
@@ -12,7 +13,8 @@ import 'meal_preview_screen.dart';
 class MealEntryScreen extends StatelessWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
-  const MealEntryScreen({super.key, required this.api, required this.history});
+  final DailyLogStore store;
+  const MealEntryScreen({super.key, required this.api, required this.history, required this.store});
 
   Future<void> _pick(BuildContext context, ImageSource source) async {
     Haptics.selectionClick();
@@ -29,7 +31,7 @@ class MealEntryScreen extends StatelessWidget {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) =>
-            MealPreviewScreen(image: file, api: api, history: history),
+            MealPreviewScreen(image: file, api: api, history: history, store: store),
       ),
     );
   }

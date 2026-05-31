@@ -7,6 +7,7 @@ import '../../api/api_exception.dart';
 import '../../api/models.dart';
 import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../../screens/food_detail_screen.dart';
 import '../../ui/food_view_data.dart';
@@ -15,6 +16,7 @@ class BarcodeResultSheet extends StatefulWidget {
   final String barcode;
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
   final VoidCallback onScanAgain;
   final VoidCallback? onEnterManually;
 
@@ -23,6 +25,7 @@ class BarcodeResultSheet extends StatefulWidget {
     required this.barcode,
     required this.api,
     required this.history,
+    required this.store,
     required this.onScanAgain,
     this.onEnterManually,
   });
@@ -100,6 +103,16 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
                             food: FoodViewData.fromFood(_food!),
                             history: widget.history,
                             sourceLabel: 'Barcode scan',
+                            onLog: (grams) {
+                              final m = _food!.macrosPer100g.forGrams(grams);
+                              return widget.store.logMeal(
+                                name: _food!.name,
+                                caloriesKcal: m.caloriesKcal,
+                                proteinG: m.proteinG,
+                                carbsG: m.carbsG,
+                                fatG: m.fatG,
+                              );
+                            },
                           ),
                         ),
                       );
@@ -111,13 +124,24 @@ class _BarcodeResultSheetState extends State<BarcodeResultSheet> {
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Haptics.lightImpact();
-                      // TODO(Davud): persist to daily log.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${_food!.name} logged')),
+                      final food = _food!;
+                      final servingG = food.servingSizeG ?? 100.0;
+                      final m = food.macrosPer100g.forGrams(servingG);
+                      await widget.store.logMeal(
+                        name: food.name,
+                        caloriesKcal: m.caloriesKcal,
+                        proteinG: m.proteinG,
+                        carbsG: m.carbsG,
+                        fatG: m.fatG,
                       );
-                      Navigator.of(context).pop();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${food.name} logged')),
+                        );
+                        Navigator.of(context).pop();
+                      }
                     },
                     icon: const Icon(Icons.check, size: 18),
                     label: const Text('Log to today'),

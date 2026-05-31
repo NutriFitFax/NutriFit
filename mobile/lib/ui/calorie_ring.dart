@@ -78,7 +78,7 @@ class _CalorieRingState extends State<CalorieRing>
               progress: math.min(1.05, widget.value / widget.goal) * t,
               track: c.line,
               fillStart: c.primary,
-              fillEnd: const Color(0xFF5A9A6E),
+              fillEnd: c.primaryDeep,
               stroke: widget.stroke,
             ),
             child: Center(
@@ -152,12 +152,21 @@ class _RingPainter extends CustomPainter {
     // Sweep
     final sweep = 2 * math.pi * progress;
     if (sweep <= 0) return;
+    // Span the gradient over exactly the arc, with its zero-angle (and the
+    // SweepGradient's internal seam) rotated to the arc's start at 12 o'clock.
+    // Measuring from 3 o'clock instead would drag the seam through the arc and
+    // leave a dark band wherever the angle wraps. We also tuck the seam a hair
+    // back past the round start cap (which overhangs the arc start) so the cap
+    // stays in the bright start colour instead of catching the dark end.
+    final capAngle = (stroke / 2) / radius;
+    final lead = capAngle + 0.04;
     final shader = SweepGradient(
-      startAngle: -math.pi / 2,
-      endAngle: -math.pi / 2 + math.max(sweep, 0.001),
+      startAngle: 0,
+      endAngle: math.max(sweep, 0.001),
       colors: [fillStart, fillEnd],
       stops: const [0.0, 1.0],
       tileMode: TileMode.clamp,
+      transform: GradientRotation(-math.pi / 2 - lead),
     ).createShader(rect);
 
     final paint = Paint()

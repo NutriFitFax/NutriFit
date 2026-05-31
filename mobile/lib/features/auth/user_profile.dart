@@ -18,6 +18,14 @@ class UserProfile {
     final hm = heightCm / 100;
     return weightKg / (hm * hm);
   }
+
+  String get bmiCategory {
+    final b = bmi;
+    if (b < 18.5) return 'Underweight';
+    if (b < 25.0) return 'Normal';
+    if (b < 30.0) return 'Overweight';
+    return 'Obese';
+  }
 }
 
 enum UnitSystem { metric, imperial }
@@ -30,4 +38,7 @@ class UnitConvert {
     final totalInches = (cm / 2.54).round();
     return (totalInches ~/ 12, totalInches % 12);
   }
+
+  static double feetInchesToCm(int feet, int inches) =>
+      (feet * 12 + inches) * 2.54;
 }

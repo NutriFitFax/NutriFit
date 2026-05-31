@@ -100,6 +100,7 @@ class _AppShellState extends State<AppShell> {
         build: () => BarcodeScannerScreen(
           api: widget.api,
           history: widget.history,
+          store: widget.store,
           onGoToSearch: () => _openTab(AppTabId.search),
         ),
       ),
@@ -108,7 +109,7 @@ class _AppShellState extends State<AppShell> {
         label: 'Meal',
         icon: Icon(Icons.camera_alt_outlined, color: unselectedColor),
         activeIcon: Icon(Icons.camera_alt, color: selectedColor),
-        build: () => MealEntryScreen(api: widget.api, history: widget.history),
+        build: () => MealEntryScreen(api: widget.api, history: widget.history, store: widget.store),
       ),
       _TabDef(
         id: AppTabId.history,
