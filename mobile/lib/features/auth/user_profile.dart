@@ -1,17 +1,24 @@
 import 'package:flutter/foundation.dart';
 
+enum Sex { male, female, other }
+enum ActivityLevel { sedentary, light, moderate, veryActive, extraActive }
+
 @immutable
 class UserProfile {
   final String name;
   final String email;
   final double weightKg;
   final double heightCm;
+  final Sex? sex;
+  final ActivityLevel? activityLevel;
 
   const UserProfile({
     required this.name,
     required this.email,
     required this.weightKg,
     required this.heightCm,
+    this.sex,
+    this.activityLevel,
   });
 
   double get bmi {

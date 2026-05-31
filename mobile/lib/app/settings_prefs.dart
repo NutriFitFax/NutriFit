@@ -138,6 +138,15 @@ class SettingsPrefs {
     await _p.remove(_kAvatarPath);
   }
 
+  static const _kSex           = 'sex';
+  static const _kActivityLevel = 'activity_level';
+
+  String? get sex => _p.getString(_kSex);
+  Future<void> setSex(String v) => _p.setString(_kSex, v);
+
+  String? get activityLevel => _p.getString(_kActivityLevel);
+  Future<void> setActivityLevel(String v) => _p.setString(_kActivityLevel, v);
+
   static const _kUserEmail = 'user_email';
 
   String? getUserEmail() => _p.getString(_kUserEmail);

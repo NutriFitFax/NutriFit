@@ -71,6 +71,8 @@ class _AuthGateState extends State<AuthGate> {
         goalProteinG: SettingsPrefs.instance.goalProteinG.toDouble(),
         goalCarbsG: SettingsPrefs.instance.goalCarbsG.toDouble(),
         goalFatG: SettingsPrefs.instance.goalFatG.toDouble(),
+        sex: profile.sex?.name,
+        activityLevel: _activityLevelKey(profile.activityLevel),
         updatedAt: null,
       ));
     } catch (_) {
@@ -80,7 +82,23 @@ class _AuthGateState extends State<AuthGate> {
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
     await SettingsPrefs.instance.setHeightCm(profile.heightCm);
+    if (profile.sex != null) {
+      await SettingsPrefs.instance.setSex(profile.sex!.name);
+    }
+    final actKey = _activityLevelKey(profile.activityLevel);
+    if (actKey != null) {
+      await SettingsPrefs.instance.setActivityLevel(actKey);
+    }
   }
+
+  static String? _activityLevelKey(ActivityLevel? level) => switch (level) {
+    ActivityLevel.sedentary   => 'sedentary',
+    ActivityLevel.light       => 'light',
+    ActivityLevel.moderate    => 'moderate',
+    ActivityLevel.veryActive  => 'very_active',
+    ActivityLevel.extraActive => 'extra_active',
+    null                      => null,
+  };
 
   // ── Navigation ────────────────────────────────────────────────────────
 
