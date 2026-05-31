@@ -50,6 +50,12 @@ class _AuthGateState extends State<AuthGate> {
   Future<void> _handleProfileCreated(UserProfile profile) async {
     widget.api.userId = profile.email;
     try {
+      // 1. Create the account row in the users table.
+      await widget.api.registerUser(
+        email: profile.email,
+        displayName: profile.name,
+      );
+      // 2. Create the profile row with goals and measurements.
       await widget.api.saveStorageProfile(StoredUserProfile(
         userId: profile.email,
         displayName: profile.name,
