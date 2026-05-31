@@ -76,6 +76,8 @@ class _AuthGateState extends State<AuthGate> {
     }
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);
+    await SettingsPrefs.instance.setWeightKg(profile.weightKg);
+    await SettingsPrefs.instance.setHeightCm(profile.heightCm);
   }
 
   // ── Navigation ────────────────────────────────────────────────────────
@@ -91,6 +93,7 @@ class _AuthGateState extends State<AuthGate> {
 
   void _handleLogout() {
     SettingsPrefs.instance.clearUserEmail();
+    SettingsPrefs.instance.clearAvatarPath();
     widget.api.userId = 'demo-user';
     Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() {});
@@ -99,6 +102,7 @@ class _AuthGateState extends State<AuthGate> {
   void _handleDeleteAccount() {
     widget.store.clearAllData();
     SettingsPrefs.instance.clearUserEmail();
+    SettingsPrefs.instance.clearAvatarPath();
     widget.api.userId = 'demo-user';
     Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() {});

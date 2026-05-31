@@ -116,7 +116,7 @@ class SettingsPrefs {
   int get goalFatG => _p.getInt(_kGoalFat) ?? 70;
   Future<void> setGoalFatG(int v) => _p.setInt(_kGoalFat, v);
 
-  double get heightCm => _p.getDouble(_kHeightCm) ?? 170.0;
+  double get heightCm => _p.getDouble(_kHeightCm) ?? 0.0;
   Future<void> setHeightCm(double v) => _p.setDouble(_kHeightCm, v);
 
   double get weightKg => _p.getDouble(_kWeightKg) ?? 0.0;

@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       name:     prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
       email:    prefs.getUserEmail() ?? _profile.email,
       weightKg: prefs.weightKg == 0.0 ? _profile.weightKg : prefs.weightKg,
-      heightCm: prefs.heightCm == 170.0 ? _profile.heightCm : prefs.heightCm,
+      heightCm: prefs.heightCm == 0.0 ? _profile.heightCm : prefs.heightCm,
     );
     _loadFromApi();
   }
