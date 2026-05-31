@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/haptics.dart';
 import '../features/history/viewed_food_history_store.dart';
 import '../ui/food_view_data.dart';
 import '../ui/app_page.dart';
@@ -9,12 +10,14 @@ class FoodDetailScreen extends StatefulWidget {
   final FoodViewData food;
   final ViewedFoodHistoryStore history;
   final String sourceLabel;
+  final Future<void> Function(double grams)? onLog;
 
   const FoodDetailScreen({
     super.key,
     required this.food,
     required this.history,
     required this.sourceLabel,
+    this.onLog,
   });
 
   @override
@@ -96,6 +99,23 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 'Nutrition for ${_grams.toStringAsFixed(0)} g${widget.food.servingSizeG == null ? '' : ' · default serving ${widget.food.servingSizeG!.toStringAsFixed(0)} g'}',
             macros: macros,
           ),
+          if (widget.onLog != null) ...[
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () async {
+                Haptics.lightImpact();
+                await widget.onLog!(_grams);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${widget.food.name} logged')),
+                  );
+                  Navigator.of(context).pop();
+                }
+              },
+              icon: const Icon(Icons.check, size: 18),
+              label: Text('Log ${_grams.toStringAsFixed(0)} g to today'),
+            ),
+          ],
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../api/api_client.dart';
 import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import 'meal_results_screen.dart';
 
@@ -13,12 +14,14 @@ class MealPreviewScreen extends StatefulWidget {
   final XFile image;
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
 
   const MealPreviewScreen({
     super.key,
     required this.image,
     required this.api,
     required this.history,
+    required this.store,
   });
 
   @override
@@ -39,6 +42,7 @@ class _MealPreviewScreenState extends State<MealPreviewScreen> {
           builder: (_) => MealResultsScreen(
             estimateFuture: estimateFuture,
             history: widget.history,
+            store: widget.store,
           ),
         ),
       );

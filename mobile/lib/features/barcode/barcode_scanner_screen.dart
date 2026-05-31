@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../api/api_client.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
 import '../shared/permission_helper.dart';
 import 'barcode_result_sheet.dart';
@@ -14,12 +15,14 @@ import 'widgets/scanner_overlay.dart';
 class BarcodeScannerScreen extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
   final VoidCallback? onGoToSearch;
 
   const BarcodeScannerScreen({
     super.key,
     required this.api,
     required this.history,
+    required this.store,
     this.onGoToSearch,
   });
 
@@ -86,6 +89,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
         barcode: barcode,
         api: widget.api,
         history: widget.history,
+        store: widget.store,
         onScanAgain: _resumeScanning,
         onEnterManually: widget.onGoToSearch,
       ),
