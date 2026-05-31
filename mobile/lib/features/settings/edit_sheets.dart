@@ -266,31 +266,50 @@ class _EditProfileSheetState extends State<_EditProfileSheet> {
 }
 
 // ── Edit calorie goal ────────────────────────────────────────────────────
-Future<int?> showEditCalorieGoalSheet(BuildContext context, int current) {
-  final ctrl = TextEditingController(text: current.toString());
-  return _showSheet<int>(
-    context,
-    _SheetScaffold(
+Future<int?> showEditCalorieGoalSheet(BuildContext context, int current) =>
+    _showSheet<int>(context, _EditCalorieSheet(current: current));
+
+class _EditCalorieSheet extends StatefulWidget {
+  final int current;
+  const _EditCalorieSheet({required this.current});
+
+  @override
+  State<_EditCalorieSheet> createState() => _EditCalorieSheetState();
+}
+
+class _EditCalorieSheetState extends State<_EditCalorieSheet> {
+  late final TextEditingController _ctrl =
+      TextEditingController(text: widget.current.toString());
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SheetScaffold(
       title: 'Daily calorie goal',
       subtitle: 'Used for the ring on your home dashboard.',
       onSave: () {
-        final v = (int.tryParse(ctrl.text) ?? current).clamp(800, 6000);
+        final v = (int.tryParse(_ctrl.text) ?? widget.current).clamp(800, 6000);
         Navigator.of(context).pop(v);
       },
       children: [
-        _Labeled(label: 'Calories', child: _numField(ctrl, suffix: 'kcal')),
+        _Labeled(label: 'Calories', child: _numField(_ctrl, suffix: 'kcal')),
         Wrap(
           spacing: 8,
           children: [1800, 2000, 2150, 2400, 2800].map((v) {
             return ActionChip(
               label: Text('$v'),
-              onPressed: () => ctrl.text = v.toString(),
+              onPressed: () => setState(() => _ctrl.text = v.toString()),
             );
           }).toList(),
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 // ── Edit macros ────────────────────────────────────────────────────────────
@@ -299,35 +318,59 @@ class MacroGoals {
   const MacroGoals(this.protein, this.carbs, this.fat);
 }
 
-Future<MacroGoals?> showEditMacrosSheet(BuildContext context, MacroGoals g) {
-  final p = TextEditingController(text: g.protein.toString());
-  final c = TextEditingController(text: g.carbs.toString());
-  final f = TextEditingController(text: g.fat.toString());
-  return _showSheet<MacroGoals>(
-    context,
-    _SheetScaffold(
+Future<MacroGoals?> showEditMacrosSheet(BuildContext context, MacroGoals g) =>
+    _showSheet<MacroGoals>(context, _EditMacrosSheet(goals: g));
+
+class _EditMacrosSheet extends StatefulWidget {
+  final MacroGoals goals;
+  const _EditMacrosSheet({required this.goals});
+
+  @override
+  State<_EditMacrosSheet> createState() => _EditMacrosSheetState();
+}
+
+class _EditMacrosSheetState extends State<_EditMacrosSheet> {
+  late final TextEditingController _protein =
+      TextEditingController(text: widget.goals.protein.toString());
+  late final TextEditingController _carbs =
+      TextEditingController(text: widget.goals.carbs.toString());
+  late final TextEditingController _fat =
+      TextEditingController(text: widget.goals.fat.toString());
+
+  @override
+  void dispose() {
+    _protein.dispose();
+    _carbs.dispose();
+    _fat.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final g = widget.goals;
+    return _SheetScaffold(
       title: 'Macro targets',
       subtitle: 'Grams per day for protein, carbs and fat.',
       onSave: () {
         Navigator.of(context).pop(MacroGoals(
-          (int.tryParse(p.text) ?? g.protein).clamp(0, 600),
-          (int.tryParse(c.text) ?? g.carbs).clamp(0, 800),
-          (int.tryParse(f.text) ?? g.fat).clamp(0, 400),
+          (int.tryParse(_protein.text) ?? g.protein).clamp(0, 600),
+          (int.tryParse(_carbs.text)   ?? g.carbs).clamp(0, 800),
+          (int.tryParse(_fat.text)     ?? g.fat).clamp(0, 400),
         ));
       },
       children: [
         Row(
           children: [
-            Expanded(child: _Labeled(label: 'Protein', child: _numField(p, suffix: 'g'))),
+            Expanded(child: _Labeled(label: 'Protein', child: _numField(_protein, suffix: 'g'))),
             const SizedBox(width: 10),
-            Expanded(child: _Labeled(label: 'Carbs', child: _numField(c, suffix: 'g'))),
+            Expanded(child: _Labeled(label: 'Carbs',   child: _numField(_carbs,   suffix: 'g'))),
             const SizedBox(width: 10),
-            Expanded(child: _Labeled(label: 'Fat', child: _numField(f, suffix: 'g'))),
+            Expanded(child: _Labeled(label: 'Fat',     child: _numField(_fat,     suffix: 'g'))),
           ],
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 // ── Edit water goal ──────────────────────────────────────────────────────

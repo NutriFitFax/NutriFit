@@ -2,9 +2,11 @@ package com.nutrifit.backend.controller;
 
 import com.nutrifit.backend.model.*;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +28,7 @@ import java.util.UUID;
  * Optional<JdbcTemplate> is empty, and every endpoint returns an empty-but-
  * valid response so the app degrades gracefully.
  */
+@Validated
 @RestController
 @RequestMapping("/storage")
 public class StorageController {
@@ -116,7 +119,7 @@ public class StorageController {
     /** Register a new account. Idempotent — calling again with the same email is a no-op. */
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserAccount registerUser(@RequestBody UserAccount body) {
+    public UserAccount registerUser(@Valid @RequestBody UserAccount body) {
         String id  = uuid();
         String now = nowIso();
         if (db.isPresent()) {
@@ -178,7 +181,7 @@ public class StorageController {
     @PutMapping("/profile")
     public StoredUserProfile saveProfile(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody StoredUserProfile body) {
+            @Valid @RequestBody StoredUserProfile body) {
         if (db.isEmpty()) return body;
         db.get().update("""
                 INSERT INTO user_profiles
@@ -236,7 +239,7 @@ public class StorageController {
     @ResponseStatus(HttpStatus.CREATED)
     public MealLogEntry addMeal(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody MealLogEntry body) {
+            @Valid @RequestBody MealLogEntry body) {
         String id  = uuid();
         String ts  = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
@@ -279,7 +282,7 @@ public class StorageController {
     @ResponseStatus(HttpStatus.CREATED)
     public WaterLogEntry addWater(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody WaterLogEntry body) {
+            @Valid @RequestBody WaterLogEntry body) {
         String id  = uuid();
         String tsW = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
@@ -303,7 +306,7 @@ public class StorageController {
     @ResponseStatus(HttpStatus.CREATED)
     public WeightLogEntry addWeight(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody WeightLogEntry body) {
+            @Valid @RequestBody WeightLogEntry body) {
         String id  = uuid();
         String tsWt = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
@@ -327,7 +330,7 @@ public class StorageController {
     @ResponseStatus(HttpStatus.CREATED)
     public ActivityLogEntry addActivity(
             @RequestHeader("X-User-Id") String userId,
-            @RequestBody ActivityLogEntry body) {
+            @Valid @RequestBody ActivityLogEntry body) {
         String id  = uuid();
         String tsA = body.loggedAt() != null ? body.loggedAt() : nowIso();
         if (db.isPresent()) {
