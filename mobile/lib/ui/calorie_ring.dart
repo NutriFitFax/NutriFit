@@ -154,9 +154,10 @@ class _RingPainter extends CustomPainter {
     if (sweep <= 0) return;
     final shader = SweepGradient(
       startAngle: -math.pi / 2,
-      endAngle: -math.pi / 2 + 2 * math.pi,
-      colors: [fillStart, fillEnd, fillStart],
-      stops: const [0.0, 0.6, 1.0],
+      endAngle: -math.pi / 2 + math.max(sweep, 0.001),
+      colors: [fillStart, fillEnd],
+      stops: const [0.0, 1.0],
+      tileMode: TileMode.clamp,
     ).createShader(rect);
 
     final paint = Paint()
