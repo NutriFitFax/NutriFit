@@ -236,6 +236,19 @@ class NutriFitApi {
     });
   }
 
+  /// POST /storage/users — create account row in the users table.
+  Future<void> registerUser({required String email, required String displayName}) {
+    return _wrapErrors(() async {
+      await _client
+          .post(
+            _u('/storage/users'),
+            headers: _jsonHeaders,
+            body: jsonEncode({'email': email, 'display_name': displayName}),
+          )
+          .timeout(timeout);
+    });
+  }
+
   Future<StoredUserProfile> getStorageProfile() {
     return _wrapErrors(() async {
       final resp = await _client
