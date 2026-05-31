@@ -11,12 +11,14 @@ Backend endpoints power the mobile app, plus health checks used by Render/Fly up
 | POST   | `/estimate-meal`           | Estimate macros from a meal photo (multipart `image`) |
 | GET    | `/meal-plan`               | Generate a day/week recipe meal plan     |
 | GET    | `/recipes/{id}`            | Get recipe details and nutrition         |
+| GET    | `/storage/profile`         | Read the current user's profile          |
+| PUT    | `/storage/profile`         | Create or update the current user's profile |
 | GET    | `/db-health`               | Database connectivity probe              |
 | GET    | `/health`                  | Liveness / readiness probe               |
 
 Search is backed by [USDA FoodData Central](https://fdc.nal.usda.gov/api-guide/). Barcode lookup tries USDA first, then falls back to [Open Food Facts](https://openfoodfacts.github.io/openfoodfacts-server/api/) for products USDA does not have. The meal-photo endpoint uses OpenAI `gpt-4o` vision when `OPENAI_API_KEY` is set; if OpenAI is not configured or fails, the endpoint returns an upstream error instead of inventing fake foods.
 Meal plans and recipe details are backed by [Spoonacular](https://spoonacular.com/food-api/docs) when `SPOONACULAR_API_KEY` is set.
-`/db-health` is backed by Supabase Postgres (project `pyfpxlhmqjdorsqhbtyh`, eu-west-1) when `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD` are set.
+`/db-health` and `/storage/*` are backed by Supabase Postgres (project `pyfpxlhmqjdorsqhbtyh`, eu-west-1) when `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD` are set. The backend creates the storage tables on startup when the database is configured.
 
 Live staging URL: <https://nutrifit-backend-lnm0.onrender.com>
 
@@ -40,6 +42,11 @@ curl "http://127.0.0.1:8000/search?q=cheddar%20cheese"
 curl -F "image=@./some_meal.jpg" http://127.0.0.1:8000/estimate-meal
 curl "http://127.0.0.1:8000/meal-plan?time_frame=day&target_calories=2000&diet=vegetarian"
 curl http://127.0.0.1:8000/recipes/716429
+curl -X PUT http://127.0.0.1:8000/storage/profile \
+  -H "Content-Type: application/json" \
+  -H "X-User-Id: demo-user" \
+  -d '{"display_name":"Demo User","height_cm":170,"goal_calories_kcal":2000}'
+curl -H "X-User-Id: demo-user" http://127.0.0.1:8000/storage/profile
 curl http://127.0.0.1:8000/db-health
 ```
 

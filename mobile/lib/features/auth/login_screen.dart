@@ -4,16 +4,27 @@ import 'package:flutter/services.dart';
 import '../../app/nutri_colors.dart';
 import 'auth_widgets.dart';
 import 'forgot_password_screen.dart';
+import 'sign_up_screen.dart';
+import 'user_profile.dart';
 
+/// Email + password login. On success calls [onLogin] (backend verification),
+/// then [onAuthenticated] (navigation). On a new account, navigates to the
+/// sign-up flow which calls [onProfileCreated] then [onAuthenticated].
 class LoginScreen extends StatefulWidget {
   /// Called with the entered email. Returns null on success or an error string.
   final Future<String?> Function(String email) onLogin;
-  final VoidCallback onRegister;
+
+  /// Called after login or sign-up succeeds — triggers navigation to AppShell.
+  final VoidCallback onAuthenticated;
+
+  /// Called when a brand-new profile is created via the sign-up flow.
+  final Future<void> Function(UserProfile profile)? onProfileCreated;
 
   const LoginScreen({
     super.key,
     required this.onLogin,
-    required this.onRegister,
+    required this.onAuthenticated,
+    this.onProfileCreated,
   });
 
   @override
@@ -43,11 +54,24 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (error != null) {
       setState(() { _busy = false; _error = error; });
+    } else {
+      setState(() => _busy = false);
+      widget.onAuthenticated();
     }
-    // On success auth_gate rebuilds the tree — no need to reset _busy.
   }
 
-  void _goToSignUp() => widget.onRegister();
+  void _goToSignUp() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SignUpScreen(
+          onComplete: (profile) async {
+            await widget.onProfileCreated?.call(profile);
+            widget.onAuthenticated();
+          },
+        ),
+      ),
+    );
+  }
 
   void _goToForgot() {
     Navigator.of(context).push(
