@@ -3,26 +3,16 @@ import 'package:flutter/services.dart';
 
 import '../../app/nutri_colors.dart';
 import 'forgot_password_screen.dart';
-import 'sign_up_screen.dart';
-import 'user_profile.dart';
-import 'widgets/auth_widgets.dart';
+import 'auth_widgets.dart';
 
-/// Email + password login with social sign-in. On a successful (stubbed)
-/// auth it calls [onAuthenticated] — wire that to navigate into AppShell.
-///
-/// There is NO real authentication here (the SRS specifies no accounts).
-/// Replace the TODO blocks with your own logic if the team adds auth later.
 class LoginScreen extends StatefulWidget {
-  /// Called when login (or social sign-in) succeeds.
-  final VoidCallback onAuthenticated;
-
-  /// Called when a brand-new profile is created via the sign-up flow.
-  final void Function(UserProfile profile)? onProfileCreated;
+  final void Function(String email) onLogin;
+  final VoidCallback onRegister;
 
   const LoginScreen({
     super.key,
-    required this.onAuthenticated,
-    this.onProfileCreated,
+    required this.onLogin,
+    required this.onRegister,
   });
 
   @override
@@ -51,21 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _busy = false);
-    widget.onAuthenticated();
+    widget.onLogin(_email.text.trim());
   }
 
-  void _goToSignUp() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SignUpScreen(
-          onComplete: (profile) {
-            widget.onProfileCreated?.call(profile);
-            widget.onAuthenticated();
-          },
-        ),
-      ),
-    );
-  }
+  void _goToSignUp() => widget.onRegister();
 
   void _goToForgot() {
     Navigator.of(context).push(

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../app/nutri_colors.dart';
 import 'user_profile.dart';
-import 'widgets/auth_widgets.dart';
+import 'auth_widgets.dart';
 
 /// Step 2 of sign-up: collect weight + height (keyboard-editable, with a
 /// metric/imperial toggle) and show a live BMI readout. Produces the finished

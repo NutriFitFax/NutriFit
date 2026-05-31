@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../../app/nutri_colors.dart';
 import 'profile_setup_screen.dart';
 import 'user_profile.dart';
-import 'widgets/auth_widgets.dart';
+import 'auth_widgets.dart';
 
 
 class SignUpScreen extends StatefulWidget {

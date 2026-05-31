@@ -1,13 +1,31 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' show Response;
 import 'package:http/testing.dart';
 import 'package:nutrifit/api/api_client.dart';
 import 'package:nutrifit/app/nutri_colors.dart';
+import 'package:nutrifit/db/daily_log.dart';
 import 'package:nutrifit/features/barcode/barcode_result_sheet.dart';
 import 'package:nutrifit/features/history/viewed_food_history_store.dart';
+
+class _FakeStore implements DailyLogStore {
+  final _notifier = ValueNotifier(const DailyLog(
+    goalCalories: 2000, goalProteinG: 130, goalCarbsG: 240, goalFatG: 70,
+    goalWaterMl: 2500, consumedCalories: 0, consumedProteinG: 0,
+    consumedCarbsG: 0, consumedFatG: 0, consumedWaterMl: 0,
+    meals: [], latestWeightKg: null, heightCm: 170, weightTrend: [],
+  ));
+  @override ValueListenable<DailyLog> get todayListenable => _notifier;
+  @override Future<void> logMeal({required String name, required double caloriesKcal, required double proteinG, required double carbsG, required double fatG}) async {}
+  @override Future<void> deleteMeal(int id) async {}
+  @override Future<void> logWater(int amountMl) async {}
+  @override Future<void> logWeight(double weightKg) async {}
+  @override Future<void> refresh() async {}
+  @override Future<void> clearAllData() async {}
+}
 
 const _baseUrl = 'http://localhost';
 
@@ -38,6 +56,7 @@ Widget _sheet(
           barcode: '1234567890',
           api: api,
           history: InMemoryViewedFoodHistoryStore(),
+          store: _FakeStore(),
           onScanAgain: onScanAgain ?? () {},
           onEnterManually: onEnterManually,
         ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/nutri_colors.dart';
-import 'widgets/auth_widgets.dart';
+import 'auth_widgets.dart';
 
 /// "Reset password" — collects an email and shows a sent-confirmation state.
 /// No backend call (stubbed); wire the TODO to your real reset endpoint.
