@@ -20,7 +20,7 @@ class SettingsScreen extends StatefulWidget {
   final UserProfile? profile;
   final ViewedFoodHistoryStore? history;
   final VoidCallback? onLogout;
-  final VoidCallback? onDeleteAccount;
+  final Future<void> Function()? onDeleteAccount;
 
   const SettingsScreen({
     super.key,
@@ -513,11 +513,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _confirmDelete() async {
     final ok = await _confirm(
       title: 'Delete account & data?',
-      message: 'This permanently erases your profile and all logs on this device. This cannot be undone.',
+      message: 'This permanently deletes your account and all logs from this device and the server. This cannot be undone.',
       confirmLabel: 'Delete everything',
       destructive: true,
     );
-    if (ok == true) widget.onDeleteAccount?.call();
+    if (ok == true) await widget.onDeleteAccount?.call();
   }
 
   Future<bool?> _confirm({

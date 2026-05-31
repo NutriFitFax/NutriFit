@@ -20,7 +20,7 @@ class AppShell extends StatefulWidget {
   final ViewedFoodHistoryStore history;
   final DailyLogStore store;
   final VoidCallback? onLogout;
-  final VoidCallback? onDeleteAccount;
+  final Future<void> Function()? onDeleteAccount;
 
   const AppShell({
     super.key,

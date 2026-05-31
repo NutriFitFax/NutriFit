@@ -236,6 +236,17 @@ class NutriFitApi {
     });
   }
 
+  /// DELETE /storage/account — erase the user's account and all their data.
+  Future<void> deleteAccount() {
+    return _wrapErrors(() async {
+      final resp = await _client
+          .delete(_u('/storage/account'), headers: _userHeaders)
+          .timeout(timeout);
+      if (resp.statusCode == 204) return;
+      _throwForStatus(resp.statusCode, resp.body);
+    });
+  }
+
   /// GET /storage/users/me — verify the current user is registered.
   /// Throws [NotFoundException] if the email is not in the users table.
   Future<void> getUserAccount() {
