@@ -78,6 +78,8 @@ class _AuthGateState extends State<AuthGate> {
     }
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);
+    await SettingsPrefs.instance.setWeightKg(profile.weightKg);
+    await SettingsPrefs.instance.setHeightCm(profile.heightCm);
   }
 
   // ── Navigation ────────────────────────────────────────────────────────
@@ -95,6 +97,7 @@ class _AuthGateState extends State<AuthGate> {
     // Reset today's water intake before logging out so the next session starts fresh.
     await widget.store.resetTodayWater();
     await SettingsPrefs.instance.clearUserEmail();
+    await SettingsPrefs.instance.clearAvatarPath();
     widget.api.userId = 'demo-user';
     if (mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -109,10 +112,13 @@ class _AuthGateState extends State<AuthGate> {
     } catch (_) {
       // Backend unavailable — proceed with local-only deletion.
     }
+
     // Clear local SQLite logs and session.
     await widget.store.clearAllData();
     await SettingsPrefs.instance.clearUserEmail();
+
     widget.api.userId = 'demo-user';
+
     if (mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
       setState(() {});

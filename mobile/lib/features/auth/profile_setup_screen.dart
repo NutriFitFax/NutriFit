@@ -29,9 +29,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   static const _minKg = 30.0,  _maxKg = 300.0;
   static const _minCm = 100.0, _maxCm = 272.0;
 
-  // Canonical values — the single source of truth.
-  double _weightKg = 74.2;
-  double _heightCm = 181;
+  // Canonical values — null until the user types something.
+  double? _weightKg;
+  double? _heightCm;
   UnitSystem _unit = UnitSystem.metric;
 
   // Editable controllers.
@@ -58,13 +58,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   /// Push canonical values into the controllers (on unit switch / blur).
   void _fillControllers() {
     if (_unit == UnitSystem.metric) {
-      _weightCtrl.text = _weightKg.toStringAsFixed(1);
-      _heightCmCtrl.text = _heightCm.round().toString();
+      if (_weightKg != null) _weightCtrl.text = _weightKg!.toStringAsFixed(1);
+      if (_heightCm != null) _heightCmCtrl.text = _heightCm!.round().toString();
     } else {
-      _weightCtrl.text = UnitConvert.kgToLb(_weightKg).round().toString();
-      final (ft, inch) = UnitConvert.cmToFeetInches(_heightCm);
-      _feetCtrl.text = ft.toString();
-      _inchCtrl.text = inch.toString();
+      if (_weightKg != null) _weightCtrl.text = UnitConvert.kgToLb(_weightKg!).round().toString();
+      if (_heightCm != null) {
+        final (ft, inch) = UnitConvert.cmToFeetInches(_heightCm!);
+        _feetCtrl.text = ft.toString();
+        _inchCtrl.text = inch.toString();
+      }
     }
   }
 
@@ -72,16 +74,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   /// text (so the cursor doesn't jump); just keeps BMI in sync.
   void _readToCanonical() {
     if (_unit == UnitSystem.metric) {
-      final kg = double.tryParse(_weightCtrl.text) ?? 0;
-      final cm = double.tryParse(_heightCmCtrl.text) ?? 0;
-      _weightKg = kg.clamp(_minKg, _maxKg);
-      _heightCm = cm.clamp(_minCm, _maxCm);
+      final kg = double.tryParse(_weightCtrl.text);
+      final cm = double.tryParse(_heightCmCtrl.text);
+      if (kg != null) _weightKg = kg.clamp(_minKg, _maxKg);
+      if (cm != null) _heightCm = cm.clamp(_minCm, _maxCm);
     } else {
-      final lb = double.tryParse(_weightCtrl.text) ?? 0;
-      final ft = int.tryParse(_feetCtrl.text) ?? 0;
-      final inch = double.tryParse(_inchCtrl.text) ?? 0;
-      _weightKg = UnitConvert.lbToKg(lb).clamp(_minKg, _maxKg);
-      _heightCm = UnitConvert.feetInchesToCm(ft, inch.round()).clamp(_minCm, _maxCm);
+      final lb = double.tryParse(_weightCtrl.text);
+      final ft = int.tryParse(_feetCtrl.text);
+      final inch = double.tryParse(_inchCtrl.text);
+      if (lb != null) _weightKg = UnitConvert.lbToKg(lb).clamp(_minKg, _maxKg);
+      if (ft != null && inch != null) {
+        _heightCm = UnitConvert.feetInchesToCm(ft, inch.round()).clamp(_minCm, _maxCm);
+      }
     }
     setState(() {}); // refresh BMI chip
   }
@@ -101,22 +105,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void _finish() {
     FocusScope.of(context).unfocus();
     _readToCanonical();
+    if (_weightKg == null || _heightCm == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your weight and height')),
+      );
+      return;
+    }
     HapticFeedback.mediumImpact();
     widget.onComplete(UserProfile(
       name: widget.name,
       email: widget.email,
-      weightKg: double.parse(_weightKg.toStringAsFixed(1)),
-      heightCm: _heightCm.roundToDouble(),
+      weightKg: double.parse(_weightKg!.toStringAsFixed(1)),
+      heightCm: _heightCm!.roundToDouble(),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.nutri;
-    final profile = UserProfile(
-      name: widget.name, email: widget.email,
-      weightKg: _weightKg, heightCm: _heightCm,
-    );
+    final profile = (_weightKg != null && _heightCm != null)
+        ? UserProfile(name: widget.name, email: widget.email, weightKg: _weightKg!, heightCm: _heightCm!)
+        : null;
 
     return Scaffold(
       backgroundColor: c.bg,
@@ -195,6 +204,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               _MeasureField(
                 controller: _weightCtrl,
                 unit: _unit == UnitSystem.metric ? 'kg' : 'lb',
+                hintText: 'weight',
                 allowDecimal: true,
                 onChanged: (_) => _readToCanonical(),
                 onEditingComplete: _normalize,
@@ -207,6 +217,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 _MeasureField(
                   controller: _heightCmCtrl,
                   unit: 'cm',
+                  hintText: 'height',
                   allowDecimal: false,
                   onChanged: (_) => _readToCanonical(),
                   onEditingComplete: _normalize,
@@ -218,6 +229,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: _MeasureField(
                         controller: _feetCtrl,
                         unit: 'ft',
+                        hintText: 'height',
                         allowDecimal: false,
                         onChanged: (_) => _readToCanonical(),
                         onEditingComplete: _normalize,
@@ -228,6 +240,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       child: _MeasureField(
                         controller: _inchCtrl,
                         unit: 'in',
+                        hintText: 'height',
                         allowDecimal: false,
                         onChanged: (_) => _readToCanonical(),
                         onEditingComplete: _normalize,
@@ -240,25 +253,28 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(color: c.primaryTint, borderRadius: BorderRadius.circular(99)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(width: 7, height: 7, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
-                        const SizedBox(width: 8),
-                        Text.rich(TextSpan(
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.primaryDeep),
-                          children: [
-                            const TextSpan(text: 'BMI '),
-                            TextSpan(text: profile.bmi.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w800)),
-                            TextSpan(text: ' · ${profile.bmiCategory}'),
-                          ],
-                        )),
-                      ],
-                    ),
-                  ),
+                  if (profile != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(color: c.primaryTint, borderRadius: BorderRadius.circular(99)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(width: 7, height: 7, decoration: BoxDecoration(color: c.primary, shape: BoxShape.circle)),
+                          const SizedBox(width: 8),
+                          Text.rich(TextSpan(
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.primaryDeep),
+                            children: [
+                              const TextSpan(text: 'BMI '),
+                              TextSpan(text: profile.bmi.toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.w800)),
+                              TextSpan(text: ' · ${profile.bmiCategory}'),
+                            ],
+                          )),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
                   Text('Change anytime', style: TextStyle(fontSize: 12, color: c.ink3)),
                 ],
               ),
@@ -335,6 +351,7 @@ class _UnitToggle extends StatelessWidget {
 class _MeasureField extends StatelessWidget {
   final TextEditingController controller;
   final String unit;
+  final String? hintText;
   final bool allowDecimal;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onEditingComplete;
@@ -343,6 +360,7 @@ class _MeasureField extends StatelessWidget {
     required this.controller,
     required this.unit,
     required this.allowDecimal,
+    this.hintText,
     this.onChanged,
     this.onEditingComplete,
   });
@@ -374,13 +392,18 @@ class _MeasureField extends StatelessWidget {
                 ),
               ],
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
                 filled: false,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                hintText: hintText,
+                hintStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontSize: 26,
+                  color: c.ink.withValues(alpha: 0.25),
+                ),
               ),
             ),
           ),
