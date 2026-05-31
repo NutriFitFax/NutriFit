@@ -354,7 +354,7 @@ public class StorageController {
     // ── Row mappers ───────────────────────────────────────────────────────
 
     private static RowMapper<StoredUserProfile> profileMapper() {
-        return (rs, _) -> new StoredUserProfile(
+        return (rs, rowNum) -> new StoredUserProfile(
                 rs.getString("user_id"),
                 rs.getString("display_name"),
                 (Double) rs.getObject("height_cm"),
@@ -366,7 +366,7 @@ public class StorageController {
     }
 
     private static RowMapper<MealLogEntry> mealMapper() {
-        return (rs, _) -> new MealLogEntry(
+        return (rs, rowNum) -> new MealLogEntry(
                 rs.getString("id"),
                 rs.getString("user_id"),
                 rs.getString("logged_at"),
@@ -379,7 +379,7 @@ public class StorageController {
     }
 
     private static RowMapper<WaterLogEntry> waterMapper() {
-        return (rs, _) -> new WaterLogEntry(
+        return (rs, rowNum) -> new WaterLogEntry(
                 rs.getString("id"),
                 rs.getString("user_id"),
                 rs.getString("logged_at"),
@@ -387,7 +387,7 @@ public class StorageController {
     }
 
     private static RowMapper<WeightLogEntry> weightMapper() {
-        return (rs, _) -> new WeightLogEntry(
+        return (rs, rowNum) -> new WeightLogEntry(
                 rs.getString("id"),
                 rs.getString("user_id"),
                 rs.getString("logged_at"),
@@ -395,7 +395,7 @@ public class StorageController {
     }
 
     private static RowMapper<ActivityLogEntry> activityMapper() {
-        return (rs, _) -> new ActivityLogEntry(
+        return (rs, rowNum) -> new ActivityLogEntry(
                 rs.getString("id"),
                 rs.getString("user_id"),
                 rs.getString("logged_at"),
