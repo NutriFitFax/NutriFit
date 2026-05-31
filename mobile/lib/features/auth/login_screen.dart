@@ -92,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.fromLTRB(26, 0, 26, 8),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -187,8 +188,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   static String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Enter your email';
-    final ok = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim());
-    return ok ? null : 'Enter a valid email';
+    if (v == null || v.trim().isEmpty) return 'Enter your email address';
+    final email = v.trim();
+    final valid = RegExp(
+      r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+    ).hasMatch(email);
+    return valid ? null : 'Enter a valid email address (e.g. name@example.com)';
   }
 }
