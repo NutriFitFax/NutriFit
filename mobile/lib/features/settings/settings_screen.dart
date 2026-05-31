@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import '../../api/api_client.dart';
 import '../../app/haptics.dart';
 import '../../api/models.dart';
@@ -355,6 +360,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // ── Avatar picker ─────────────────────────────────────────────────────────
+
+  Future<void> _pickAvatar() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null || !mounted) return;
+    final dir  = await getApplicationDocumentsDirectory();
+    final dest = File(p.join(dir.path, 'avatar.jpg'));
+    await File(picked.path).copy(dest.path);
+    await SettingsPrefs.instance.setAvatarPath(dest.path);
+    setState(() {});
+  }
+
   // ── Profile hero card ─────────────────────────────────────────────────────
 
   Widget _profileHero(NutriColors c) {
@@ -384,22 +401,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(18),
           child: Row(
             children: [
-              Container(
-                width: 56, height: 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
-                  ),
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(color: c.line),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  _avatarLetter,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: c.primaryDeep, fontSize: 22, fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: _pickAvatar,
+                child: Stack(
+                  children: [
+                    () {
+                      final avatarPath = SettingsPrefs.instance.avatarPath;
+                      return Container(
+                        width: 56, height: 56,
+                        decoration: BoxDecoration(
+                          gradient: avatarPath == null ? LinearGradient(
+                            begin: Alignment.topLeft, end: Alignment.bottomRight,
+                            colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
+                          ) : null,
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(color: c.line),
+                          image: avatarPath != null ? DecorationImage(
+                            image: FileImage(File(avatarPath)),
+                            fit: BoxFit.cover,
+                          ) : null,
+                        ),
+                        alignment: Alignment.center,
+                        child: avatarPath == null ? Text(
+                          _avatarLetter,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: c.primaryDeep, fontSize: 22, fontWeight: FontWeight.w600,
+                              ),
+                        ) : null,
+                      );
+                    }(),
+                    Positioned(
+                      bottom: 0, right: 0,
+                      child: Container(
+                        width: 20, height: 20,
+                        decoration: BoxDecoration(
+                          color: c.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: c.surface, width: 1.5),
+                        ),
+                        child: const Icon(Icons.camera_alt, size: 11, color: Colors.white),
                       ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 14),

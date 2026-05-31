@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'haptics.dart';
 
@@ -104,23 +106,32 @@ class HomeDashboardScreen extends StatelessWidget {
                             ),
                             GestureDetector(
                               onTap: onOpenSettings,
-                              child: Container(
-                                width: 44, height: 44,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                                    colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(99),
-                                  border: Border.all(color: c.line),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  avatarLetter,
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
-                                      ),
-                                ),
+                              child: ValueListenableBuilder<String?>(
+                                valueListenable: SettingsPrefs.instance.avatarPathNotifier,
+                                builder: (context, avatarPath, _) {
+                                  return Container(
+                                    width: 44, height: 44,
+                                    decoration: BoxDecoration(
+                                      gradient: avatarPath == null ? LinearGradient(
+                                        begin: Alignment.topLeft, end: Alignment.bottomRight,
+                                        colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
+                                      ) : null,
+                                      borderRadius: BorderRadius.circular(99),
+                                      border: Border.all(color: c.line),
+                                      image: avatarPath != null ? DecorationImage(
+                                        image: FileImage(File(avatarPath)),
+                                        fit: BoxFit.cover,
+                                      ) : null,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: avatarPath == null ? Text(
+                                      avatarLetter,
+                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                            color: c.primaryDeep, fontSize: 18, fontWeight: FontWeight.w600,
+                                          ),
+                                    ) : null,
+                                  );
+                                },
                               ),
                             ),
                           ],

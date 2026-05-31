@@ -27,6 +27,7 @@ class SettingsPrefs {
       NutriAccent.values[(_p.getInt(_kAccent) ?? 0).clamp(0, NutriAccent.values.length - 1)],
     );
     displayNameNotifier = ValueNotifier(_p.getString(_kDisplayName) ?? 'friend');
+    avatarPathNotifier  = ValueNotifier(_p.getString(_kAvatarPath));
   }
 
   static const _kAccent   = 'accent_index';
@@ -38,6 +39,9 @@ class SettingsPrefs {
 
   /// Notifies listeners when the display name changes.
   late final ValueNotifier<String> displayNameNotifier;
+
+  /// Notifies listeners when the avatar image path changes.
+  late final ValueNotifier<String?> avatarPathNotifier;
 
   NutriAccent get accent => accentNotifier.value;
   Future<void> setAccent(NutriAccent a) async {
@@ -98,6 +102,7 @@ class SettingsPrefs {
   static const _kHeightCm     = 'height_cm';
   static const _kWeightKg     = 'weight_kg';
   static const _kDisplayName  = 'display_name';
+  static const _kAvatarPath   = 'avatar_path';
 
   int get goalCaloriesKcal => _p.getInt(_kGoalCalories) ?? 2150;
   Future<void> setGoalCaloriesKcal(int v) => _p.setInt(_kGoalCalories, v);
@@ -121,6 +126,16 @@ class SettingsPrefs {
   Future<void> setDisplayName(String v) async {
     displayNameNotifier.value = v;
     await _p.setString(_kDisplayName, v);
+  }
+
+  String? get avatarPath => _p.getString(_kAvatarPath);
+  Future<void> setAvatarPath(String path) async {
+    avatarPathNotifier.value = path;
+    await _p.setString(_kAvatarPath, path);
+  }
+  Future<void> clearAvatarPath() async {
+    avatarPathNotifier.value = null;
+    await _p.remove(_kAvatarPath);
   }
 
   static const _kUserEmail = 'user_email';
