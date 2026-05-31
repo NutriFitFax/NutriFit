@@ -43,6 +43,15 @@ public class StorageController {
     public void initSchema() {
         db.ifPresent(jdbc -> {
             try {
+                // users — one row per registered account (email is the userId key)
+                jdbc.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id          TEXT PRIMARY KEY,
+                        email       TEXT UNIQUE NOT NULL,
+                        display_name TEXT,
+                        created_at  TIMESTAMPTZ DEFAULT NOW()
+                    )
+                    """);
                 jdbc.execute("""
                     CREATE TABLE IF NOT EXISTS user_profiles (
                         user_id           TEXT PRIMARY KEY,
@@ -99,6 +108,49 @@ public class StorageController {
                 System.err.println("[StorageController] Schema init failed: " + e.getMessage());
             }
         });
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────
+
+    /** Register a new account. Idempotent — calling again with the same email is a no-op. */
+    @PostMapping("/users")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserAccount registerUser(@RequestBody UserAccount body) {
+        String id  = uuid();
+        String now = nowIso();
+        if (db.isPresent()) {
+            db.get().update("""
+                    INSERT INTO users (id, email, display_name, created_at)
+                    VALUES (?, ?, ?, ?::timestamptz)
+                    ON CONFLICT (email) DO NOTHING
+                    """,
+                    id, body.email(), body.displayName(), now);
+            List<UserAccount> existing = db.get().query(
+                    "SELECT * FROM users WHERE email = ?",
+                    (rs, rowNum) -> new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("email"),
+                            rs.getString("display_name"),
+                            rs.getString("created_at")),
+                    body.email());
+            if (!existing.isEmpty()) return existing.get(0);
+        }
+        return new UserAccount(id, body.email(), body.displayName(), now);
+    }
+
+    /** Read back the account row for the current user (identified by X-User-Id = email). */
+    @GetMapping("/users/me")
+    public UserAccount getUser(@RequestHeader("X-User-Id") String email) {
+        if (db.isEmpty()) return new UserAccount(null, email, null, null);
+        List<UserAccount> rows = db.get().query(
+                "SELECT * FROM users WHERE email = ?",
+                (rs, rowNum) -> new UserAccount(
+                        rs.getString("id"),
+                        rs.getString("email"),
+                        rs.getString("display_name"),
+                        rs.getString("created_at")),
+                email);
+        return rows.isEmpty() ? new UserAccount(null, email, null, null) : rows.get(0);
     }
 
     // ── Profile ───────────────────────────────────────────────────────────
