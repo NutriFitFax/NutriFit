@@ -13,7 +13,7 @@ import '../ui/barcode_icon.dart';
 import 'home_dashboard_screen.dart';
 import 'nutri_colors.dart';
 
-enum AppTabId { home, search, barcode, meal, history }
+enum AppTabId { home, search, meal, barcode, history }
 
 class AppShell extends StatefulWidget {
   final NutriFitApi api;
@@ -93,6 +93,13 @@ class _AppShellState extends State<AppShell> {
         build: () => SearchScreen(api: widget.api, history: widget.history),
       ),
       _TabDef(
+        id: AppTabId.meal,
+        label: 'Meal',
+        icon: Icon(Icons.camera_alt_outlined, color: unselectedColor),
+        activeIcon: Icon(Icons.camera_alt, color: selectedColor),
+        build: () => MealEntryScreen(api: widget.api, history: widget.history, store: widget.store),
+      ),
+      _TabDef(
         id: AppTabId.barcode,
         label: 'Scan',
         icon: BarcodeIcon(size: 22, color: unselectedColor),
@@ -103,13 +110,6 @@ class _AppShellState extends State<AppShell> {
           store: widget.store,
           onGoToSearch: () => _openTab(AppTabId.search),
         ),
-      ),
-      _TabDef(
-        id: AppTabId.meal,
-        label: 'Meal',
-        icon: Icon(Icons.camera_alt_outlined, color: unselectedColor),
-        activeIcon: Icon(Icons.camera_alt, color: selectedColor),
-        build: () => MealEntryScreen(api: widget.api, history: widget.history, store: widget.store),
       ),
       _TabDef(
         id: AppTabId.history,
