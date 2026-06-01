@@ -111,4 +111,4 @@ This is a university group project (team of 5). The backend is deployed to a fre
 
 ## Download link
 
-https://drive.google.com/file/d/16HcipMenZ-tnhyzpNNWXNrNEY_CGJ4-5/view?usp=drive_link
+(https://github.com/NutriFitFax/NutriFit/releases/download/v1.0.0/app-release.apk)
