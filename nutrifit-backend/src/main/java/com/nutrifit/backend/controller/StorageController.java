@@ -73,6 +73,7 @@ public class StorageController {
                 // Migrate existing rows: add columns if the table was created before this version.
                 jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS sex TEXT");
                 jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS activity_level TEXT");
+                jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE");
                 jdbc.execute("""
                     CREATE TABLE IF NOT EXISTS meal_logs (
                         id           TEXT PRIMARY KEY,
@@ -209,8 +210,8 @@ public class StorageController {
                 INSERT INTO user_profiles
                     (user_id, display_name, height_cm, goal_calories_kcal,
                      goal_protein_g, goal_carbs_g, goal_fat_g,
-                     sex, activity_level, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                     sex, activity_level, date_of_birth, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::date, NOW())
                 ON CONFLICT (user_id) DO UPDATE SET
                     display_name       = EXCLUDED.display_name,
                     height_cm          = EXCLUDED.height_cm,
@@ -220,12 +221,13 @@ public class StorageController {
                     goal_fat_g         = EXCLUDED.goal_fat_g,
                     sex                = EXCLUDED.sex,
                     activity_level     = EXCLUDED.activity_level,
+                    date_of_birth      = EXCLUDED.date_of_birth,
                     updated_at         = NOW()
                 """,
                 userId, body.displayName(), body.heightCm(),
                 body.goalCaloriesKcal(), body.goalProteinG(),
                 body.goalCarbsG(), body.goalFatG(),
-                body.sex(), body.activityLevel());
+                body.sex(), body.activityLevel(), body.dateOfBirth());
         return getProfile(userId);
     }
 
@@ -443,6 +445,7 @@ public class StorageController {
                 (Double) rs.getObject("goal_fat_g"),
                 rs.getString("sex"),
                 rs.getString("activity_level"),
+                rs.getString("date_of_birth"),
                 rs.getString("updated_at"));
     }
 
@@ -497,7 +500,7 @@ public class StorageController {
     }
 
     private static StoredUserProfile emptyProfile(String userId) {
-        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null);
+        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static DailyStorageSummary emptySummary(String userId, String date) {

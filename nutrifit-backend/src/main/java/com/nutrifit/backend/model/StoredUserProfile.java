@@ -16,5 +16,6 @@ public record StoredUserProfile(
         @JsonProperty("goal_fat_g")         @PositiveOrZero Double goalFatG,
         @JsonProperty("sex")                String sex,
         @JsonProperty("activity_level")     String activityLevel,
+        @JsonProperty("date_of_birth")      String dateOfBirth,
         @JsonProperty("updated_at")         String updatedAt
 ) {}

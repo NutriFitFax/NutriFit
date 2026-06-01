@@ -145,6 +145,7 @@ class SettingsPrefs {
 
   static const _kGender        = 'gender';
   static const _kActivityLevel = 'activity_level';
+  static const _kDateOfBirth   = 'date_of_birth';
 
   Gender get gender => Gender.values.firstWhere(
     // Fall back to the pre-rename 'sex' key so existing users keep their value.
@@ -172,6 +173,13 @@ class SettingsPrefs {
       parseActivityLevel(_p.getString(_kActivityLevel));
   Future<void> setActivityLevel(ActivityLevel a) =>
       _p.setString(_kActivityLevel, a.name);
+
+  DateTime? get dateOfBirth {
+    final s = _p.getString(_kDateOfBirth);
+    return s != null ? DateTime.tryParse(s) : null;
+  }
+  Future<void> setDateOfBirth(DateTime d) =>
+      _p.setString(_kDateOfBirth, '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}');
 
   static const _kUserEmail = 'user_email';
 

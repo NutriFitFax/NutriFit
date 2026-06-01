@@ -17,6 +17,8 @@ class UserProfile {
   final int carbsGoalG;
   final int fatGoalG;
 
+  final DateTime? dateOfBirth;
+
   const UserProfile({
     required this.name,
     required this.email,
@@ -27,6 +29,7 @@ class UserProfile {
     this.proteinGoalG = 130,
     this.carbsGoalG = 240,
     this.fatGoalG = 70,
+    this.dateOfBirth,
   });
 
   double get bmi {
@@ -56,6 +59,7 @@ class UserProfile {
     int? proteinGoalG,
     int? carbsGoalG,
     int? fatGoalG,
+    DateTime? dateOfBirth,
   }) => UserProfile(
     name: name ?? this.name,
     email: email ?? this.email,
@@ -66,6 +70,7 @@ class UserProfile {
     proteinGoalG: proteinGoalG ?? this.proteinGoalG,
     carbsGoalG: carbsGoalG ?? this.carbsGoalG,
     fatGoalG: fatGoalG ?? this.fatGoalG,
+    dateOfBirth: dateOfBirth ?? this.dateOfBirth,
   );
 
   Map<String, dynamic> toJson() => {
@@ -78,6 +83,8 @@ class UserProfile {
     'protein_goal_g': proteinGoalG,
     'carbs_goal_g': carbsGoalG,
     'fat_goal_g': fatGoalG,
+    if (dateOfBirth != null)
+      'date_of_birth': '${dateOfBirth!.year.toString().padLeft(4,'0')}-${dateOfBirth!.month.toString().padLeft(2,'0')}-${dateOfBirth!.day.toString().padLeft(2,'0')}',
   };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -96,6 +103,9 @@ class UserProfile {
     proteinGoalG: (json['protein_goal_g'] as num?)?.toInt() ?? 130,
     carbsGoalG: (json['carbs_goal_g'] as num?)?.toInt() ?? 240,
     fatGoalG: (json['fat_goal_g'] as num?)?.toInt() ?? 70,
+    dateOfBirth: json['date_of_birth'] != null
+        ? DateTime.tryParse(json['date_of_birth'] as String)
+        : null,
   );
 }
 

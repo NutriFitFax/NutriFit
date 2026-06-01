@@ -31,6 +31,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   UnitSystem _unit = UnitSystem.metric;
   Gender? _gender;
   ActivityLevel? _activityLevel;
+  DateTime? _dob;
 
   final _weightCtrl   = TextEditingController();
   final _heightCmCtrl = TextEditingController();
@@ -108,6 +109,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       );
       return;
     }
+    if (_dob == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your date of birth')),
+      );
+      return;
+    }
     HapticFeedback.mediumImpact();
     widget.onComplete(UserProfile(
       name: widget.name,
@@ -116,6 +123,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       heightCm: _heightCm!.roundToDouble(),
       gender: _gender!,
       activityLevel: _activityLevel!,
+      dateOfBirth: _dob,
     ));
   }
 
@@ -237,6 +245,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ],
               const SizedBox(height: 22),
 
+              // ── Date of birth ──────────────────────────────────────────
+              const FieldLabel('Date of birth'),
+              _DobField(
+                value: _dob,
+                onPicked: (d) => setState(() => _dob = d),
+              ),
+              const SizedBox(height: 22),
+
               // ── Gender ─────────────────────────────────────────────────
               const FieldLabel('Gender'),
               Row(
@@ -344,6 +360,55 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DobField extends StatelessWidget {
+  final DateTime? value;
+  final ValueChanged<DateTime> onPicked;
+  const _DobField({required this.value, required this.onPicked});
+
+  String _format(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')} / ${d.month.toString().padLeft(2, '0')} / ${d.year}';
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    final now = DateTime.now();
+    return GestureDetector(
+      onTap: () async {
+        HapticFeedback.selectionClick();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: value ?? DateTime(now.year - 25, now.month, now.day),
+          firstDate: DateTime(now.year - 120),
+          lastDate: DateTime(now.year - 13, now.month, now.day),
+        );
+        if (picked != null) onPicked(picked);
+      },
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        decoration: BoxDecoration(
+          color: c.surface,
+          border: Border.all(color: c.line),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                value != null ? _format(value!) : 'date of birth',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  fontSize: 22,
+                  color: value != null ? c.ink : c.ink.withValues(alpha: 0.25),
+                ),
+              ),
+            ),
+            Icon(Icons.calendar_today_outlined, size: 18, color: c.ink2),
+          ],
         ),
       ),
     );

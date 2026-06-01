@@ -76,6 +76,9 @@ class _AuthGateState extends State<AuthGate> {
         goalFatG: profile.fatGoalG.toDouble(),
         sex: profile.gender.name,
         activityLevel: profile.activityLevel.name,
+        dateOfBirth: profile.dateOfBirth != null
+            ? '${profile.dateOfBirth!.year.toString().padLeft(4,'0')}-${profile.dateOfBirth!.month.toString().padLeft(2,'0')}-${profile.dateOfBirth!.day.toString().padLeft(2,'0')}'
+            : null,
         updatedAt: null,
       ));
     } catch (_) {}
@@ -89,6 +92,9 @@ class _AuthGateState extends State<AuthGate> {
     await SettingsPrefs.instance.setGoalCaloriesKcal(profile.macroCalories);
     await SettingsPrefs.instance.setGender(profile.gender);
     await SettingsPrefs.instance.setActivityLevel(profile.activityLevel);
+    if (profile.dateOfBirth != null) {
+      await SettingsPrefs.instance.setDateOfBirth(profile.dateOfBirth!);
+    }
   }
 
   // ── Navigation ────────────────────────────────────────────────────────

@@ -288,6 +288,7 @@ class StoredUserProfile {
   final double? goalFatG;
   final String? sex;
   final String? activityLevel;
+  final String? dateOfBirth;
   final DateTime? updatedAt;
 
   const StoredUserProfile({
@@ -300,6 +301,7 @@ class StoredUserProfile {
     this.goalFatG,
     this.sex,
     this.activityLevel,
+    this.dateOfBirth,
     this.updatedAt,
   });
 
@@ -314,6 +316,7 @@ class StoredUserProfile {
         goalFatG: (json['goal_fat_g'] as num?)?.toDouble(),
         sex: json['sex'] as String?,
         activityLevel: json['activity_level'] as String?,
+        dateOfBirth: json['date_of_birth'] as String?,
         updatedAt: _dateTimeFromJson(json['updated_at']),
       );
 
@@ -326,6 +329,7 @@ class StoredUserProfile {
         if (goalFatG != null) 'goal_fat_g': goalFatG,
         if (sex != null) 'sex': sex,
         if (activityLevel != null) 'activity_level': activityLevel,
+        if (dateOfBirth != null) 'date_of_birth': dateOfBirth,
       };
 }
 
