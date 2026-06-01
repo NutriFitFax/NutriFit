@@ -108,3 +108,7 @@ mvn spring-boot:run
 ## Project status
 
 This is a university group project (team of 5). The backend is deployed to a free Render tier, which sleeps after inactivity - the first request after an idle period may take 30–60 seconds while the service wakes up.
+
+## Download link
+
+https://drive.google.com/file/d/16HcipMenZ-tnhyzpNNWXNrNEY_CGJ4-5/view?usp=drive_link
