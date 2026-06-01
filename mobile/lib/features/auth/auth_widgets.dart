@@ -31,6 +31,33 @@ class NutriWordmark extends StatelessWidget {
   }
 }
 
+/// Animated progress dot row used in the sign-up flow.
+class SignUpProgressDots extends StatelessWidget {
+  final int total;
+  final int current;
+  const SignUpProgressDots({super.key, required this.total, required this.current});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+    return Row(
+      children: [
+        for (var i = 1; i <= total; i++)
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.only(left: 5),
+            width: i == current ? 22 : 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: i <= current ? c.primary : c.line,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 /// All-caps muted field label.
 class FieldLabel extends StatelessWidget {
   final String text;

@@ -65,14 +65,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Row(
                         children: [
                           _BackButton(),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 4),
                           Text(
-                            'STEP 1 OF 2',
+                            'STEP 1 OF 3',
                             style: TextStyle(
                               fontSize: 11, fontWeight: FontWeight.w700,
                               letterSpacing: 0.8, color: c.ink2,
                             ),
                           ),
+                          const Spacer(),
+                          const SignUpProgressDots(total: 3, current: 1),
                         ],
                       ),
                       const SizedBox(height: 14),

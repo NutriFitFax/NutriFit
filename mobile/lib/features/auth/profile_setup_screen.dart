@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/nutri_colors.dart';
+import 'goals_setup_screen.dart';
 import 'user_profile.dart';
 import 'auth_widgets.dart';
 
@@ -116,15 +117,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       return;
     }
     HapticFeedback.mediumImpact();
-    widget.onComplete(UserProfile(
-      name: widget.name,
-      email: widget.email,
-      weightKg: double.parse(_weightKg!.toStringAsFixed(1)),
-      heightCm: _heightCm!.roundToDouble(),
-      gender: _gender!,
-      activityLevel: _activityLevel!,
-      dateOfBirth: _dob,
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GoalsSetupScreen(
+          name: widget.name,
+          email: widget.email,
+          weightKg: double.parse(_weightKg!.toStringAsFixed(1)),
+          heightCm: _heightCm!.roundToDouble(),
+          gender: _gender!,
+          activityLevel: _activityLevel!,
+          dateOfBirth: _dob,
+          onComplete: widget.onComplete,
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,10 +159,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         child: Icon(Icons.chevron_left, size: 26, color: c.ink)),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Text('STEP 2 OF 2',
+                  const SizedBox(width: 4),
+                  Text('STEP 2 OF 3',
                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                       letterSpacing: 0.8, color: c.ink2)),
+                  const Spacer(),
+                  const SignUpProgressDots(total: 3, current: 2),
                 ],
               ),
               const SizedBox(height: 14),
@@ -352,9 +360,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Create account'),
+                    Text('Continue'),
                     SizedBox(width: 8),
-                    Icon(Icons.check, size: 18),
+                    Icon(Icons.arrow_forward, size: 18),
                   ],
                 ),
               ),
