@@ -95,6 +95,7 @@ class _AuthGateState extends State<AuthGate> {
     if (profile.dateOfBirth != null) {
       await SettingsPrefs.instance.setDateOfBirth(profile.dateOfBirth!);
     }
+    await widget.store.refresh();
   }
 
   // ── Navigation ────────────────────────────────────────────────────────

@@ -78,7 +78,8 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
     if (dob == null) return widget.fallbackAge;
     final now = DateTime.now();
     var age = now.year - dob.year;
-    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) {
       age--;
     }
     return age.clamp(13, 100);
@@ -173,7 +174,8 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                       onTap: () => Navigator.of(context).maybePop(),
                       customBorder: const CircleBorder(),
                       child: SizedBox(
-                        width: 40, height: 40,
+                        width: 40,
+                        height: 40,
                         child: Icon(Icons.chevron_left, size: 26, color: c.ink),
                       ),
                     ),
@@ -181,7 +183,11 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                   const SizedBox(width: 4),
                   Text(
                     'STEP 3 OF 3',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: c.ink2),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: c.ink2),
                   ),
                   const Spacer(),
                   const _ProgressDots(total: 3, current: 3),
@@ -197,26 +203,32 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                   children: [
                     Text(
                       'Set your goals',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 30),
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(fontSize: 30),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "Choose a goal and we'll estimate your daily calories and macros. You can always edit them later.",
-                      style: TextStyle(color: c.ink2, fontSize: 14, height: 1.5),
+                      style:
+                          TextStyle(color: c.ink2, fontSize: 14, height: 1.5),
                     ),
                     const SizedBox(height: 22),
 
                     // ── Goal cards (2×2 grid) ──────────────────────────
                     Row(
                       children: [
-                        Expanded(child: _GoalCard(
+                        Expanded(
+                            child: _GoalCard(
                           icon: Icons.trending_down,
                           label: 'Lose weight',
                           selected: _goal == GoalType.lose,
                           onTap: () => _select(GoalType.lose),
                         )),
                         const SizedBox(width: 12),
-                        Expanded(child: _GoalCard(
+                        Expanded(
+                            child: _GoalCard(
                           icon: Icons.balance,
                           label: 'Maintain',
                           selected: _goal == GoalType.maintain,
@@ -227,14 +239,16 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _GoalCard(
+                        Expanded(
+                            child: _GoalCard(
                           icon: Icons.fitness_center,
                           label: 'Gain muscle',
                           selected: _goal == GoalType.gain,
                           onTap: () => _select(GoalType.gain),
                         )),
                         const SizedBox(width: 12),
-                        Expanded(child: _GoalCard(
+                        Expanded(
+                            child: _GoalCard(
                           icon: Icons.tune,
                           label: 'Custom',
                           selected: _goal == GoalType.custom,
@@ -253,7 +267,8 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                         Expanded(
                           child: Text(
                             _goalExplanation,
-                            style: TextStyle(fontSize: 13, color: c.ink2, height: 1.45),
+                            style: TextStyle(
+                                fontSize: 13, color: c.ink2, height: 1.45),
                           ),
                         ),
                       ],
@@ -284,7 +299,9 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(_goal == GoalType.custom ? 'Create account' : 'Use these goals'),
+                    Text(_goal == GoalType.custom
+                        ? 'Create account'
+                        : 'Create account'),
                     const SizedBox(width: 8),
                     const Icon(Icons.check, size: 18),
                   ],
@@ -298,10 +315,14 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
   }
 
   String get _goalExplanation => switch (_goal) {
-        GoalType.lose => 'A gentle calorie deficit (~500 kcal/day) with higher protein to keep muscle while you lose fat.',
-        GoalType.maintain => 'Matches your estimated daily burn so your weight stays steady.',
-        GoalType.gain => 'A small surplus (~300 kcal/day) with high protein to support muscle growth.',
-        GoalType.custom => 'Enter your own targets. You can fine-tune these later in settings.',
+        GoalType.lose =>
+          'A gentle calorie deficit (~500 kcal/day) with higher protein to keep muscle while you lose fat.',
+        GoalType.maintain =>
+          'Matches your estimated daily burn so your weight stays steady.',
+        GoalType.gain =>
+          'A small surplus (~300 kcal/day) with high protein to support muscle growth.',
+        GoalType.custom =>
+          'Enter your own targets. You can fine-tune these later in settings.',
       };
 }
 
@@ -376,12 +397,14 @@ class _GoalCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 42, height: 42,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   color: selected ? c.primary : c.surfaceSunken,
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, size: 21, color: selected ? Colors.white : c.ink2),
+                child: Icon(icon,
+                    size: 21, color: selected ? Colors.white : c.ink2),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -419,7 +442,11 @@ class _PreviewPanel extends StatelessWidget {
         border: Border.all(color: c.line),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: c.ink.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6), spreadRadius: -6),
+          BoxShadow(
+              color: c.ink.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+              spreadRadius: -6),
         ],
       ),
       child: Column(
@@ -427,7 +454,11 @@ class _PreviewPanel extends StatelessWidget {
         children: [
           Text(
             'ESTIMATED DAILY TARGET',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: c.ink2),
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+                color: c.ink2),
           ),
           const SizedBox(height: 10),
           // Calories — hero number
@@ -437,10 +468,17 @@ class _PreviewPanel extends StatelessWidget {
             children: [
               Text(
                 estimate.calories.toString(),
-                style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 44, height: 1.0),
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineLarge
+                    ?.copyWith(fontSize: 44, height: 1.0),
               ),
               const SizedBox(width: 6),
-              Text('kcal', style: TextStyle(fontSize: 16, color: c.ink2, fontWeight: FontWeight.w600)),
+              Text('kcal',
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: c.ink2,
+                      fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 16),
@@ -448,9 +486,17 @@ class _PreviewPanel extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _MacroStat(value: estimate.protein, label: 'Protein', color: c.protein)),
-              Expanded(child: _MacroStat(value: estimate.carbs, label: 'Carbs', color: c.carbs)),
-              Expanded(child: _MacroStat(value: estimate.fat, label: 'Fat', color: c.fat)),
+              Expanded(
+                  child: _MacroStat(
+                      value: estimate.protein,
+                      label: 'Protein',
+                      color: c.protein)),
+              Expanded(
+                  child: _MacroStat(
+                      value: estimate.carbs, label: 'Carbs', color: c.carbs)),
+              Expanded(
+                  child: _MacroStat(
+                      value: estimate.fat, label: 'Fat', color: c.fat)),
             ],
           ),
           const SizedBox(height: 14),
@@ -476,7 +522,8 @@ class _MacroStat extends StatelessWidget {
   final int value;
   final String label;
   final Color color;
-  const _MacroStat({required this.value, required this.label, required this.color});
+  const _MacroStat(
+      {required this.value, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -486,16 +533,25 @@ class _MacroStat extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            Container(
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 6),
             Text(
               '${value}g',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 22),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineLarge
+                  ?.copyWith(fontSize: 22),
             ),
           ],
         ),
         const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 12, color: c.ink2, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 12, color: c.ink2, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -519,15 +575,38 @@ class _CustomEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _CustomField(controller: calCtrl, label: 'Calories', unit: 'kcal', accent: c.ink, onChanged: onChanged),
+        _CustomField(
+            controller: calCtrl,
+            label: 'Calories',
+            unit: 'kcal',
+            accent: c.ink,
+            onChanged: onChanged),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _CustomField(controller: proteinCtrl, label: 'Protein', unit: 'g', accent: c.protein, onChanged: onChanged)),
+            Expanded(
+                child: _CustomField(
+                    controller: proteinCtrl,
+                    label: 'Protein',
+                    unit: 'g',
+                    accent: c.protein,
+                    onChanged: onChanged)),
             const SizedBox(width: 10),
-            Expanded(child: _CustomField(controller: carbsCtrl, label: 'Carbs', unit: 'g', accent: c.carbs, onChanged: onChanged)),
+            Expanded(
+                child: _CustomField(
+                    controller: carbsCtrl,
+                    label: 'Carbs',
+                    unit: 'g',
+                    accent: c.carbs,
+                    onChanged: onChanged)),
             const SizedBox(width: 10),
-            Expanded(child: _CustomField(controller: fatCtrl, label: 'Fat', unit: 'g', accent: c.fat, onChanged: onChanged)),
+            Expanded(
+                child: _CustomField(
+                    controller: fatCtrl,
+                    label: 'Fat',
+                    unit: 'g',
+                    accent: c.fat,
+                    onChanged: onChanged)),
           ],
         ),
         const SizedBox(height: 10),
@@ -569,11 +648,19 @@ class _CustomField extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: accent, shape: BoxShape.circle)),
+              Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(color: accent, shape: BoxShape.circle)),
               const SizedBox(width: 6),
               Text(
                 label.toUpperCase(),
-                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4, color: c.ink2),
+                style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: c.ink2),
               ),
             ],
           ),
@@ -587,8 +674,13 @@ class _CustomField extends StatelessWidget {
                   controller: controller,
                   onChanged: (_) => onChanged(),
                   keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 22),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))
+                  ],
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineLarge
+                      ?.copyWith(fontSize: 22),
                   decoration: const InputDecoration(
                     isDense: true,
                     filled: false,
@@ -599,7 +691,11 @@ class _CustomField extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(unit, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.ink2)),
+              Text(unit,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: c.ink2)),
             ],
           ),
         ],
