@@ -297,14 +297,12 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
               padding: const EdgeInsets.fromLTRB(26, 6, 26, 14),
               child: FilledButton(
                 onPressed: _finish,
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(_goal == GoalType.custom
-                        ? 'Create account'
-                        : 'Create account'),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.check, size: 18),
+                    Text('Create account'),
+                    SizedBox(width: 8),
+                    Icon(Icons.check, size: 18),
                   ],
                 ),
               ),

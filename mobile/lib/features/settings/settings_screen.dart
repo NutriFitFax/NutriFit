@@ -37,7 +37,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late UserProfile _profile = widget.profile ??
-      const UserProfile(name: 'Bakir H.', email: 'bakir@nutrifit.app', weightKg: 74.2, heightCm: 181);
+      const UserProfile(
+          name: 'Bakir H.',
+          email: 'bakir@nutrifit.app',
+          weightKg: 74.2,
+          heightCm: 181);
 
   int _calorieGoal = 2150;
   MacroGoals _macros = const MacroGoals(130, 240, 70);
@@ -59,11 +63,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool _haptics = true;
 
-  String get _avatarLetter =>
-      _profile.name.trim().isEmpty ? 'U' : _profile.name.trim()[0].toUpperCase();
+  String get _avatarLetter => _profile.name.trim().isEmpty
+      ? 'U'
+      : _profile.name.trim()[0].toUpperCase();
 
   String get _weightDisplay {
-    if (_unit == UnitSystem.metric) return '${_profile.weightKg.toStringAsFixed(1)} kg';
+    if (_unit == UnitSystem.metric)
+      return '${_profile.weightKg.toStringAsFixed(1)} kg';
     return '${UnitConvert.kgToLb(_profile.weightKg).round()} lb';
   }
 
@@ -77,24 +83,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     final prefs = SettingsPrefs.instance;
-    _unit           = prefs.unit;
-    _accent         = prefs.accent;
-    _waterMl        = prefs.waterGoalMl;
-    _mealReminders  = prefs.mealReminders;
-    _mealTimes      = _parseMealTimes(prefs.mealReminderTimes);
+    _unit = prefs.unit;
+    _accent = prefs.accent;
+    _waterMl = prefs.waterGoalMl;
+    _mealReminders = prefs.mealReminders;
+    _mealTimes = _parseMealTimes(prefs.mealReminderTimes);
     _waterReminders = prefs.waterReminders;
-    _waterStart     = _parseTime(prefs.waterReminderStart);
-    _waterEnd       = _parseTime(prefs.waterReminderEnd);
-    _waterInterval  = prefs.waterReminderIntervalMinutes;
-    _haptics        = prefs.haptics;
+    _waterStart = _parseTime(prefs.waterReminderStart);
+    _waterEnd = _parseTime(prefs.waterReminderEnd);
+    _waterInterval = prefs.waterReminderIntervalMinutes;
+    _haptics = prefs.haptics;
     // Restore locally-persisted goals so they survive without the backend.
     _calorieGoal = prefs.goalCaloriesKcal;
-    _macros      = MacroGoals(prefs.goalProteinG, prefs.goalCarbsG, prefs.goalFatG);
-    _gender      = prefs.gender;
-    _activity    = prefs.activityLevel;
+    _macros = MacroGoals(prefs.goalProteinG, prefs.goalCarbsG, prefs.goalFatG);
+    _gender = prefs.gender;
+    _activity = prefs.activityLevel;
     _profile = UserProfile(
-      name:     prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
-      email:    prefs.getUserEmail() ?? _profile.email,
+      name: prefs.displayName == 'friend' ? _profile.name : prefs.displayName,
+      email: prefs.getUserEmail() ?? _profile.email,
       weightKg: prefs.weightKg == 0.0 ? _profile.weightKg : prefs.weightKg,
       heightCm: prefs.heightCm == 0.0 ? _profile.heightCm : prefs.heightCm,
     );
@@ -107,23 +113,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final stored = await widget.api.getStorageProfile();
       if (!mounted) return;
-      final name     = stored.displayName?.isNotEmpty == true ? stored.displayName! : _profile.name;
+      final name = stored.displayName?.isNotEmpty == true
+          ? stored.displayName!
+          : _profile.name;
       final heightCm = stored.heightCm ?? _profile.heightCm;
       final weightKg = stored.weightKg ?? _profile.weightKg;
-      final cal      = stored.goalCaloriesKcal?.round() ?? _calorieGoal;
-      final macros   = MacroGoals(
+      final cal = stored.goalCaloriesKcal?.round() ?? _calorieGoal;
+      final macros = MacroGoals(
         stored.goalProteinG?.round() ?? _macros.protein,
-        stored.goalCarbsG?.round()   ?? _macros.carbs,
-        stored.goalFatG?.round()     ?? _macros.fat,
+        stored.goalCarbsG?.round() ?? _macros.carbs,
+        stored.goalFatG?.round() ?? _macros.fat,
       );
       final gender = stored.sex != null
-          ? Gender.values.firstWhere((g) => g.name == stored.sex,
-              orElse: () => _gender)
+          ? Gender.values
+              .firstWhere((g) => g.name == stored.sex, orElse: () => _gender)
           : _gender;
       // Use the legacy-aware parser so old backend values (e.g. 'very_active')
       // are correctly mapped to the current enum instead of falling back to medium.
-      final activity = SettingsPrefs.parseActivityLevel(
-          stored.activityLevel, fallback: _activity);
+      final activity = SettingsPrefs.parseActivityLevel(stored.activityLevel,
+          fallback: _activity);
       // Mirror to local storage so DailyLogStore picks up the latest goals
       // on the next refresh, even when the backend becomes unavailable later.
       await Future.wait([
@@ -140,15 +148,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _profile = UserProfile(
-          name:     name,
-          email:    _profile.email,
+          name: name,
+          email: _profile.email,
           weightKg: weightKg,
           heightCm: heightCm,
         );
         _calorieGoal = cal;
-        _macros      = macros;
-        _gender      = gender;
-        _activity    = activity;
+        _macros = macros;
+        _gender = gender;
+        _activity = activity;
       });
     } catch (_) {
       // Keep defaults when the backend is unreachable.
@@ -158,15 +166,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _saveToApi() async {
     try {
       await widget.api.saveStorageProfile(StoredUserProfile(
-        displayName:      _profile.name,
-        heightCm:         _profile.heightCm,
-        weightKg:         _profile.weightKg,
+        displayName: _profile.name,
+        heightCm: _profile.heightCm,
+        weightKg: _profile.weightKg,
         goalCaloriesKcal: _calorieGoal.toDouble(),
-        goalProteinG:     _macros.protein.toDouble(),
-        goalCarbsG:       _macros.carbs.toDouble(),
-        goalFatG:         _macros.fat.toDouble(),
-        sex:              _gender.name,
-        activityLevel:    _activity.name,
+        goalProteinG: _macros.protein.toDouble(),
+        goalCarbsG: _macros.carbs.toDouble(),
+        goalFatG: _macros.fat.toDouble(),
+        sex: _gender.name,
+        activityLevel: _activity.name,
       ));
     } catch (_) {}
   }
@@ -189,11 +197,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.fromLTRB(18, 4, 18, 32),
         children: [
           _profileHero(c),
-
           const SettingsHeader('Goals'),
           SettingsGroup(children: [
             SettingsRow(
-              icon: Icons.local_fire_department_outlined, iconColor: c.primary, iconBg: c.primaryTint,
+              icon: Icons.local_fire_department_outlined,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
               title: 'Daily calories',
               value: '${_thousands(_calorieGoal)} kcal',
               onTap: () async {
@@ -206,9 +215,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsRow(
-              icon: Icons.pie_chart_outline, iconColor: c.carbs, iconBg: c.carbsSoft,
+              icon: Icons.pie_chart_outline,
+              iconColor: c.carbs,
+              iconBg: c.carbsSoft,
               title: 'Macro targets',
-              value: 'P ${_macros.protein} · C ${_macros.carbs} · F ${_macros.fat} g',
+              value:
+                  'P ${_macros.protein} · C ${_macros.carbs} · F ${_macros.fat} g',
               onTap: () async {
                 final v = await showEditMacrosSheet(context, _macros);
                 if (v != null) {
@@ -221,7 +233,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsRow(
-              icon: Icons.water_drop_outlined, iconColor: c.water, iconBg: c.waterSoft,
+              icon: Icons.water_drop_outlined,
+              iconColor: c.water,
+              iconBg: c.waterSoft,
               title: 'Water goal',
               value: '${(_waterMl / 1000).toStringAsFixed(1)} L',
               onTap: () async {
@@ -233,13 +247,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsSegmentedRow<Gender>(
-              icon: Icons.person_outline, iconColor: c.primary, iconBg: c.primaryTint,
+              icon: Icons.person_outline,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
               title: 'Sex',
               value: _gender,
               options: const [
-                (Gender.male,   'Male'),
+                (Gender.male, 'Male'),
                 (Gender.female, 'Female'),
-                (Gender.other,  'Other'),
+                (Gender.other, 'Other'),
               ],
               onChanged: (g) {
                 Haptics.selectionClick();
@@ -248,7 +264,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsRow(
-              icon: Icons.directions_run, iconColor: c.carbs, iconBg: c.carbsSoft,
+              icon: Icons.directions_run,
+              iconColor: c.carbs,
+              iconBg: c.carbsSoft,
               title: 'Activity level',
               value: activityLabel[_activity],
               onTap: () async {
@@ -260,11 +278,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ]),
-
           const SettingsHeader('Preferences'),
           SettingsGroup(children: [
             SettingsSegmentedRow<UnitSystem>(
-              icon: Icons.straighten, iconColor: c.fat, iconBg: c.fatSoft,
+              icon: Icons.straighten,
+              iconColor: c.fat,
+              iconBg: c.fatSoft,
               title: 'Units',
               value: _unit,
               options: const [
@@ -278,7 +297,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsAccentRow(
-              icon: Icons.palette_outlined, iconColor: c.primary, iconBg: c.primaryTint,
+              icon: Icons.palette_outlined,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
               value: _accent,
               onChanged: (a) {
                 Haptics.selectionClick();
@@ -287,50 +308,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsToggleRow(
-              icon: Icons.restaurant_outlined, iconColor: c.protein, iconBg: c.proteinSoft,
+              icon: Icons.restaurant_outlined,
+              iconColor: c.protein,
+              iconBg: c.proteinSoft,
               title: 'Meal reminders',
-              subtitle: _mealReminders ? _mealTimesDisplay : 'Nudge me to log meals',
+              subtitle:
+                  _mealReminders ? _mealTimesDisplay : 'Nudge me to log meals',
               value: _mealReminders,
               onChanged: (v) async {
                 setState(() => _mealReminders = v);
                 await SettingsPrefs.instance.setMealReminders(v);
-                await NotificationService.instance.setMealReminders(v, _mealTimes.asPairs);
-                if (mounted) _toast(v ? 'Meal reminders on · $_mealTimesDisplay' : 'Meal reminders turned off');
+                await NotificationService.instance
+                    .setMealReminders(v, _mealTimes.asPairs);
+                if (mounted)
+                  _toast(v
+                      ? 'Meal reminders on · $_mealTimesDisplay'
+                      : 'Meal reminders turned off');
               },
             ),
             if (_mealReminders)
               SettingsRow(
-                icon: Icons.schedule_outlined, iconColor: c.protein, iconBg: c.proteinSoft,
+                icon: Icons.schedule_outlined,
+                iconColor: c.protein,
+                iconBg: c.proteinSoft,
                 title: 'Reminder times',
                 value: _mealTimesDisplay,
                 onTap: _editMealTimes,
               ),
             SettingsToggleRow(
-              icon: Icons.water_drop_outlined, iconColor: c.water, iconBg: c.waterSoft,
+              icon: Icons.water_drop_outlined,
+              iconColor: c.water,
+              iconBg: c.waterSoft,
               title: 'Water reminders',
-              subtitle: _waterReminders ? _waterScheduleDisplay : 'Hourly hydration nudges',
+              subtitle: _waterReminders
+                  ? _waterScheduleDisplay
+                  : 'Hourly hydration nudges',
               value: _waterReminders,
               onChanged: (v) async {
                 setState(() => _waterReminders = v);
                 await SettingsPrefs.instance.setWaterReminders(v);
                 await NotificationService.instance.setWaterReminders(
                   v,
-                  _waterStart.hour, _waterStart.minute,
-                  _waterEnd.hour,   _waterEnd.minute,
+                  _waterStart.hour,
+                  _waterStart.minute,
+                  _waterEnd.hour,
+                  _waterEnd.minute,
                   _waterInterval,
                 );
-                if (mounted) _toast(v ? 'Water reminders on · $_waterScheduleDisplay' : 'Water reminders turned off');
+                if (mounted)
+                  _toast(v
+                      ? 'Water reminders on · $_waterScheduleDisplay'
+                      : 'Water reminders turned off');
               },
             ),
             if (_waterReminders)
               SettingsRow(
-                icon: Icons.schedule_outlined, iconColor: c.water, iconBg: c.waterSoft,
+                icon: Icons.schedule_outlined,
+                iconColor: c.water,
+                iconBg: c.waterSoft,
                 title: 'Schedule',
                 value: _waterScheduleDisplay,
                 onTap: _editWaterSchedule,
               ),
             SettingsToggleRow(
-              icon: Icons.vibration, iconColor: c.fat, iconBg: c.fatSoft,
+              icon: Icons.vibration,
+              iconColor: c.fat,
+              iconBg: c.fatSoft,
               title: 'Haptic feedback',
               value: _haptics,
               onChanged: (v) {
@@ -340,17 +383,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ]),
-
           const SettingsHeader('Data & privacy'),
           SettingsGroup(children: [
             SettingsRow(
-              icon: Icons.ios_share, iconColor: c.primary, iconBg: c.primaryTint,
+              icon: Icons.ios_share,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
               title: 'Export my data',
               subtitle: 'Download a copy of your logs',
               onTap: () => _toast('Export coming soon'),
             ),
             SettingsRow(
-              icon: Icons.delete_sweep_outlined, iconColor: c.warn, iconBg: c.proteinSoft,
+              icon: Icons.delete_sweep_outlined,
+              iconColor: c.warn,
+              iconBg: c.proteinSoft,
               title: 'Clear food history',
               onTap: _confirmClearHistory,
             ),
@@ -371,27 +417,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-
           const SettingsHeader('About'),
           SettingsGroup(children: [
             SettingsRow(
-              icon: Icons.eco_outlined, iconColor: c.primary, iconBg: c.primaryTint,
+              icon: Icons.eco_outlined,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
               title: 'About NutriFit',
               subtitle: 'Built by 5 students at IUS',
               onTap: () => _showAbout(c),
             ),
             SettingsRow(
-              icon: Icons.help_outline, iconColor: c.carbs, iconBg: c.carbsSoft,
+              icon: Icons.help_outline,
+              iconColor: c.carbs,
+              iconBg: c.carbsSoft,
               title: 'Help & feedback',
-              onTap: () => _toast('Opens support — wire your link'),
+              onTap: () => _toast('Send feedback to: nutrifit@gmail.com'),
             ),
             const SettingsRow(
-              icon: Icons.info_outline, iconColor: Color(0xFF8A948C), iconBg: Color(0xFFEFE8D4),
+              icon: Icons.info_outline,
+              iconColor: Color(0xFF8A948C),
+              iconBg: Color(0xFFEFE8D4),
               title: 'App version',
               value: '1.0.0 (1)',
             ),
           ]),
-
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: _confirmLogout,
@@ -412,9 +462,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Avatar picker ─────────────────────────────────────────────────────────
 
   Future<void> _pickAvatar() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final picked = await ImagePicker()
+        .pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null || !mounted) return;
-    final dir  = await getApplicationDocumentsDirectory();
+    final dir = await getApplicationDocumentsDirectory();
     final dest = File(p.join(dir.path, 'avatar.jpg'));
     await File(picked.path).copy(dest.path);
     await SettingsPrefs.instance.setAvatarPath(dest.path);
@@ -444,7 +495,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             border: Border.all(color: c.line),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
-              BoxShadow(color: c.ink.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8), spreadRadius: -8),
+              BoxShadow(
+                  color: c.ink.withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                  spreadRadius: -8),
             ],
           ),
           padding: const EdgeInsets.all(18),
@@ -457,38 +512,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     () {
                       final avatarPath = SettingsPrefs.instance.avatarPath;
                       return Container(
-                        width: 56, height: 56,
+                        width: 56,
+                        height: 56,
                         decoration: BoxDecoration(
-                          gradient: avatarPath == null ? LinearGradient(
-                            begin: Alignment.topLeft, end: Alignment.bottomRight,
-                            colors: [c.primarySoft, c.honey.withValues(alpha: 0.4)],
-                          ) : null,
+                          gradient: avatarPath == null
+                              ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    c.primarySoft,
+                                    c.honey.withValues(alpha: 0.4)
+                                  ],
+                                )
+                              : null,
                           borderRadius: BorderRadius.circular(99),
                           border: Border.all(color: c.line),
-                          image: avatarPath != null ? DecorationImage(
-                            image: FileImage(File(avatarPath)),
-                            fit: BoxFit.cover,
-                          ) : null,
+                          image: avatarPath != null
+                              ? DecorationImage(
+                                  image: FileImage(File(avatarPath)),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
                         alignment: Alignment.center,
-                        child: avatarPath == null ? Text(
-                          _avatarLetter,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: c.primaryDeep, fontSize: 22, fontWeight: FontWeight.w600,
-                              ),
-                        ) : null,
+                        child: avatarPath == null
+                            ? Text(
+                                _avatarLetter,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: c.primaryDeep,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              )
+                            : null,
                       );
                     }(),
                     Positioned(
-                      bottom: 0, right: 0,
+                      bottom: 0,
+                      right: 0,
                       child: Container(
-                        width: 20, height: 20,
+                        width: 20,
+                        height: 20,
                         decoration: BoxDecoration(
                           color: c.primary,
                           shape: BoxShape.circle,
                           border: Border.all(color: c.surface, width: 1.5),
                         ),
-                        child: const Icon(Icons.camera_alt, size: 11, color: Colors.white),
+                        child: const Icon(Icons.camera_alt,
+                            size: 11, color: Colors.white),
                       ),
                     ),
                   ],
@@ -499,9 +573,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_profile.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 19)),
+                    Text(_profile.name,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineSmall
+                            ?.copyWith(fontSize: 19)),
                     const SizedBox(height: 2),
-                    Text(_profile.email, style: TextStyle(fontSize: 13, color: c.ink2)),
+                    Text(_profile.email,
+                        style: TextStyle(fontSize: 13, color: c.ink2)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -528,8 +607,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _miniStat(NutriColors c, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(color: c.surfaceSunken, borderRadius: BorderRadius.circular(99)),
-      child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: c.ink2)),
+      decoration: BoxDecoration(
+          color: c.surfaceSunken, borderRadius: BorderRadius.circular(99)),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w600, color: c.ink2)),
     );
   }
 
@@ -542,7 +624,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _confirmClearHistory() async {
     final ok = await _confirm(
       title: 'Clear food history?',
-      message: 'This removes every viewed food from this device. It cannot be undone.',
+      message:
+          'This removes every viewed food from this device. It cannot be undone.',
       confirmLabel: 'Clear',
       destructive: true,
     );
@@ -564,7 +647,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _confirmDelete() async {
     final ok = await _confirm(
       title: 'Delete account & data?',
-      message: 'This permanently deletes your account and all logs from this device and the server. This cannot be undone.',
+      message:
+          'This permanently deletes your account and all logs from this device and the server. This cannot be undone.',
       confirmLabel: 'Delete everything',
       destructive: true,
     );
@@ -583,12 +667,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => AlertDialog(
         backgroundColor: c.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text(title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 20)),
+        title: Text(title,
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontSize: 20)),
         content: Text(message, style: TextStyle(color: c.ink2, height: 1.5)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           FilledButton(
-            style: destructive ? FilledButton.styleFrom(backgroundColor: c.warn) : null,
+            style: destructive
+                ? FilledButton.styleFrom(backgroundColor: c.warn)
+                : null,
             onPressed: () => Navigator.pop(context, true),
             child: Text(confirmLabel),
           ),
@@ -620,7 +712,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 
-  static MealReminderTimes _parseMealTimes(List<String> list) => MealReminderTimes(
+  static MealReminderTimes _parseMealTimes(List<String> list) =>
+      MealReminderTimes(
         _parseTime(list[0]),
         _parseTime(list[1]),
         _parseTime(list[2]),
@@ -661,22 +754,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _editWaterSchedule() async {
     final result = await showWaterScheduleSheet(
       context,
-      WaterSchedule(start: _waterStart, end: _waterEnd, intervalMinutes: _waterInterval),
+      WaterSchedule(
+          start: _waterStart, end: _waterEnd, intervalMinutes: _waterInterval),
     );
     if (result == null || !mounted) return;
     setState(() {
-      _waterStart    = result.start;
-      _waterEnd      = result.end;
+      _waterStart = result.start;
+      _waterEnd = result.end;
       _waterInterval = result.intervalMinutes;
     });
     await SettingsPrefs.instance.setWaterReminderStart(_fmtTime(result.start));
     await SettingsPrefs.instance.setWaterReminderEnd(_fmtTime(result.end));
-    await SettingsPrefs.instance.setWaterReminderIntervalMinutes(result.intervalMinutes);
+    await SettingsPrefs.instance
+        .setWaterReminderIntervalMinutes(result.intervalMinutes);
     if (_waterReminders) {
       await NotificationService.instance.setWaterReminders(
         true,
-        result.start.hour, result.start.minute,
-        result.end.hour,   result.end.minute,
+        result.start.hour,
+        result.start.minute,
+        result.end.hour,
+        result.end.minute,
         result.intervalMinutes,
       );
       if (mounted) _toast('Water reminder schedule updated');

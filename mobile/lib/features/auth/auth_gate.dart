@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../api/api_client.dart';
 import '../../api/models.dart';
 import '../../app/app_shell.dart';
+import '../../app/notification_service.dart';
 import '../../app/settings_prefs.dart';
 import '../../db/daily_log.dart';
 import '../../features/history/viewed_food_history_store.dart';
@@ -118,11 +119,13 @@ class _AuthGateState extends State<AuthGate> {
   void _handleAuthenticated() {
     Navigator.of(context).popUntil((route) => route.isFirst);
     setState(() {});
+    NotificationService.instance.rescheduleFromPrefs();
   }
 
   // ── Logout / delete ───────────────────────────────────────────────────
 
   Future<void> _handleLogout() async {
+    await NotificationService.instance.cancelAll();
     // Reset today's water intake before logging out so the next session starts fresh.
     await widget.store.resetTodayWater();
     await SettingsPrefs.instance.clearUserEmail();
@@ -135,6 +138,7 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<void> _handleDeleteAccount() async {
+    await NotificationService.instance.cancelAll();
     // Delete from backend first (all 6 tables: users, user_profiles, and all logs).
     try {
       await widget.api.deleteAccount();

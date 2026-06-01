@@ -3,6 +3,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'settings_prefs.dart';
+
 /// Manages meal and water reminder notifications.
 ///
 /// Call [init] once at app startup before scheduling anything.
@@ -138,6 +140,39 @@ class NotificationService {
       totalMin += stepMin;
       idx++;
     }
+  }
+
+  /// Cancels every meal and water reminder notification that this service
+  /// could have scheduled. Call on logout and account deletion.
+  Future<void> cancelAll() async {
+    if (!_ready) return;
+    for (final id in _mealIds)  { await _plugin.cancel(id); }
+    for (final id in _waterIds) { await _plugin.cancel(id); }
+  }
+
+  /// Re-applies whatever the user has saved in [SettingsPrefs].
+  /// Call on login, sign-up, and cold start (when the user is logged in)
+  /// so notifications survive OS alarm-manager resets.
+  Future<void> rescheduleFromPrefs() async {
+    if (!_ready) return;
+    final prefs = SettingsPrefs.instance;
+
+    final mealPairs = prefs.mealReminderTimes.map(_parseHHMM).toList();
+    await setMealReminders(prefs.mealReminders, mealPairs);
+
+    final start = _parseHHMM(prefs.waterReminderStart);
+    final end   = _parseHHMM(prefs.waterReminderEnd);
+    await setWaterReminders(
+      prefs.waterReminders,
+      start.$1, start.$2,
+      end.$1,   end.$2,
+      prefs.waterReminderIntervalMinutes,
+    );
+  }
+
+  static (int, int) _parseHHMM(String hhmm) {
+    final parts = hhmm.split(':');
+    return (int.parse(parts[0]), int.parse(parts[1]));
   }
 
   tz.TZDateTime _nextDailyInstance(int hour, int minute) {

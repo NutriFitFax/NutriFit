@@ -17,6 +17,11 @@ void main() async {
   await NotificationService.instance.init();
   final store = await SqliteDailyLogStore.open();
   final savedEmail = SettingsPrefs.instance.getUserEmail();
+  // Re-register scheduled notifications in case the OS cleared them
+  // (e.g. after an app update). The boot receiver handles device reboots.
+  if (savedEmail != null) {
+    await NotificationService.instance.rescheduleFromPrefs();
+  }
   runApp(
     NutriFitApp(
       api: NutriFitApi(

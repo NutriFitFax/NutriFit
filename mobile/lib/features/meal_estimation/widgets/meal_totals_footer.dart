@@ -63,47 +63,28 @@ class MealTotalsFooter extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Haptics.selectionClick();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tap a food above to adjust its portion')),
-                      );
-                    },
-                    child: const Text('Adjust portions'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: FilledButton.icon(
-                    onPressed: () async {
-                      Haptics.mediumImpact();
-                      for (final item in t.items) {
-                        final m = item.macrosPer100g.forGrams(item.estimatedGrams);
-                        await store.logMeal(
-                          name: item.name,
-                          caloriesKcal: m.caloriesKcal,
-                          proteinG: m.proteinG,
-                          carbsG: m.carbsG,
-                          fatG: m.fatG,
-                        );
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${t.items.length} foods logged to today')),
-                        );
-                        Navigator.of(context).popUntil((r) => r.isFirst);
-                      }
-                    },
-                    icon: const Icon(Icons.check, size: 18),
-                    label: Text('Log all ${t.items.length}'),
-                  ),
-                ),
-              ],
+            FilledButton.icon(
+              onPressed: () async {
+                Haptics.mediumImpact();
+                for (final item in t.items) {
+                  final m = item.macrosPer100g.forGrams(item.estimatedGrams);
+                  await store.logMeal(
+                    name: item.name,
+                    caloriesKcal: m.caloriesKcal,
+                    proteinG: m.proteinG,
+                    carbsG: m.carbsG,
+                    fatG: m.fatG,
+                  );
+                }
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${t.items.length} foods logged to today')),
+                  );
+                  Navigator.of(context).popUntil((r) => r.isFirst);
+                }
+              },
+              icon: const Icon(Icons.check, size: 18),
+              label: Text('Log all ${t.items.length}'),
             ),
           ],
         ),
