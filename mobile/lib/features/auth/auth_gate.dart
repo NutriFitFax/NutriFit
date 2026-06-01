@@ -70,6 +70,7 @@ class _AuthGateState extends State<AuthGate> {
         userId: profile.email,
         displayName: profile.name,
         heightCm: profile.heightCm,
+        weightKg: profile.weightKg,
         goalCaloriesKcal: profile.macroCalories.toDouble(),
         goalProteinG: profile.proteinGoalG.toDouble(),
         goalCarbsG: profile.carbsGoalG.toDouble(),
@@ -81,6 +82,10 @@ class _AuthGateState extends State<AuthGate> {
             : null,
         updatedAt: null,
       ));
+    } catch (_) {}
+    // Log the initial weight so it appears in weight history from day one.
+    try {
+      await widget.api.addWeightLog(WeightLogEntry(weightKg: profile.weightKg));
     } catch (_) {}
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);

@@ -61,18 +61,21 @@ public class StorageController {
                         user_id           TEXT PRIMARY KEY,
                         display_name      TEXT,
                         height_cm         DOUBLE PRECISION,
+                        weight_kg         DOUBLE PRECISION,
                         goal_calories_kcal DOUBLE PRECISION,
                         goal_protein_g    DOUBLE PRECISION,
                         goal_carbs_g      DOUBLE PRECISION,
                         goal_fat_g        DOUBLE PRECISION,
                         sex               TEXT,
                         activity_level    TEXT,
+                        date_of_birth     DATE,
                         updated_at        TIMESTAMPTZ DEFAULT NOW()
                     )
                     """);
                 // Migrate existing rows: add columns if the table was created before this version.
                 jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS sex TEXT");
                 jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS activity_level TEXT");
+                jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS weight_kg DOUBLE PRECISION");
                 jdbc.execute("ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS date_of_birth DATE");
                 jdbc.execute("""
                     CREATE TABLE IF NOT EXISTS meal_logs (
@@ -208,13 +211,14 @@ public class StorageController {
         if (db.isEmpty()) return body;
         db.get().update("""
                 INSERT INTO user_profiles
-                    (user_id, display_name, height_cm, goal_calories_kcal,
+                    (user_id, display_name, height_cm, weight_kg, goal_calories_kcal,
                      goal_protein_g, goal_carbs_g, goal_fat_g,
                      sex, activity_level, date_of_birth, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::date, NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::date, NOW())
                 ON CONFLICT (user_id) DO UPDATE SET
                     display_name       = EXCLUDED.display_name,
                     height_cm          = EXCLUDED.height_cm,
+                    weight_kg          = EXCLUDED.weight_kg,
                     goal_calories_kcal = EXCLUDED.goal_calories_kcal,
                     goal_protein_g     = EXCLUDED.goal_protein_g,
                     goal_carbs_g       = EXCLUDED.goal_carbs_g,
@@ -224,7 +228,7 @@ public class StorageController {
                     date_of_birth      = EXCLUDED.date_of_birth,
                     updated_at         = NOW()
                 """,
-                userId, body.displayName(), body.heightCm(),
+                userId, body.displayName(), body.heightCm(), body.weightKg(),
                 body.goalCaloriesKcal(), body.goalProteinG(),
                 body.goalCarbsG(), body.goalFatG(),
                 body.sex(), body.activityLevel(), body.dateOfBirth());
@@ -439,6 +443,7 @@ public class StorageController {
                 rs.getString("user_id"),
                 rs.getString("display_name"),
                 (Double) rs.getObject("height_cm"),
+                (Double) rs.getObject("weight_kg"),
                 (Double) rs.getObject("goal_calories_kcal"),
                 (Double) rs.getObject("goal_protein_g"),
                 (Double) rs.getObject("goal_carbs_g"),
@@ -500,7 +505,7 @@ public class StorageController {
     }
 
     private static StoredUserProfile emptyProfile(String userId) {
-        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null, null);
+        return new StoredUserProfile(userId, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static DailyStorageSummary emptySummary(String userId, String date) {

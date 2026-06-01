@@ -282,6 +282,7 @@ class StoredUserProfile {
   final String? userId;
   final String? displayName;
   final double? heightCm;
+  final double? weightKg;
   final double? goalCaloriesKcal;
   final double? goalProteinG;
   final double? goalCarbsG;
@@ -295,6 +296,7 @@ class StoredUserProfile {
     this.userId,
     this.displayName,
     this.heightCm,
+    this.weightKg,
     this.goalCaloriesKcal,
     this.goalProteinG,
     this.goalCarbsG,
@@ -310,6 +312,7 @@ class StoredUserProfile {
         userId: json['user_id'] as String?,
         displayName: json['display_name'] as String?,
         heightCm: (json['height_cm'] as num?)?.toDouble(),
+        weightKg: (json['weight_kg'] as num?)?.toDouble(),
         goalCaloriesKcal: (json['goal_calories_kcal'] as num?)?.toDouble(),
         goalProteinG: (json['goal_protein_g'] as num?)?.toDouble(),
         goalCarbsG: (json['goal_carbs_g'] as num?)?.toDouble(),
@@ -323,6 +326,7 @@ class StoredUserProfile {
   Map<String, dynamic> toJson() => {
         if (displayName != null) 'display_name': displayName,
         if (heightCm != null) 'height_cm': heightCm,
+        if (weightKg != null) 'weight_kg': weightKg,
         if (goalCaloriesKcal != null) 'goal_calories_kcal': goalCaloriesKcal,
         if (goalProteinG != null) 'goal_protein_g': goalProteinG,
         if (goalCarbsG != null) 'goal_carbs_g': goalCarbsG,

@@ -109,6 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       final name     = stored.displayName?.isNotEmpty == true ? stored.displayName! : _profile.name;
       final heightCm = stored.heightCm ?? _profile.heightCm;
+      final weightKg = stored.weightKg ?? _profile.weightKg;
       final cal      = stored.goalCaloriesKcal?.round() ?? _calorieGoal;
       final macros   = MacroGoals(
         stored.goalProteinG?.round() ?? _macros.protein,
@@ -128,6 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await Future.wait([
         SettingsPrefs.instance.setDisplayName(name),
         SettingsPrefs.instance.setHeightCm(heightCm),
+        SettingsPrefs.instance.setWeightKg(weightKg),
         SettingsPrefs.instance.setGoalCaloriesKcal(cal),
         SettingsPrefs.instance.setGoalProteinG(macros.protein),
         SettingsPrefs.instance.setGoalCarbsG(macros.carbs),
@@ -140,7 +142,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _profile = UserProfile(
           name:     name,
           email:    _profile.email,
-          weightKg: _profile.weightKg,
+          weightKg: weightKg,
           heightCm: heightCm,
         );
         _calorieGoal = cal;
@@ -158,6 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await widget.api.saveStorageProfile(StoredUserProfile(
         displayName:      _profile.name,
         heightCm:         _profile.heightCm,
+        weightKg:         _profile.weightKg,
         goalCaloriesKcal: _calorieGoal.toDouble(),
         goalProteinG:     _macros.protein.toDouble(),
         goalCarbsG:       _macros.carbs.toDouble(),

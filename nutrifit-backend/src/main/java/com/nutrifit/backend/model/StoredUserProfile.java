@@ -10,6 +10,7 @@ public record StoredUserProfile(
         @JsonProperty("user_id")            String userId,
         @JsonProperty("display_name")       String displayName,
         @JsonProperty("height_cm")          @Positive Double heightCm,
+        @JsonProperty("weight_kg")          @Positive Double weightKg,
         @JsonProperty("goal_calories_kcal") @PositiveOrZero Double goalCaloriesKcal,
         @JsonProperty("goal_protein_g")     @PositiveOrZero Double goalProteinG,
         @JsonProperty("goal_carbs_g")       @PositiveOrZero Double goalCarbsG,
