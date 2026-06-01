@@ -234,6 +234,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             SettingsRow(
+              icon: Icons.auto_awesome,
+              iconColor: c.primary,
+              iconBg: c.primaryTint,
+              title: 'Recalculate targets',
+              subtitle: 'Update from your weight, height & activity',
+              onTap: () async {
+                final v = await showRecalculateMacrosSheet(context);
+                if (v != null) {
+                  setState(() {
+                    _calorieGoal = v.calories;
+                    _macros = v.macros;
+                  });
+                  SettingsPrefs.instance.setGoalCaloriesKcal(v.calories);
+                  SettingsPrefs.instance.setGoalProteinG(v.macros.protein);
+                  SettingsPrefs.instance.setGoalCarbsG(v.macros.carbs);
+                  SettingsPrefs.instance.setGoalFatG(v.macros.fat);
+                  _saveToApi();
+                  _toast('Targets updated');
+                }
+              },
+            ),
+            SettingsRow(
               icon: Icons.water_drop_outlined,
               iconColor: c.water,
               iconBg: c.waterSoft,
@@ -321,10 +343,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 await SettingsPrefs.instance.setMealReminders(v);
                 await NotificationService.instance
                     .setMealReminders(v, _mealTimes.asPairs);
-                if (mounted)
+                if (mounted) {
                   _toast(v
                       ? 'Meal reminders on · $_mealTimesDisplay'
                       : 'Meal reminders turned off');
+                }
               },
             ),
             if (_mealReminders)
@@ -356,10 +379,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _waterEnd.minute,
                   _waterInterval,
                 );
-                if (mounted)
+                if (mounted) {
                   _toast(v
                       ? 'Water reminders on · $_waterScheduleDisplay'
                       : 'Water reminders turned off');
+                }
               },
             ),
             if (_waterReminders)

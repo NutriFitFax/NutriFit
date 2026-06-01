@@ -30,6 +30,17 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   bool get _isLoggedIn => SettingsPrefs.instance.getUserEmail() != null;
 
+  @override
+  void initState() {
+    super.initState();
+    if (_isLoggedIn) {
+      // Reschedule after the first frame so the Android Activity is ready.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService.instance.rescheduleFromPrefs();
+      });
+    }
+  }
+
   // ── Login ─────────────────────────────────────────────────────────────
 
   /// Verifies the account with the backend and saves credentials locally.
@@ -46,7 +57,14 @@ class _AuthGateState extends State<AuthGate> {
       // Network error / backend down — allow offline login.
     }
     await SettingsPrefs.instance.setUserEmail(email);
-    await SettingsPrefs.instance.setDisplayName(email.split('@').first);
+    // Restore the real display name from the backend.
+    // Falls back to whatever is already stored locally so offline logins work.
+    try {
+      final stored = await widget.api.getStorageProfile();
+      if (stored.displayName?.isNotEmpty == true) {
+        await SettingsPrefs.instance.setDisplayName(stored.displayName!);
+      }
+    } catch (_) {}
     // Reset today's water intake so every login starts with a fresh counter.
     await widget.store.resetTodayWater();
     return null;

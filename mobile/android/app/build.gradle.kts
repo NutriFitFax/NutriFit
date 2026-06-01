@@ -32,6 +32,10 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // Keep R8 minification off: it obfuscates MLKit's internal DI classes
+            // (mobile_scanner), which crashes MlKitInitProvider at app startup.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

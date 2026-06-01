@@ -40,14 +40,16 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen>
   @override
   void initState() {
     super.initState();
-    _controller = MobileScannerController();
+    _controller = MobileScannerController(autoStart: false);
     WidgetsBinding.instance.addObserver(this);
     _checkPermission();
   }
 
   Future<void> _checkPermission() async {
     final granted = await PermissionHelper.requestCamera(context);
-    if (mounted) setState(() => _hasPermission = granted);
+    if (!mounted) return;
+    setState(() => _hasPermission = granted);
+    if (granted) _controller.start();
   }
 
   @override

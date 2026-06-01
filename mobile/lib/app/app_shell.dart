@@ -53,6 +53,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _selectTab(int index) {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _index = index);
     _pageController.jumpToPage(index);
   }
@@ -131,7 +132,10 @@ class _AppShellState extends State<AppShell> {
           bottom: false,
           child: PageView(
             controller: _pageController,
-            onPageChanged: (index) => setState(() => _index = index),
+            onPageChanged: (index) {
+              FocusManager.instance.primaryFocus?.unfocus();
+              setState(() => _index = index);
+            },
             children: tabs
                 .map((t) => _KeepAlivePage(child: t.build()))
                 .toList(growable: false),

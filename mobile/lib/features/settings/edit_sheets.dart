@@ -373,6 +373,223 @@ class _EditMacrosSheetState extends State<_EditMacrosSheet> {
   }
 }
 
+// ── Recalculate macro targets ─────────────────────────────────────────────
+
+class RecalcResult {
+  final int calories;
+  final MacroGoals macros;
+  const RecalcResult(this.calories, this.macros);
+}
+
+enum _RecalcGoal { lose, maintain, gain }
+
+Future<RecalcResult?> showRecalculateMacrosSheet(BuildContext context) =>
+    _showSheet<RecalcResult>(context, const _RecalcSheet());
+
+class _RecalcSheet extends StatefulWidget {
+  const _RecalcSheet();
+  @override
+  State<_RecalcSheet> createState() => _RecalcSheetState();
+}
+
+class _RecalcSheetState extends State<_RecalcSheet> {
+  _RecalcGoal _goal = _RecalcGoal.maintain;
+
+  double get _weightKg => SettingsPrefs.instance.weightKg;
+  double get _heightCm => SettingsPrefs.instance.heightCm;
+  Gender get _gender    => SettingsPrefs.instance.gender;
+  ActivityLevel get _activity => SettingsPrefs.instance.activityLevel;
+
+  bool get _hasStats => _weightKg > 0 && _heightCm > 0;
+
+  int get _age {
+    final dob = SettingsPrefs.instance.dateOfBirth;
+    if (dob == null) return 30;
+    final now = DateTime.now();
+    var age = now.year - dob.year;
+    if (now.month < dob.month ||
+        (now.month == dob.month && now.day < dob.day)) { age--; }
+    return age.clamp(13, 100);
+  }
+
+  double get _bmr {
+    final base = 10 * _weightKg + 6.25 * _heightCm - 5 * _age;
+    return switch (_gender) {
+      Gender.male   => base + 5,
+      Gender.female => base - 161,
+      Gender.other  => base - 78,
+    };
+  }
+
+  double get _tdee => _bmr * (activityMultiplier[_activity] ?? 1.55);
+
+  RecalcResult _estimate(_RecalcGoal goal) {
+    final calories = switch (goal) {
+      _RecalcGoal.lose     => _tdee - 500,
+      _RecalcGoal.gain     => _tdee + 300,
+      _RecalcGoal.maintain => _tdee,
+    };
+    final proteinPerKg = goal == _RecalcGoal.lose ? 2.0 : 1.8;
+    const fatPerKg = 0.8;
+    final proteinG = (proteinPerKg * _weightKg).round();
+    final fatG     = (fatPerKg * _weightKg).round();
+    final carbKcal = calories - (proteinG * 4) - (fatG * 9);
+    final carbsG   = (carbKcal / 4).round().clamp(0, 1000);
+    return RecalcResult(
+      ((calories / 10).round() * 10).toInt(),
+      MacroGoals(proteinG, carbsG, fatG),
+    );
+  }
+
+  String get _statsSummary {
+    final unit = SettingsPrefs.instance.unit;
+    final w = unit == UnitSystem.metric
+        ? '${_weightKg.toStringAsFixed(1)} kg'
+        : '${UnitConvert.kgToLb(_weightKg).round()} lb';
+    final h = unit == UnitSystem.metric
+        ? '${_heightCm.round()} cm'
+        : () { final (ft, i) = UnitConvert.cmToFeetInches(_heightCm); return '$ft\'$i"'; }();
+    return '$w · $h · ${activityLabel[_activity]} · age $_age';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.nutri;
+
+    if (!_hasStats) {
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline, size: 36, color: c.ink2),
+              const SizedBox(height: 12),
+              Text('No stats on file',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 20)),
+              const SizedBox(height: 8),
+              Text(
+                'Log your weight from the Home screen first so we have your current stats on file.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: c.ink2, fontSize: 13.5),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final result = _estimate(_goal);
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Recalculate targets',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontSize: 22)),
+            const SizedBox(height: 4),
+            Text(_statsSummary, style: TextStyle(color: c.ink2, fontSize: 13)),
+            const SizedBox(height: 18),
+
+            // Goal picker
+            Row(children: [
+              for (final entry in [
+                (_RecalcGoal.lose,     'Lose'),
+                (_RecalcGoal.maintain, 'Maintain'),
+                (_RecalcGoal.gain,     'Gain'),
+              ]) ...[
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () { Haptics.selectionClick(); setState(() => _goal = entry.$1); },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _goal == entry.$1 ? c.primary : c.surfaceSunken,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: _goal == entry.$1 ? c.primary : c.line,
+                          width: _goal == entry.$1 ? 1.5 : 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(entry.$2,
+                        style: TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600,
+                          color: _goal == entry.$1 ? Colors.white : c.ink2,
+                        )),
+                    ),
+                  ),
+                ),
+                if (entry.$1 != _RecalcGoal.gain) const SizedBox(width: 8),
+              ],
+            ]),
+            const SizedBox(height: 16),
+
+            // Macro preview card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: c.primaryTint,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(children: [
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Text('${result.calories}',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontSize: 34, color: c.primaryDeep)),
+                  const SizedBox(width: 5),
+                  Text('kcal / day',
+                    style: TextStyle(fontSize: 14, color: c.primaryDeep.withValues(alpha: 0.75))),
+                ]),
+                const SizedBox(height: 14),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                  _MacroPill('Protein', result.macros.protein, c.protein),
+                  _MacroPill('Carbs',   result.macros.carbs,   c.carbs),
+                  _MacroPill('Fat',     result.macros.fat,      c.fat),
+                ]),
+              ]),
+            ),
+            const SizedBox(height: 20),
+
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(result),
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MacroPill extends StatelessWidget {
+  final String label;
+  final int grams;
+  final Color color;
+  const _MacroPill(this.label, this.grams, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      Text('${grams}g',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
+      const SizedBox(height: 2),
+      Text(label, style: TextStyle(fontSize: 11, color: context.nutri.ink2)),
+    ]);
+  }
+}
+
 // ── Edit water goal ──────────────────────────────────────────────────────
 Future<int?> showEditWaterSheet(BuildContext context, int currentMl) {
   int ml = currentMl;

@@ -29,6 +29,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   double? _weightKg;
   double? _heightCm;
+  String? _weightError;
+  String? _heightError;
   UnitSystem _unit = UnitSystem.metric;
   Gender? _gender;
   ActivityLevel? _activityLevel;
@@ -66,15 +68,36 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (_unit == UnitSystem.metric) {
       final kg = double.tryParse(_weightCtrl.text);
       final cm = double.tryParse(_heightCmCtrl.text);
-      if (kg != null) _weightKg = kg.clamp(_minKg, _maxKg);
-      if (cm != null) _heightCm = cm.clamp(_minCm, _maxCm);
+      if (kg != null) {
+        _weightKg = kg.clamp(_minKg, _maxKg);
+        _weightError = (kg < _minKg || kg > _maxKg)
+            ? 'Must be ${_minKg.round()}–${_maxKg.round()} kg'
+            : null;
+      }
+      if (cm != null) {
+        _heightCm = cm.clamp(_minCm, _maxCm);
+        _heightError = (cm < _minCm || cm > _maxCm)
+            ? 'Must be ${_minCm.round()}–${_maxCm.round()} cm'
+            : null;
+      }
     } else {
       final lb   = double.tryParse(_weightCtrl.text);
       final ft   = int.tryParse(_feetCtrl.text);
       final inch = double.tryParse(_inchCtrl.text);
-      if (lb != null) _weightKg = UnitConvert.lbToKg(lb).clamp(_minKg, _maxKg);
+      if (lb != null) {
+        final minLb = UnitConvert.kgToLb(_minKg).roundToDouble();
+        final maxLb = UnitConvert.kgToLb(_maxKg).roundToDouble();
+        _weightKg = UnitConvert.lbToKg(lb).clamp(_minKg, _maxKg);
+        _weightError = (lb < minLb || lb > maxLb)
+            ? 'Must be ${minLb.round()}–${maxLb.round()} lb'
+            : null;
+      }
       if (ft != null && inch != null) {
-        _heightCm = UnitConvert.feetInchesToCm(ft, inch.round()).clamp(_minCm, _maxCm);
+        final cm = UnitConvert.feetInchesToCm(ft, inch.round());
+        _heightCm = cm.clamp(_minCm, _maxCm);
+        _heightError = (cm < _minCm || cm > _maxCm)
+            ? "Must be 3'3\"–8'11\""
+            : null;
       }
     }
     setState(() {});
@@ -95,6 +118,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (_weightKg == null || _heightCm == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter your weight and height')),
+      );
+      return;
+    }
+    if (_weightError != null || _heightError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fix the highlighted fields')),
       );
       return;
     }
@@ -205,6 +234,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 controller: _weightCtrl,
                 unit: _unit == UnitSystem.metric ? 'kg' : 'lb',
                 hintText: 'weight', allowDecimal: true,
+                errorText: _weightError,
                 onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize,
               ),
               const SizedBox(height: 14),
@@ -215,12 +245,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 _MeasureField(
                   controller: _heightCmCtrl, unit: 'cm', hintText: 'height',
                   allowDecimal: false,
+                  errorText: _heightError,
                   onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize,
                 )
               else
                 Row(children: [
                   Expanded(child: _MeasureField(controller: _feetCtrl, unit: 'ft',
                     hintText: 'height', allowDecimal: false,
+                    errorText: _heightError,
                     onChanged: (_) => _readToCanonical(), onEditingComplete: _normalize)),
                   const SizedBox(width: 10),
                   Expanded(child: _MeasureField(controller: _inchCtrl, unit: 'in',
@@ -470,49 +502,66 @@ class _MeasureField extends StatelessWidget {
   final TextEditingController controller;
   final String unit;
   final String? hintText;
+  final String? errorText;
   final bool allowDecimal;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onEditingComplete;
 
   const _MeasureField({
     required this.controller, required this.unit, required this.allowDecimal,
-    this.hintText, this.onChanged, this.onEditingComplete,
+    this.hintText, this.errorText, this.onChanged, this.onEditingComplete,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = context.nutri;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      decoration: BoxDecoration(color: c.surface, border: Border.all(color: c.line),
-        borderRadius: BorderRadius.circular(16)),
-      child: Row(children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            onChanged: onChanged,
-            onEditingComplete: () {
-              onEditingComplete?.call();
-              FocusScope.of(context).unfocus();
-            },
-            keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
-            inputFormatters: [FilteringTextInputFormatter.allow(
-              allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))],
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26),
-            decoration: InputDecoration(
-              isDense: true, filled: false,
-              border: InputBorder.none, enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              hintText: hintText,
-              hintStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontSize: 26, color: c.ink.withValues(alpha: 0.25)),
-            ),
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+          decoration: BoxDecoration(
+            color: c.surface,
+            border: Border.all(color: hasError ? c.warn : c.line),
+            borderRadius: BorderRadius.circular(16),
           ),
+          child: Row(children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                onEditingComplete: () {
+                  onEditingComplete?.call();
+                  FocusScope.of(context).unfocus();
+                },
+                keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
+                inputFormatters: [FilteringTextInputFormatter.allow(
+                  allowDecimal ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))],
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 26),
+                decoration: InputDecoration(
+                  isDense: true, filled: false,
+                  border: InputBorder.none, enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  hintText: hintText,
+                  hintStyle: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontSize: 26, color: c.ink.withValues(alpha: 0.25)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(unit, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.ink2)),
+          ]),
         ),
-        const SizedBox(width: 8),
-        Text(unit, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.ink2)),
-      ]),
+        if (hasError) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(errorText!, style: TextStyle(fontSize: 12, color: c.warn)),
+          ),
+        ],
+      ],
     );
   }
 }
