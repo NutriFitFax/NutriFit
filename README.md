@@ -75,7 +75,7 @@ flutter build apk --release
 
 The APK is written to `mobile/build/app/outputs/flutter-apk/app-release.apk`. Share that file directly to install on any Android device (the installer will ask to allow "install from unknown sources").
 
-> **Note:** Code minification (R8) is intentionally disabled in the release build — it obfuscates the barcode scanner's MLKit classes and crashes the app at startup.
+> **Note:** Code minification (R8) is intentionally disabled in the release build - it obfuscates the barcode scanner's MLKit classes and crashes the app at startup.
 
 ---
 
@@ -107,4 +107,4 @@ mvn spring-boot:run
 
 ## Project status
 
-This is a university group project (team of 5). The backend is deployed to a free Render tier, which sleeps after inactivity — the first request after an idle period may take 30–60 seconds while the service wakes up.
+This is a university group project (team of 5). The backend is deployed to a free Render tier, which sleeps after inactivity - the first request after an idle period may take 30–60 seconds while the service wakes up.
