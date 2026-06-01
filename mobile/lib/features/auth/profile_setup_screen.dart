@@ -10,7 +10,7 @@ import 'auth_widgets.dart';
 class ProfileSetupScreen extends StatefulWidget {
   final String name;
   final String email;
-  final void Function(UserProfile profile) onComplete;
+  final Future<void> Function(UserProfile profile) onComplete;
 
   const ProfileSetupScreen({
     super.key,

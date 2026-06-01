@@ -24,7 +24,7 @@ class GoalsSetupScreen extends StatefulWidget {
   final DateTime? dateOfBirth;
   final int fallbackAge;
 
-  final void Function(UserProfile profile) onComplete;
+  final Future<void> Function(UserProfile profile) onComplete;
 
   const GoalsSetupScreen({
     super.key,
@@ -47,6 +47,7 @@ enum GoalType { lose, maintain, gain, custom }
 
 class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
   GoalType _goal = GoalType.maintain;
+  bool _busy = false;
 
   // Custom macro controllers (seeded from the maintain estimate).
   late final TextEditingController _calCtrl;
@@ -138,11 +139,13 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
     setState(() => _goal = g);
   }
 
-  void _finish() {
+  Future<void> _finish() async {
+    if (_busy) return;
     FocusScope.of(context).unfocus();
     HapticFeedback.mediumImpact();
+    setState(() => _busy = true);
     final m = _current;
-    widget.onComplete(UserProfile(
+    await widget.onComplete(UserProfile(
       name: widget.name,
       email: widget.email,
       weightKg: widget.weightKg,
@@ -154,6 +157,7 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
       fatGoalG: m.fat,
       dateOfBirth: widget.dateOfBirth,
     ));
+    if (mounted) setState(() => _busy = false);
   }
 
   @override
@@ -296,15 +300,20 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(26, 6, 26, 14),
               child: FilledButton(
-                onPressed: _finish,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Create account'),
-                    SizedBox(width: 8),
-                    Icon(Icons.check, size: 18),
-                  ],
-                ),
+                onPressed: _busy ? null : _finish,
+                child: _busy
+                    ? const SizedBox(
+                        width: 20, height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Create account'),
+                          SizedBox(width: 8),
+                          Icon(Icons.check, size: 18),
+                        ],
+                      ),
               ),
             ),
           ],

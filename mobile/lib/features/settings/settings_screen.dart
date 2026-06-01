@@ -62,6 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _waterInterval;
 
   bool _haptics = true;
+  bool _deleting = false;
 
   String get _avatarLetter => _profile.name.trim().isEmpty
       ? 'U'
@@ -450,9 +451,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 10),
           TextButton(
-            onPressed: _confirmDelete,
+            onPressed: _deleting ? null : _confirmDelete,
             style: TextButton.styleFrom(foregroundColor: c.warn),
-            child: const Text('Delete account & data'),
+            child: _deleting
+                ? SizedBox(
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: c.warn),
+                  )
+                : const Text('Delete account & data'),
           ),
         ],
       ),
@@ -652,7 +658,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       confirmLabel: 'Delete everything',
       destructive: true,
     );
-    if (ok == true) await widget.onDeleteAccount?.call();
+    if (ok != true) return;
+    setState(() => _deleting = true);
+    await widget.onDeleteAccount?.call();
+    if (mounted) setState(() => _deleting = false);
   }
 
   Future<bool?> _confirm({

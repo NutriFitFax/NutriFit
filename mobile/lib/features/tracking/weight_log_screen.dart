@@ -37,6 +37,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
     setState(() => _logging = true);
     Haptics.mediumImpact();
     await widget.store.logWeight(kg);
+    await SettingsPrefs.instance.setWeightKg(kg);
     if (mounted) {
       _controller.clear();
       setState(() => _logging = false);

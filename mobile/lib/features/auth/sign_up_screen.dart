@@ -8,7 +8,7 @@ import 'auth_widgets.dart';
 
 
 class SignUpScreen extends StatefulWidget {
-  final void Function(UserProfile profile) onComplete;
+  final Future<void> Function(UserProfile profile) onComplete;
   const SignUpScreen({super.key, required this.onComplete});
 
   @override
