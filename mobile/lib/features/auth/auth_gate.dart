@@ -56,13 +56,16 @@ class _AuthGateState extends State<AuthGate> {
   /// Creates the user profile on the backend and saves credentials locally.
   Future<void> _handleProfileCreated(UserProfile profile) async {
     widget.api.userId = profile.email;
+    // Each call gets its own try/catch so a timeout or error on step 1 does
+    // not prevent step 2 from running (server may have committed the INSERT
+    // before the client received the response).
     try {
-      // 1. Create the account row in the users table.
       await widget.api.registerUser(
         email: profile.email,
         displayName: profile.name,
       );
-      // 2. Create the profile row with goals and measurements.
+    } catch (_) {}
+    try {
       await widget.api.saveStorageProfile(StoredUserProfile(
         userId: profile.email,
         displayName: profile.name,
@@ -75,9 +78,7 @@ class _AuthGateState extends State<AuthGate> {
         activityLevel: profile.activityLevel.name,
         updatedAt: null,
       ));
-    } catch (_) {
-      // Backend unavailable — proceed with local-only registration.
-    }
+    } catch (_) {}
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
