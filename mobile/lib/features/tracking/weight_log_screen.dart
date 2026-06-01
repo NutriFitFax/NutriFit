@@ -145,7 +145,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
                         FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
                       ],
                       decoration: InputDecoration(
-                        hintText: unit == UnitSystem.imperial ? '165.0' : '75.0',
+                        hintText: weightKg != null ? displayVal : (unit == UnitSystem.imperial ? '165.0' : '75.0'),
                         suffixText: unitLabel,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

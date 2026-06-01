@@ -152,6 +152,7 @@ class _GoalsSetupScreenState extends State<GoalsSetupScreen> {
       proteinGoalG: m.protein,
       carbsGoalG: m.carbs,
       fatGoalG: m.fat,
+      dateOfBirth: widget.dateOfBirth,
     ));
   }
 

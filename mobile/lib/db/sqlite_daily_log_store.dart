@@ -128,7 +128,7 @@ class SqliteDailyLogStore implements DailyLogStore {
 
     final consumedWaterMl = waterRows.fold<int>(
       0, (s, r) => s + (r['amount_ml'] as int),
-    );
+    ).clamp(0, 999999);
 
     final weightTrend = weightRows.reversed
         .map((r) => (r['weight_kg'] as num).toDouble())

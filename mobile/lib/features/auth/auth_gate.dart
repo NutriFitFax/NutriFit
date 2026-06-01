@@ -82,11 +82,9 @@ class _AuthGateState extends State<AuthGate> {
             : null,
         updatedAt: null,
       ));
-    } catch (_) {}
-    // Log the initial weight so it appears in weight history from day one.
-    try {
-      await widget.api.addWeightLog(WeightLogEntry(weightKg: profile.weightKg));
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[NutriFit] saveStorageProfile failed: $e');
+    }
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
@@ -100,7 +98,17 @@ class _AuthGateState extends State<AuthGate> {
     if (profile.dateOfBirth != null) {
       await SettingsPrefs.instance.setDateOfBirth(profile.dateOfBirth!);
     }
-    await widget.store.refresh();
+    // Log the sign-up weight as the first weight entry so the dashboard
+    // shows it immediately and the sparkline has a starting point.
+    await widget.store.logWeight(profile.weightKg);
+    try {
+      await widget.api.addWeightLog(WeightLogEntry(
+        weightKg: profile.weightKg,
+        loggedAt: DateTime.now(),
+      ));
+    } catch (e) {
+      debugPrint('[NutriFit] addWeightLog failed: $e');
+    }
   }
 
   // ── Navigation ────────────────────────────────────────────────────────

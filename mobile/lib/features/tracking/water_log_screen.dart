@@ -148,6 +148,28 @@ class _WaterLogScreenState extends State<WaterLogScreen> {
               ),
 
               const SizedBox(height: 14),
+              NutriOverline('Quick remove'),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  for (final ml in [250, 500, 750, 1000]) ...[
+                    Expanded(
+                      child: _QuickAddButton(
+                        ml: ml,
+                        color: c.water,
+                        bg: c.waterSoft,
+                        loading: _logging,
+                        subtract: true,
+                        disabled: cur <= 0,
+                        onTap: () => _log(-ml),
+                      ),
+                    ),
+                    if (ml != 1000) const SizedBox(width: 10),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 14),
               OutlinedButton.icon(
                 onPressed: _logging ? null : () => _logCustom(log),
                 icon: const Icon(Icons.edit_outlined, size: 18),
@@ -177,6 +199,8 @@ class _QuickAddButton extends StatelessWidget {
   final Color color;
   final Color bg;
   final bool loading;
+  final bool subtract;
+  final bool disabled;
   final VoidCallback onTap;
 
   const _QuickAddButton({
@@ -185,32 +209,35 @@ class _QuickAddButton extends StatelessWidget {
     required this.bg,
     required this.loading,
     required this.onTap,
+    this.subtract = false,
+    this.disabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: loading ? null : onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.water_drop, color: color, size: 22),
-              const SizedBox(height: 6),
-              Text(
-                ml >= 1000 ? '${ml ~/ 1000}L' : '${ml}ml',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: color,
+    final blocked = loading || disabled;
+    final label = ml >= 1000 ? '${ml ~/ 1000}L' : '${ml}ml';
+    return Opacity(
+      opacity: disabled ? 0.35 : 1.0,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: blocked ? null : onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Ink(
+            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(subtract ? Icons.remove : Icons.water_drop, color: color, size: 22),
+                const SizedBox(height: 6),
+                Text(
+                  subtract ? '−$label' : label,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
