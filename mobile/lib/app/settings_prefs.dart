@@ -49,6 +49,11 @@ class SettingsPrefs {
     await _p.setInt(_kAccent, a.index);
   }
 
+  Future<void> clearAccent() async {
+    accentNotifier.value = NutriAccent.values[0];
+    await _p.remove(_kAccent);
+  }
+
   UnitSystem get unit =>
       UnitSystem.values[(_p.getInt(_kUnit) ?? 0).clamp(0, UnitSystem.values.length - 1)];
   Future<void> setUnit(UnitSystem u) => _p.setInt(_kUnit, u.index);

@@ -124,6 +124,8 @@ class _AuthGateState extends State<AuthGate> {
     // Clear local SQLite logs and session.
     await widget.store.clearAllData();
     await SettingsPrefs.instance.clearUserEmail();
+    await SettingsPrefs.instance.clearAvatarPath();
+    await SettingsPrefs.instance.clearAccent();
 
     widget.api.userId = 'demo-user';
 
