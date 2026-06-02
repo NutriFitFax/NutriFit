@@ -50,9 +50,9 @@
               "pm.test('Not a server error', () => {",
               "  pm.expect(pm.response.code).to.not.equal(500);",
               "});",
-              "pm.test('Body has status field', () => {",
+              "pm.test('Body has ok field', () => {",
               "  const body = pm.response.json();",
-              "  pm.expect(body).to.have.property('status');",
+              "  pm.expect(body).to.have.property('ok');",
               "});"
             ]
           }
