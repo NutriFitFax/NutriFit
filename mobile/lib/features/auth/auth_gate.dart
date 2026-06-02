@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 
 import '../../api/api_client.dart';
@@ -10,6 +13,11 @@ import '../../features/history/viewed_food_history_store.dart';
 import '../../api/api_exception.dart';
 import 'login_screen.dart';
 import 'user_profile.dart';
+
+String _hashPassword(String password) {
+  final bytes = utf8.encode(password);
+  return sha256.convert(bytes).toString();
+}
 
 class AuthGate extends StatefulWidget {
   final NutriFitApi api;
@@ -45,7 +53,15 @@ class _AuthGateState extends State<AuthGate> {
 
   /// Verifies the account with the backend and saves credentials locally.
   /// Returns null on success or an error message to show the user.
-  Future<String?> _handleLogin(String email) async {
+  Future<String?> _handleLogin(String email, String password) async {
+    // Check password against the locally stored hash first.
+    final storedHash = SettingsPrefs.instance.passwordHash;
+    if (storedHash != null) {
+      if (_hashPassword(password) != storedHash) {
+        return 'Incorrect password. Please try again.';
+      }
+    }
+
     widget.api.userId = email;
     try {
       // Throws NotFoundException (404) if email is not in the users table.
@@ -57,11 +73,15 @@ class _AuthGateState extends State<AuthGate> {
       // Network error / backend down — allow offline login.
     }
     await SettingsPrefs.instance.setUserEmail(email);
-    // Restore the real display name from the backend.
-    // Falls back to whatever is already stored locally so offline logins work.
+    // Restore the real display name from the backend, but only if the backend
+    // returns a proper name — not the email-prefix that some backends echo back
+    // as the userId. Guard: skip the update if the returned name is identical
+    // to the local part of the email (e.g. "bakirba" from "bakirba@example.com").
     try {
       final stored = await widget.api.getStorageProfile();
-      if (stored.displayName?.isNotEmpty == true) {
+      final emailPrefix = email.split('@').first.toLowerCase();
+      if (stored.displayName?.isNotEmpty == true &&
+          stored.displayName!.toLowerCase() != emailPrefix) {
         await SettingsPrefs.instance.setDisplayName(stored.displayName!);
       }
     } catch (_) {}
@@ -104,6 +124,18 @@ class _AuthGateState extends State<AuthGate> {
     } catch (e) {
       debugPrint('[NutriFit] saveStorageProfile failed: $e');
     }
+    // Hash and persist the password that was saved in sign-up step 1, then
+    // clear the plain-text copy so it doesn't linger in SharedPreferences.
+    final pending = SettingsPrefs.instance.pendingPassword;
+    if (pending != null && pending.isNotEmpty) {
+      await SettingsPrefs.instance.setPasswordHash(_hashPassword(pending));
+      await SettingsPrefs.instance.clearPendingPassword();
+    }
+    // Always enable haptics for a fresh account so the default is on.
+    await SettingsPrefs.instance.setHaptics(true);
+    // Reminders start off for every new account — the user can enable them in settings.
+    await SettingsPrefs.instance.setMealReminders(false);
+    await SettingsPrefs.instance.setWaterReminders(false);
     await SettingsPrefs.instance.setUserEmail(profile.email);
     await SettingsPrefs.instance.setDisplayName(profile.name);
     await SettingsPrefs.instance.setWeightKg(profile.weightKg);
@@ -147,7 +179,8 @@ class _AuthGateState extends State<AuthGate> {
     // Reset today's water intake before logging out so the next session starts fresh.
     await widget.store.resetTodayWater();
     await SettingsPrefs.instance.clearUserEmail();
-    await SettingsPrefs.instance.clearAvatarPath();
+    // Avatar path is intentionally NOT cleared on logout so the picture
+    // is still there when the same user logs back in.
     widget.api.userId = 'demo-user';
     if (mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -164,11 +197,13 @@ class _AuthGateState extends State<AuthGate> {
       // Backend unavailable — proceed with local-only deletion.
     }
 
-    // Clear local SQLite logs and session.
+    // Clear local SQLite logs, viewed-food history, and all profile/session data.
     await widget.store.clearAllData();
+    await widget.history.clear();
     await SettingsPrefs.instance.clearUserEmail();
     await SettingsPrefs.instance.clearAvatarPath();
     await SettingsPrefs.instance.clearAccent();
+    await SettingsPrefs.instance.clearProfile();
 
     widget.api.userId = 'demo-user';
 
@@ -184,7 +219,7 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     if (!_isLoggedIn) {
       return LoginScreen(
-        onLogin: _handleLogin,
+        onLogin: (email, password) => _handleLogin(email, password),
         onAuthenticated: _handleAuthenticated,
         onProfileCreated: _handleProfileCreated,
       );

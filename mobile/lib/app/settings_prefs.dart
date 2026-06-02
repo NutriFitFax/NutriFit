@@ -28,6 +28,7 @@ class SettingsPrefs {
     );
     displayNameNotifier = ValueNotifier(_p.getString(_kDisplayName) ?? 'friend');
     avatarPathNotifier  = ValueNotifier(_p.getString(_kAvatarPath));
+    unitNotifier = ValueNotifier(unit);
   }
 
   static const _kAccent   = 'accent_index';
@@ -43,6 +44,9 @@ class SettingsPrefs {
   /// Notifies listeners when the avatar image path changes.
   late final ValueNotifier<String?> avatarPathNotifier;
 
+  /// Notifies listeners when the unit system changes so weight/height displays rebuild.
+  late final ValueNotifier<UnitSystem> unitNotifier;
+
   NutriAccent get accent => accentNotifier.value;
   Future<void> setAccent(NutriAccent a) async {
     accentNotifier.value = a;
@@ -56,15 +60,18 @@ class SettingsPrefs {
 
   UnitSystem get unit =>
       UnitSystem.values[(_p.getInt(_kUnit) ?? 0).clamp(0, UnitSystem.values.length - 1)];
-  Future<void> setUnit(UnitSystem u) => _p.setInt(_kUnit, u.index);
+  Future<void> setUnit(UnitSystem u) async {
+    unitNotifier.value = u;
+    await _p.setInt(_kUnit, u.index);
+  }
 
-  int get waterGoalMl => _p.getInt(_kWaterMl) ?? 2000;
+  int get waterGoalMl => _p.getInt(_kWaterMl) ?? 3000;
   Future<void> setWaterGoalMl(int ml) => _p.setInt(_kWaterMl, ml);
 
   static const _kMealReminders  = 'meal_reminders';
   static const _kWaterReminders = 'water_reminders';
 
-  bool get mealReminders => _p.getBool(_kMealReminders) ?? true;
+  bool get mealReminders => _p.getBool(_kMealReminders) ?? false;
   Future<void> setMealReminders(bool v) => _p.setBool(_kMealReminders, v);
 
   static const _kMealTimes = 'meal_reminder_times';
@@ -163,7 +170,8 @@ class SettingsPrefs {
     switch (s) {
       case 'moderate':     return ActivityLevel.medium;
       case 'very_active':  return ActivityLevel.active;
-      case 'extra_active': return ActivityLevel.veryActive;
+      case 'extra_active': return ActivityLevel.active;
+      case 'veryActive':   return ActivityLevel.active;
     }
     return ActivityLevel.values.firstWhere((a) => a.name == s,
         orElse: () => fallback);
@@ -181,9 +189,51 @@ class SettingsPrefs {
   Future<void> setDateOfBirth(DateTime d) =>
       _p.setString(_kDateOfBirth, '${d.year.toString().padLeft(4,'0')}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}');
 
+  /// Wipes all personal profile fields (used on account deletion).
+  Future<void> clearProfile() async {
+    displayNameNotifier.value = 'friend';
+    await Future.wait([
+      _p.remove(_kDisplayName),
+      _p.remove(_kGoalCalories),
+      _p.remove(_kGoalProtein),
+      _p.remove(_kGoalCarbs),
+      _p.remove(_kGoalFat),
+      _p.remove(_kHeightCm),
+      _p.remove(_kWeightKg),
+      _p.remove(_kGender),
+      _p.remove(_kActivityLevel),
+      _p.remove(_kDateOfBirth),
+      // Reset device-level preferences so a new account starts with defaults.
+      _p.remove(_kUnit),
+      _p.remove(_kWaterMl),
+      _p.remove(_kMealReminders),
+      _p.remove(_kMealTimes),
+      _p.remove(_kWaterReminders),
+      _p.remove(_kWaterStart),
+      _p.remove(_kWaterEnd),
+      _p.remove(_kWaterIntervalMin),
+      _p.remove(_kPasswordHash),
+      _p.remove(_kPendingPassword),
+    ]);
+  }
+
   static const _kUserEmail = 'user_email';
 
   String? getUserEmail() => _p.getString(_kUserEmail);
   Future<void> setUserEmail(String email) => _p.setString(_kUserEmail, email);
   Future<void> clearUserEmail() => _p.remove(_kUserEmail);
+
+  // ── Password (local hash, verified on login) ──────────────────────────────
+  static const _kPasswordHash    = 'password_hash';
+  static const _kPendingPassword = 'pending_password';
+
+  String? get passwordHash => _p.getString(_kPasswordHash);
+  Future<void> setPasswordHash(String hash) => _p.setString(_kPasswordHash, hash);
+  Future<void> clearPasswordHash() => _p.remove(_kPasswordHash);
+
+  /// Temporary storage for the plain-text password entered in sign-up step 1.
+  /// Cleared once the hash is committed in [_handleProfileCreated].
+  String? get pendingPassword => _p.getString(_kPendingPassword);
+  Future<void> setPendingPassword(String password) => _p.setString(_kPendingPassword, password);
+  Future<void> clearPendingPassword() => _p.remove(_kPendingPassword);
 }

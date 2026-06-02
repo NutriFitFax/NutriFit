@@ -78,6 +78,7 @@ class _AppShellState extends State<AppShell> {
             MaterialPageRoute<void>(
               builder: (_) => SettingsScreen(
                 api: widget.api,
+                store: widget.store,
                 history: widget.history,
                 onLogout: widget.onLogout,
                 onDeleteAccount: widget.onDeleteAccount,
@@ -91,7 +92,7 @@ class _AppShellState extends State<AppShell> {
         label: 'Search',
         icon: Icon(Icons.search, color: unselectedColor),
         activeIcon: Icon(Icons.search, color: selectedColor),
-        build: () => SearchScreen(api: widget.api, history: widget.history),
+        build: () => SearchScreen(api: widget.api, history: widget.history, store: widget.store),
       ),
       _TabDef(
         id: AppTabId.meal,
@@ -117,7 +118,7 @@ class _AppShellState extends State<AppShell> {
         label: 'History',
         icon: Icon(Icons.history, color: unselectedColor),
         activeIcon: Icon(Icons.history, color: selectedColor),
-        build: () => HistoryScreen(history: widget.history),
+        build: () => HistoryScreen(history: widget.history, store: widget.store),
       ),
     ];
 

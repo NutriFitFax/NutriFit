@@ -10,6 +10,7 @@ import '../../api/models.dart';
 import '../../app/notification_service.dart';
 import '../../app/nutri_colors.dart';
 import '../../app/settings_prefs.dart';
+import '../../db/daily_log.dart';
 import '../auth/user_profile.dart';
 import '../history/viewed_food_history_store.dart';
 import 'edit_sheets.dart';
@@ -17,6 +18,7 @@ import 'widgets/settings_widgets.dart';
 
 class SettingsScreen extends StatefulWidget {
   final NutriFitApi api;
+  final DailyLogStore? store;
   final UserProfile? profile;
   final ViewedFoodHistoryStore? history;
   final Future<void> Function()? onLogout;
@@ -25,6 +27,7 @@ class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     required this.api,
+    this.store,
     this.profile,
     this.history,
     this.onLogout,
@@ -69,8 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       : _profile.name.trim()[0].toUpperCase();
 
   String get _weightDisplay {
-    if (_unit == UnitSystem.metric)
+    if (_unit == UnitSystem.metric) {
       return '${_profile.weightKg.toStringAsFixed(1)} kg';
+    }
     return '${UnitConvert.kgToLb(_profile.weightKg).round()} lb';
   }
 
@@ -114,7 +118,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final stored = await widget.api.getStorageProfile();
       if (!mounted) return;
-      final name = stored.displayName?.isNotEmpty == true
+      // Same email-prefix guard as in auth_gate: don't let a backend that
+      // echoes back the userId (email local-part) clobber the real display name.
+      final email = SettingsPrefs.instance.getUserEmail() ?? '';
+      final emailPrefix = email.split('@').first.toLowerCase();
+      final name = (stored.displayName?.isNotEmpty == true &&
+              stored.displayName!.toLowerCase() != emailPrefix)
           ? stored.displayName!
           : _profile.name;
       final heightCm = stored.heightCm ?? _profile.heightCm;
@@ -210,7 +219,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final v = await showEditCalorieGoalSheet(context, _calorieGoal);
                 if (v != null) {
                   setState(() => _calorieGoal = v);
-                  SettingsPrefs.instance.setGoalCaloriesKcal(v);
+                  await SettingsPrefs.instance.setGoalCaloriesKcal(v);
+                  await widget.store?.refresh();
                   _saveToApi();
                 }
               },
@@ -220,38 +230,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: c.carbs,
               iconBg: c.carbsSoft,
               title: 'Macro targets',
+              subtitle: 'Tap to edit or recalculate from your stats',
               value:
                   'P ${_macros.protein} · C ${_macros.carbs} · F ${_macros.fat} g',
               onTap: () async {
                 final v = await showEditMacrosSheet(context, _macros);
                 if (v != null) {
-                  setState(() => _macros = v);
-                  SettingsPrefs.instance.setGoalProteinG(v.protein);
-                  SettingsPrefs.instance.setGoalCarbsG(v.carbs);
-                  SettingsPrefs.instance.setGoalFatG(v.fat);
-                  _saveToApi();
-                }
-              },
-            ),
-            SettingsRow(
-              icon: Icons.auto_awesome,
-              iconColor: c.primary,
-              iconBg: c.primaryTint,
-              title: 'Recalculate targets',
-              subtitle: 'Update from your weight, height & activity',
-              onTap: () async {
-                final v = await showRecalculateMacrosSheet(context);
-                if (v != null) {
                   setState(() {
-                    _calorieGoal = v.calories;
                     _macros = v.macros;
+                    if (v.calories != null) _calorieGoal = v.calories!;
                   });
-                  SettingsPrefs.instance.setGoalCaloriesKcal(v.calories);
-                  SettingsPrefs.instance.setGoalProteinG(v.macros.protein);
-                  SettingsPrefs.instance.setGoalCarbsG(v.macros.carbs);
-                  SettingsPrefs.instance.setGoalFatG(v.macros.fat);
+                  await SettingsPrefs.instance.setGoalProteinG(v.macros.protein);
+                  await SettingsPrefs.instance.setGoalCarbsG(v.macros.carbs);
+                  await SettingsPrefs.instance.setGoalFatG(v.macros.fat);
+                  if (v.calories != null) {
+                    await SettingsPrefs.instance.setGoalCaloriesKcal(v.calories!);
+                  }
+                  await widget.store?.refresh();
                   _saveToApi();
-                  _toast('Targets updated');
                 }
               },
             ),
@@ -265,7 +261,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 final v = await showEditWaterSheet(context, _waterMl);
                 if (v != null) {
                   setState(() => _waterMl = v);
-                  SettingsPrefs.instance.setWaterGoalMl(v);
+                  await SettingsPrefs.instance.setWaterGoalMl(v);
+                  // Refresh the store so the home dashboard water card picks up
+                  // the new goal immediately.
+                  await widget.store?.refresh();
                 }
               },
             ),
@@ -278,7 +277,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               options: const [
                 (Gender.male, 'Male'),
                 (Gender.female, 'Female'),
-                (Gender.other, 'Other'),
               ],
               onChanged: (g) {
                 Haptics.selectionClick();
@@ -435,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'All your data is stored on this device. NutriFit never uploads your logs.',
+                    'We will never share your personal data or sell it to third parties. Your privacy is our priority.',
                     style: TextStyle(fontSize: 12, color: c.ink3, height: 1.5),
                   ),
                 ),
@@ -464,7 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: Color(0xFF8A948C),
               iconBg: Color(0xFFEFE8D4),
               title: 'App version',
-              value: '1.0.0 (1)',
+              value: '1.0.1 (2)',
             ),
           ]),
           const SizedBox(height: 24),
@@ -512,10 +510,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onTap: () async {
           final updated = await showEditProfileSheet(context, _profile);
           if (updated != null) {
+            final weightChanged = updated.weightKg != _profile.weightKg;
             setState(() => _profile = updated);
             SettingsPrefs.instance.setDisplayName(updated.name);
             SettingsPrefs.instance.setHeightCm(updated.heightCm);
             SettingsPrefs.instance.setWeightKg(updated.weightKg);
+            if (weightChanged) {
+              // Push the new weight into the log so the home dashboard updates.
+              widget.store?.logWeight(updated.weightKg);
+            }
             _saveToApi();
           }
         },
@@ -648,19 +651,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Actions ───────────────────────────────────────────────────────────────
 
   void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(msg),
+        duration: const Duration(seconds: 2),
+      ));
   }
 
   Future<void> _confirmClearHistory() async {
     final ok = await _confirm(
       title: 'Clear food history?',
       message:
-          'This removes every viewed food from this device. It cannot be undone.',
+          'This removes all viewed foods and today\'s logged meals from this device. It cannot be undone.',
       confirmLabel: 'Clear',
       destructive: true,
     );
     if (ok == true) {
-      widget.history?.clear();
+      await widget.history?.clear();
+      await widget.store?.clearTodayMeals();
       if (mounted) _toast('History cleared');
     }
   }
@@ -726,7 +735,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showAboutDialog(
       context: context,
       applicationName: 'NutriFit',
-      applicationVersion: '1.0.0 (1)',
+      applicationVersion: '1.0.1 (2)',
       applicationIcon: Icon(Icons.eco, color: c.primary, size: 36),
       children: [
         const SizedBox(height: 8),
@@ -780,7 +789,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await SettingsPrefs.instance.setMealReminderTimes(strings);
     if (_mealReminders) {
       await NotificationService.instance.setMealReminders(true, result.asPairs);
-      if (mounted) _toast('Meal reminder times updated');
     }
   }
 
@@ -809,7 +817,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         result.end.minute,
         result.intervalMinutes,
       );
-      if (mounted) _toast('Water reminder schedule updated');
     }
   }
 

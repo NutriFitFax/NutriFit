@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/nutri_colors.dart';
+import '../../app/settings_prefs.dart';
 import 'profile_setup_screen.dart';
 import 'user_profile.dart';
 import 'auth_widgets.dart';
@@ -29,10 +30,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  void _continue() {
+  Future<void> _continue() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.lightImpact();
+    // Persist the password temporarily so auth_gate can hash and store it
+    // once the full sign-up flow completes.
+    await SettingsPrefs.instance.setPendingPassword(_password.text);
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProfileSetupScreen(

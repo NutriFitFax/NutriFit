@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/haptics.dart';
 import '../../app/nutri_colors.dart';
+import '../../db/daily_log.dart';
 import '../../screens/food_detail_screen.dart';
 import '../../ui/section_header.dart';
 import '../../ui/status_views.dart';
@@ -10,7 +11,8 @@ import 'viewed_food_history_store.dart';
 /// History list, day-grouped, with optional source-label filtering.
 class HistoryScreen extends StatefulWidget {
   final ViewedFoodHistoryStore history;
-  const HistoryScreen({super.key, required this.history});
+  final DailyLogStore? store;
+  const HistoryScreen({super.key, required this.history, this.store});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -19,6 +21,39 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   /// `null` = All. Otherwise matches against `entry.sourceLabel` substring.
   String? _filter;
+
+  Future<void> _confirmClear() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final c = ctx.nutri;
+        return AlertDialog(
+          backgroundColor: c.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('Clear history?',
+              style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(fontSize: 20)),
+          content: Text(
+            'This removes all viewed foods and today\'s logged meals. It cannot be undone.',
+            style: TextStyle(color: c.ink2, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                  backgroundColor: ctx.nutri.warn),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true) return;
+    await widget.history.clear();
+    await widget.store?.clearTodayMeals();
+  }
 
   static const _filters = <_FilterDef>[
     _FilterDef(id: null,        label: 'All'),
@@ -80,7 +115,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                         IconButton(
                           tooltip: 'Clear history',
-                          onPressed: entries.isEmpty ? null : () => widget.history.clear(),
+                          onPressed: entries.isEmpty ? null : _confirmClear,
                           icon: const Icon(Icons.delete_outline),
                         ),
                       ],
@@ -155,7 +190,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     final widgets = <Widget>[];
     groups.forEach((day, items) {
-      final totalKcal = items.fold<double>(0, (a, b) => a + b.food.macrosPer100g.caloriesKcal);
       widgets.add(
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(22, 10, 22, 4),
@@ -163,7 +197,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: SectionHeader(
               title: day,
               trailing: Text(
-                '${totalKcal.toStringAsFixed(0)} kcal · ${items.length} items',
+                '${items.length} item${items.length == 1 ? '' : 's'}',
                 style: TextStyle(fontSize: 12, color: c.ink3),
               ),
             ),

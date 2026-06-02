@@ -95,4 +95,10 @@ abstract class DailyLogStore {
 
   /// Wipes all local logs (used on account deletion).
   Future<void> clearAllData();
+
+  /// Deletes every weight log entry (user-triggered reset with confirmation).
+  Future<void> clearAllWeightLogs();
+
+  /// Deletes today's logged meals (used when clearing food history).
+  Future<void> clearTodayMeals();
 }

@@ -11,8 +11,8 @@ import 'user_profile.dart';
 /// then [onAuthenticated] (navigation). On a new account, navigates to the
 /// sign-up flow which calls [onProfileCreated] then [onAuthenticated].
 class LoginScreen extends StatefulWidget {
-  /// Called with the entered email. Returns null on success or an error string.
-  final Future<String?> Function(String email) onLogin;
+  /// Called with the entered email and password. Returns null on success or an error string.
+  final Future<String?> Function(String email, String password) onLogin;
 
   /// Called after login or sign-up succeeds — triggers navigation to AppShell.
   final VoidCallback onAuthenticated;
@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _busy = true; _error = null; });
     HapticFeedback.lightImpact();
-    final error = await widget.onLogin(_email.text.trim());
+    final error = await widget.onLogin(_email.text.trim(), _password.text);
     if (!mounted) return;
     if (error != null) {
       setState(() { _busy = false; _error = error; });

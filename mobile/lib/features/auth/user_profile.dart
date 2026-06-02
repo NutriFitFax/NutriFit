@@ -24,7 +24,7 @@ class UserProfile {
     required this.email,
     required this.weightKg,
     required this.heightCm,
-    this.gender = Gender.other,
+    this.gender = Gender.male,
     this.activityLevel = ActivityLevel.medium,
     this.proteinGoalG = 130,
     this.carbsGoalG = 240,
@@ -94,7 +94,7 @@ class UserProfile {
     heightCm: (json['height_cm'] as num?)?.toDouble() ?? 170,
     gender: Gender.values.firstWhere(
       (g) => g.name == json['gender'],
-      orElse: () => Gender.other,
+      orElse: () => Gender.male,
     ),
     activityLevel: ActivityLevel.values.firstWhere(
       (a) => a.name == json['activity_level'],
@@ -119,22 +119,20 @@ const Map<Gender, String> genderLabel = {
 };
 
 /// Activity level (drives the activity multiplier in goal calculations).
-enum ActivityLevel { sedentary, light, medium, active, veryActive }
+enum ActivityLevel { sedentary, light, medium, active }
 
 const Map<ActivityLevel, String> activityLabel = {
   ActivityLevel.sedentary: 'Sedentary',
   ActivityLevel.light: 'Lightly Active',
   ActivityLevel.medium: 'Moderately Active',
   ActivityLevel.active: 'Very Active',
-  ActivityLevel.veryActive: 'Extra Active',
 };
 
 const Map<ActivityLevel, String> activityDescription = {
   ActivityLevel.sedentary: 'Little or no exercise',
   ActivityLevel.light: 'Exercise 1–3 days/week',
   ActivityLevel.medium: 'Exercise 3–5 days/week',
-  ActivityLevel.active: 'Exercise 6–7 days/week',
-  ActivityLevel.veryActive: 'Hard exercise or a physical job',
+  ActivityLevel.active: 'Exercise 6–7 days/week or physical job',
 };
 
 /// Harris–Benedict style activity multipliers.
@@ -143,7 +141,6 @@ const Map<ActivityLevel, double> activityMultiplier = {
   ActivityLevel.light: 1.375,
   ActivityLevel.medium: 1.55,
   ActivityLevel.active: 1.725,
-  ActivityLevel.veryActive: 1.9,
 };
 
 enum UnitSystem { metric, imperial }

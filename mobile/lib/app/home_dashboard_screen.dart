@@ -17,6 +17,7 @@ import '../ui/warm_card.dart';
 import '../ui/water_glasses.dart';
 import 'app_shell.dart' show AppTabId;
 import 'nutri_colors.dart';
+import '../features/auth/user_profile.dart' show UnitSystem, UnitConvert;
 
 class HomeDashboardScreen extends StatelessWidget {
   final DailyLogStore store;
@@ -541,20 +542,31 @@ class _WeightCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          weightKg == null
-              ? Text(
+          ValueListenableBuilder<UnitSystem>(
+            valueListenable: SettingsPrefs.instance.unitNotifier,
+            builder: (context, unit, _) {
+              if (weightKg == null) {
+                return Text(
                   'Tap to log',
                   style: TextStyle(fontSize: 18, color: c.ink2, fontWeight: FontWeight.w500),
-                )
-              : Text.rich(
-                  TextSpan(
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 28),
-                    children: [
-                      TextSpan(text: weightKg!.toStringAsFixed(1)),
-                      TextSpan(text: ' kg', style: TextStyle(fontSize: 12, color: c.ink2)),
-                    ],
-                  ),
+                );
+              }
+              final isImperial = unit == UnitSystem.imperial;
+              final display = isImperial
+                  ? UnitConvert.kgToLb(weightKg!).round().toString()
+                  : weightKg!.toStringAsFixed(1);
+              final unitLabel = isImperial ? ' lb' : ' kg';
+              return Text.rich(
+                TextSpan(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 28),
+                  children: [
+                    TextSpan(text: display),
+                    TextSpan(text: unitLabel, style: TextStyle(fontSize: 12, color: c.ink2)),
+                  ],
                 ),
+              );
+            },
+          ),
           const SizedBox(height: 8),
           SizedBox(
             height: 26,

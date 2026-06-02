@@ -41,9 +41,46 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
     if (mounted) {
       _controller.clear();
       setState(() => _logging = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Weight logged: ${raw.toStringAsFixed(1)} ${unit == UnitSystem.imperial ? 'lb' : 'kg'}')),
-      );
+    }
+  }
+
+  Future<void> _confirmReset() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final c = ctx.nutri;
+        return AlertDialog(
+          backgroundColor: c.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text('Reset weight history?',
+              style: Theme.of(ctx).textTheme.headlineSmall?.copyWith(fontSize: 20)),
+          content: Text(
+            'This removes all logged weight entries from this device. It cannot be undone.',
+            style: TextStyle(color: c.ink2, height: 1.5),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: c.warn),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Reset'),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true || !mounted) return;
+    await widget.store.clearAllWeightLogs();
+    await SettingsPrefs.instance.setWeightKg(0.0);
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(
+          content: Text('Weight history cleared'),
+          duration: Duration(seconds: 2),
+        ));
     }
   }
 
@@ -81,7 +118,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        NutriOverline('Current weight'),
+                        const NutriOverline('Current weight'),
                         Icon(Icons.monitor_weight_outlined, color: c.protein, size: 18),
                       ],
                     ),
@@ -133,7 +170,7 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
               ),
 
               const SizedBox(height: 22),
-              NutriOverline('Log today\'s weight'),
+              const NutriOverline('Log today\'s weight'),
               const SizedBox(height: 10),
               WarmCard(
                 child: Column(
@@ -160,6 +197,13 @@ class _WeightLogScreenState extends State<WeightLogScreen> {
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 28),
+              TextButton.icon(
+                onPressed: _confirmReset,
+                icon: Icon(Icons.delete_sweep_outlined, size: 18, color: c.warn),
+                label: Text('Reset weight history', style: TextStyle(color: c.warn)),
               ),
             ],
           );

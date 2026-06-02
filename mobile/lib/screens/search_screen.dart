@@ -4,6 +4,7 @@ import '../api/api_client.dart';
 import '../app/haptics.dart';
 import '../api/api_exception.dart';
 import '../api/models.dart';
+import '../db/daily_log.dart';
 import '../features/history/viewed_food_history_store.dart';
 import '../ui/food_view_data.dart';
 import '../ui/app_page.dart';
@@ -14,11 +15,13 @@ import 'food_detail_screen.dart';
 class SearchScreen extends StatefulWidget {
   final NutriFitApi api;
   final ViewedFoodHistoryStore history;
+  final DailyLogStore store;
 
   const SearchScreen({
     super.key,
     required this.api,
     required this.history,
+    required this.store,
   });
 
   @override
@@ -38,6 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _search() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final q = _controller.text.trim();
     if (q.isEmpty) return;
     setState(() {
@@ -118,6 +122,16 @@ class _SearchScreenState extends State<SearchScreen> {
                                 food: FoodViewData.fromFood(food),
                                 history: widget.history,
                                 sourceLabel: 'Search',
+                                onLog: (grams) {
+                                  final m = food.macrosPer100g.forGrams(grams);
+                                  return widget.store.logMeal(
+                                    name: food.name,
+                                    caloriesKcal: m.caloriesKcal,
+                                    proteinG: m.proteinG,
+                                    carbsG: m.carbsG,
+                                    fatG: m.fatG,
+                                  );
+                                },
                               ),
                             ),
                           );

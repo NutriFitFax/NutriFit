@@ -107,6 +107,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   void _switchUnit(UnitSystem u) {
     if (u == _unit) return;
+    FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
     _readToCanonical();
     setState(() { _unit = u; _fillControllers(); });
@@ -296,13 +297,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               // ── Gender ─────────────────────────────────────────────────
               const FieldLabel('Gender'),
               Row(
-                children: Gender.values.map((g) {
+                children: Gender.values.where((g) => g != Gender.other).map((g) {
                   final selected = _gender == g;
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
                         onTap: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
                           HapticFeedback.selectionClick();
                           setState(() => _gender = g);
                         },
@@ -339,6 +341,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 final selected = _activityLevel == level;
                 return GestureDetector(
                   onTap: () {
+                    FocusManager.instance.primaryFocus?.unfocus();
                     HapticFeedback.selectionClick();
                     setState(() => _activityLevel = level);
                   },
@@ -420,6 +423,7 @@ class _DobField extends StatelessWidget {
     final now = DateTime.now();
     return GestureDetector(
       onTap: () async {
+        FocusManager.instance.primaryFocus?.unfocus();
         HapticFeedback.selectionClick();
         final picked = await showDatePicker(
           context: context,

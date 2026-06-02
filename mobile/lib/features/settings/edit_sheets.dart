@@ -318,8 +318,16 @@ class MacroGoals {
   const MacroGoals(this.protein, this.carbs, this.fat);
 }
 
-Future<MacroGoals?> showEditMacrosSheet(BuildContext context, MacroGoals g) =>
-    _showSheet<MacroGoals>(context, _EditMacrosSheet(goals: g));
+/// Returned by [showEditMacrosSheet]. [calories] is non-null only when the
+/// user triggered a recalculate and applied the result.
+class MacroEditResult {
+  final MacroGoals macros;
+  final int? calories;
+  const MacroEditResult({required this.macros, this.calories});
+}
+
+Future<MacroEditResult?> showEditMacrosSheet(BuildContext context, MacroGoals g) =>
+    _showSheet<MacroEditResult>(context, _EditMacrosSheet(goals: g));
 
 class _EditMacrosSheet extends StatefulWidget {
   final MacroGoals goals;
@@ -336,6 +344,7 @@ class _EditMacrosSheetState extends State<_EditMacrosSheet> {
       TextEditingController(text: widget.goals.carbs.toString());
   late final TextEditingController _fat =
       TextEditingController(text: widget.goals.fat.toString());
+  int? _recalcCalories;
 
   @override
   void dispose() {
@@ -345,19 +354,25 @@ class _EditMacrosSheetState extends State<_EditMacrosSheet> {
     super.dispose();
   }
 
+  void _save() {
+    final g = widget.goals;
+    final macros = MacroGoals(
+      (int.tryParse(_protein.text) ?? g.protein).clamp(0, 600),
+      (int.tryParse(_carbs.text)   ?? g.carbs).clamp(0, 800),
+      (int.tryParse(_fat.text)     ?? g.fat).clamp(0, 400),
+    );
+    Navigator.of(context).pop(
+      MacroEditResult(macros: macros, calories: _recalcCalories),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final g = widget.goals;
+    final c = context.nutri;
     return _SheetScaffold(
       title: 'Macro targets',
-      subtitle: 'Grams per day for protein, carbs and fat.',
-      onSave: () {
-        Navigator.of(context).pop(MacroGoals(
-          (int.tryParse(_protein.text) ?? g.protein).clamp(0, 600),
-          (int.tryParse(_carbs.text)   ?? g.carbs).clamp(0, 800),
-          (int.tryParse(_fat.text)     ?? g.fat).clamp(0, 400),
-        ));
-      },
+      subtitle: 'Edit manually or recalculate from your current stats.',
+      onSave: _save,
       children: [
         Row(
           children: [
@@ -367,6 +382,23 @@ class _EditMacrosSheetState extends State<_EditMacrosSheet> {
             const SizedBox(width: 10),
             Expanded(child: _Labeled(label: 'Fat',     child: _numField(_fat,     suffix: 'g'))),
           ],
+        ),
+        const SizedBox(height: 4),
+        TextButton.icon(
+          style: TextButton.styleFrom(foregroundColor: c.primary),
+          icon: const Icon(Icons.auto_awesome, size: 16),
+          label: const Text('Recalculate from my stats'),
+          onPressed: () async {
+            final result = await showRecalculateMacrosSheet(context);
+            if (result != null && mounted) {
+              setState(() {
+                _protein.text = result.macros.protein.toString();
+                _carbs.text   = result.macros.carbs.toString();
+                _fat.text     = result.macros.fat.toString();
+                _recalcCalories = result.calories;
+              });
+            }
+          },
         ),
       ],
     );
