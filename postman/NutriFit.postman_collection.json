@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "NutriFit API",
+    "description": "E2E tests for the NutriFit Spring Boot backend. Run with Newman:\n  newman run NutriFit.postman_collection.json -e NutriFit.postman_environment.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1 — Health Check",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/",
+          "host": ["{{base_url}}"],
+          "path": [""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Body has status field', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('status');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 — Database Health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/db-health",
+          "host": ["{{base_url}}"],
+          "path": ["db-health"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Not a server error', () => {",
+              "  pm.expect(pm.response.code).to.not.equal(500);",
+              "});",
+              "pm.test('Body has status field', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('status');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 — Food Search — valid query",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/search?q=chicken",
+          "host": ["{{base_url}}"],
+          "path": ["search"],
+          "query": [{ "key": "q", "value": "chicken" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Response has items array', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body).to.have.property('items').that.is.an('array');",
+              "  pm.expect(body).to.have.property('query', 'chicken');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 — Food Search — empty query (should be 400)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/search?q=",
+          "host": ["{{base_url}}"],
+          "path": ["search"],
+          "query": [{ "key": "q", "value": "" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 for empty query', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 — Food Search — query too long (should be 400)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "host": ["{{base_url}}"],
+          "path": ["search"],
+          "query": [
+            {
+              "key": "q",
+              "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 for oversized query', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6 — Barcode Lookup — valid EAN",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/barcode/077034085228",
+          "host": ["{{base_url}}"],
+          "path": ["barcode", "077034085228"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Not a validation error or server error', () => {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 404, 502]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7 — Barcode Lookup — non-numeric (should be 400)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/barcode/ABCDEFGHIJ",
+          "host": ["{{base_url}}"],
+          "path": ["barcode", "ABCDEFGHIJ"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 for non-numeric barcode', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8 — Barcode Lookup — too long (should be 400)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/barcode/123456789012345678901",
+          "host": ["{{base_url}}"],
+          "path": ["barcode", "123456789012345678901"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 for oversized barcode', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9 — Meal Plan — valid request",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/meal-plan?time_frame=day",
+          "host": ["{{base_url}}"],
+          "path": ["meal-plan"],
+          "query": [{ "key": "time_frame", "value": "day" }]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Not a validation error (400)', () => {",
+              "  pm.expect(pm.response.code).to.not.equal(400);",
+              "});",
+              "pm.test('Accepted response code', () => {",
+              "  pm.expect(pm.response.code).to.be.oneOf([200, 502, 503]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 — Meal Plan — calories too low (should be 400)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/meal-plan?time_frame=day&target_calories=100",
+          "host": ["{{base_url}}"],
+          "path": ["meal-plan"],
+          "query": [
+            { "key": "time_frame", "value": "day" },
+            { "key": "target_calories", "value": "100" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400 for calories below minimum', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
